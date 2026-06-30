@@ -20,4 +20,20 @@ It is designed for building AI applications with digital avatars, streaming conv
 
 ## Current Status
 
-This repository is in the design-first stage. The goal is to finish product and architecture documents before starting implementation.
+This repository is entering the MVP implementation stage. The current app includes a first interactive digital human conversation prototype with mock streaming, TTS state, and avatar state transitions.
+
+## Quick Start
+
+```bash
+npm install
+npm run dev
+```
+
+Open http://127.0.0.1:3000.
+
+## Scripts
+
+- `npm run dev`: start local development server
+- `npm run build`: create production build
+- `npm run lint`: run ESLint
+- `npm run format`: format files with Prettier
