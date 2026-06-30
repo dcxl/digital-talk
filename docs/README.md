@@ -8,6 +8,10 @@ Next Digital Human 是一个面向个人开发者的开源 AI 数字人框架。
 
 - [01 产品设计与原型文档](./01-product-design.md)
 - [02 技术架构草案](./02-technical-architecture.md)
+- [03 页面级原型细节](./03-page-prototypes.md)
+- [04 数据表字段设计](./04-data-model.md)
+- [05 Provider 接口设计](./05-provider-interfaces.md)
+- [06 MVP 任务拆分](./06-mvp-task-breakdown.md)
 
 ## 当前设计原则
 
@@ -24,4 +28,3 @@ Next Digital Human 是一个面向个人开发者的开源 AI 数字人框架。
 | MVP | 数字人页面、文本聊天、流式 LLM、TTS 播放、基础 Avatar 状态 |
 | Beta | ASR 语音输入、RAG 知识库、会话历史、Provider 抽象 |
 | v1.0 | Tool Calling、插件化工具、状态机、文档站、示例应用 |
-
