@@ -42,7 +42,7 @@ export type LLMChatChunk =
     }
   | {
       type: "done";
-      finishReason: "stop" | "length" | "tool_call" | "error";
+      finishReason: "stop" | "length" | "tool_call" | "tool_calls" | "error";
     };
 
 export interface LLMProvider extends ProviderDescriptor {

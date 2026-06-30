@@ -3,7 +3,7 @@ import {
   encodeRuntimeEvent,
   type RuntimeEvent,
 } from "@/core/runtime/events";
-import { mockLLMProvider } from "@/providers/llm/mock-llm-provider";
+import { getLLMProvider } from "@/providers/llm";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,6 +62,8 @@ export async function POST(request: NextRequest) {
       const assistantId = crypto.randomUUID();
 
       try {
+        const llmProvider = getLLMProvider();
+
         enqueue(controller, {
           type: "assistant.created",
           message: {
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest) {
           reason: "request_received",
         });
 
-        for await (const chunk of mockLLMProvider.chat({
+        for await (const chunk of llmProvider.chat({
           conversationId:
             typeof body?.conversationId === "string"
               ? body.conversationId
