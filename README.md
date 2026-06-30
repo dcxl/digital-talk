@@ -13,6 +13,10 @@ It is designed for building AI applications with digital avatars, streaming conv
 - [Data Model](./docs/04-data-model.md)
 - [Provider Interfaces](./docs/05-provider-interfaces.md)
 - [MVP Task Breakdown](./docs/06-mvp-task-breakdown.md)
+- [Event Model](./docs/07-event-model.md)
+- [Runtime State Machine](./docs/08-state-machine.md)
+- [API Contracts](./docs/09-api-contracts.md)
+- [Security and Deployment Constraints](./docs/10-security-deployment.md)
 
 ## Current Status
 

@@ -12,6 +12,10 @@ Next Digital Human 是一个面向个人开发者的开源 AI 数字人框架。
 - [04 数据表字段设计](./04-data-model.md)
 - [05 Provider 接口设计](./05-provider-interfaces.md)
 - [06 MVP 任务拆分](./06-mvp-task-breakdown.md)
+- [07 事件模型](./07-event-model.md)
+- [08 Runtime 状态机](./08-state-machine.md)
+- [09 API 契约](./09-api-contracts.md)
+- [10 安全与部署约束](./10-security-deployment.md)
 
 ## 当前设计原则
 
