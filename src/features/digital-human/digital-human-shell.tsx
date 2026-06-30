@@ -11,8 +11,8 @@ import {
   Sparkles,
   Volume2,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
-import type { ChatMessage, RuntimeState } from "./types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ChatMessage, RuntimeEvent, RuntimeState } from "./types";
 
 const suggestions = [
   "介绍一下 Next Digital Human",
@@ -40,11 +40,20 @@ const stateTone: Record<RuntimeState, string> = {
   error: "bg-red-100 text-red-800",
 };
 
-const demoAnswer =
-  "Next Digital Human 会先从一个可运行的数字人对话闭环开始：文本输入、LLM 流式回复、TTS 播放、Avatar 状态驱动和会话保存。底层通过 Provider 接口隔离模型、语音和 Avatar 实现，后续再扩展 ASR、RAG 与 Tool Calling。";
+function parseRuntimeEvent(block: string): RuntimeEvent | null {
+  const dataLines = block
+    .replaceAll("\r", "")
+    .split("\n")
+    .filter((line) => line.startsWith("data:"))
+    .map((line) => line.slice(5).trimStart());
 
-function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  if (dataLines.length === 0) return null;
+
+  try {
+    return JSON.parse(dataLines.join("\n")) as RuntimeEvent;
+  } catch {
+    return null;
+  }
 }
 
 export function DigitalHumanShell() {
@@ -59,23 +68,117 @@ export function DigitalHumanShell() {
       status: "completed",
     },
   ]);
-  const cancelledRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const activeAssistantRef = useRef<string | null>(null);
 
   const canSend = state === "idle" || state === "speaking" || state === "error";
   const isBusy = ["thinking", "streaming", "synthesizing"].includes(state);
+
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
 
   const latestStatus = useMemo(() => {
     if (state === "speaking") return "Avatar 正在播报回复";
     if (state === "streaming") return "LLM 正在流式生成";
     if (state === "thinking") return "请求已提交，等待首包";
+    if (state === "error") return "服务端调用异常，可重试";
     return "准备接收新的问题";
   }, [state]);
+
+  function applyRuntimeEvent(event: RuntimeEvent, assistantId: string) {
+    if (event.type === "text.delta") {
+      setState("streaming");
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === assistantId
+            ? {
+                ...message,
+                content: message.content + event.text,
+                status: "streaming",
+              }
+            : message,
+        ),
+      );
+      return;
+    }
+
+    if (event.type === "text.done") {
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === assistantId
+            ? { ...message, status: "completed" }
+            : message,
+        ),
+      );
+      return;
+    }
+
+    if (event.type === "tts.started") {
+      setState("synthesizing");
+      return;
+    }
+
+    if (event.type === "tts.done") {
+      setState("speaking");
+      window.setTimeout(() => {
+        setState((current) => (current === "speaking" ? "idle" : current));
+      }, 1800);
+      return;
+    }
+
+    if (event.type === "avatar.state") {
+      setState(event.state);
+      return;
+    }
+
+    if (event.type === "error") {
+      setState("error");
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === assistantId
+            ? {
+                ...message,
+                content: message.content || event.message,
+                status: "failed",
+              }
+            : message,
+        ),
+      );
+    }
+  }
+
+  async function consumeRuntimeStream(response: Response, assistantId: string) {
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Response body is empty");
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const blocks = buffer.split("\n\n");
+      buffer = blocks.pop() ?? "";
+
+      for (const block of blocks) {
+        const event = parseRuntimeEvent(block);
+        if (event) applyRuntimeEvent(event, assistantId);
+      }
+    }
+
+    buffer += decoder.decode();
+    const event = parseRuntimeEvent(buffer);
+    if (event) applyRuntimeEvent(event, assistantId);
+  }
 
   async function sendMessage(text: string) {
     const content = text.trim();
     if (!content || !canSend) return;
 
-    cancelledRef.current = false;
+    abortRef.current?.abort();
     setInput("");
 
     const userMessage: ChatMessage = {
@@ -94,51 +197,58 @@ export function DigitalHumanShell() {
 
     setMessages((current) => [...current, userMessage, assistantMessage]);
     setState("thinking");
-    await wait(500);
+    activeAssistantRef.current = assistantId;
 
-    if (cancelledRef.current) return markInterrupted(assistantId);
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    setState("streaming");
-    const chunks = demoAnswer.match(/.{1,5}/g) ?? [];
+    try {
+      const response = await fetch("/api/chat", {
+        body: JSON.stringify({ message: content }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        signal: controller.signal,
+      });
 
-    for (const chunk of chunks) {
-      if (cancelledRef.current) return markInterrupted(assistantId);
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+      await consumeRuntimeStream(response, assistantId);
+    } catch (error) {
+      if (controller.signal.aborted) {
+        markInterrupted(assistantId);
+        return;
+      }
+
+      setState("error");
       setMessages((current) =>
         current.map((message) =>
           message.id === assistantId
             ? {
                 ...message,
-                content: message.content + chunk,
-                status: "streaming",
+                content:
+                  error instanceof Error ? error.message : "Runtime request failed",
+                status: "failed",
               }
             : message,
         ),
       );
-      await wait(45);
+    } finally {
+      if (abortRef.current === controller) abortRef.current = null;
+      if (activeAssistantRef.current === assistantId) {
+        activeAssistantRef.current = null;
+      }
     }
-
-    setMessages((current) =>
-      current.map((message) =>
-        message.id === assistantId
-          ? { ...message, status: "completed" }
-          : message,
-      ),
-    );
-    setState("synthesizing");
-    await wait(700);
-
-    if (cancelledRef.current) return markInterrupted(assistantId);
-
-    setState("speaking");
-    await wait(2200);
-
-    if (!cancelledRef.current) setState("idle");
   }
 
   function markInterrupted(messageId?: string) {
     setMessages((current) =>
       current.map((message) =>
-        !messageId || message.id === messageId
+        message.role === "assistant" &&
+        (messageId
+          ? message.id === messageId
+          : message.status === "pending" || message.status === "streaming")
           ? { ...message, status: "interrupted" }
           : message,
       ),
@@ -148,8 +258,8 @@ export function DigitalHumanShell() {
   }
 
   function interrupt() {
-    cancelledRef.current = true;
-    markInterrupted();
+    abortRef.current?.abort();
+    markInterrupted(activeAssistantRef.current ?? undefined);
   }
 
   return (
@@ -223,11 +333,11 @@ export function DigitalHumanShell() {
             <div className="grid w-full grid-cols-3 gap-2 text-center text-xs text-slate-500">
               <div className="rounded-md bg-slate-50 p-3">
                 <p className="font-medium text-slate-800">LLM</p>
-                <p>mock stream</p>
+                <p>server stream</p>
               </div>
               <div className="rounded-md bg-slate-50 p-3">
                 <p className="font-medium text-slate-800">TTS</p>
-                <p>simulated</p>
+                <p>event mock</p>
               </div>
               <div className="rounded-md bg-slate-50 p-3">
                 <p className="font-medium text-slate-800">Avatar</p>
@@ -241,7 +351,7 @@ export function DigitalHumanShell() {
           <div className="border-b border-slate-200 p-4">
             <h2 className="text-sm font-semibold text-slate-950">Conversation</h2>
             <p className="mt-1 text-xs text-slate-500">
-              MVP preview: text input, streaming answer, TTS state, avatar events.
+              MVP preview: API stream, text delta, TTS state, avatar events.
             </p>
           </div>
 
@@ -345,4 +455,3 @@ export function DigitalHumanShell() {
     </main>
   );
 }
-
