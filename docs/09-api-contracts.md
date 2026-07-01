@@ -317,6 +317,8 @@ Query：
 | q | 搜索关键词 |
 | cursor | 分页游标 |
 | limit | 数量 |
+| status | active、archived、deleted |
+| starred | true 时只返回收藏 |
 
 ### 7.2 Response
 
@@ -328,6 +330,9 @@ Query：
         "id": "conv_xxx",
         "title": "介绍一下你自己",
         "summary": "用户询问数字人介绍",
+        "messageCount": 12,
+        "isStarred": true,
+        "status": "active",
         "lastMessageAt": "2026-06-30T10:00:00.000Z"
       }
     ],
@@ -345,6 +350,18 @@ Query：
 
 软删除会话。
 
+### 7.5 `PATCH /api/conversations/:id`
+
+用于 History 页收藏、归档、恢复、重命名。
+
+```json
+{
+  "title": "新的会话标题",
+  "isStarred": true,
+  "status": "archived"
+}
+```
+
 ## 8. Knowledge API
 
 P1 阶段实现。
@@ -357,7 +374,355 @@ P1 阶段实现。
 | `GET /api/knowledge-bases/:id/documents` | 文档列表 |
 | `POST /api/knowledge-bases/:id/search` | 检索测试 |
 
-## 9. 请求取消
+## 9. Dashboard API
+
+### 9.1 `GET /api/dashboard/summary`
+
+Dashboard 页聚合接口，优先从现有表实时聚合；有 `UsageDailyStat` 后再读统计表。
+
+Response：
+
+```json
+{
+  "data": {
+    "metrics": {
+      "conversationCount": 1233,
+      "knowledgeDocumentCount": 32,
+      "avgLatencyMs": 382,
+      "tokensToday": 128600
+    },
+    "runtimeStatus": [
+      {
+        "type": "llm",
+        "name": "DeepSeek V3",
+        "status": "online",
+        "lastTestAt": "2026-07-01T10:00:00.000Z"
+      }
+    ],
+    "recentConversations": [
+      {
+        "id": "conv_xxx",
+        "title": "关于数字人项目的问题",
+        "lastMessageAt": "2026-07-01T09:30:00.000Z"
+      }
+    ],
+    "tokenUsage": [
+      {
+        "date": "2026-07-01",
+        "totalTokens": 128600
+      }
+    ],
+    "systemInfo": {
+      "version": "v1.0.0",
+      "environment": "development",
+      "uptimeSeconds": 633600
+    }
+  },
+  "requestId": "req_xxx"
+}
+```
+
+## 10. Avatar API
+
+### 10.1 `GET /api/avatar-profiles`
+
+返回 Avatar 配置列表。
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": "avatar_xxx",
+        "name": "Emily",
+        "driver": "static",
+        "voice": "cosyvoice-female",
+        "language": "zh-CN",
+        "background": "living-room",
+        "isDefault": true,
+        "status": "active"
+      }
+    ]
+  },
+  "requestId": "req_xxx"
+}
+```
+
+### 10.2 `POST /api/avatar-profiles`
+
+```json
+{
+  "name": "Emily",
+  "driver": "static",
+  "voiceProviderId": "provider_tts",
+  "voice": "cosyvoice-female",
+  "language": "zh-CN",
+  "background": "living-room",
+  "config": {}
+}
+```
+
+### 10.3 `PATCH /api/avatar-profiles/:id`
+
+同创建接口，支持局部更新。
+
+### 10.4 `POST /api/avatar-profiles/:id/preview`
+
+用于配置页预览，不写入会话。
+
+```json
+{
+  "text": "你好，我是 Emily",
+  "state": "speaking"
+}
+```
+
+## 11. Prompt API
+
+### 11.1 `GET /api/prompts`
+
+Query：
+
+| 参数 | 说明 |
+| --- | --- |
+| type | system、chat、summary、translate、custom |
+
+### 11.2 `POST /api/prompts`
+
+```json
+{
+  "type": "system",
+  "name": "System Prompt",
+  "description": "默认系统提示词",
+  "variables": [
+    {
+      "name": "char_name",
+      "required": true
+    }
+  ],
+  "content": "你是 {{char_name}}。"
+}
+```
+
+说明：创建 Prompt 时同时创建第一个 `PromptVersion`。
+
+### 11.3 `POST /api/prompts/:id/versions`
+
+```json
+{
+  "content": "新的 prompt 内容",
+  "variables": [],
+  "changelog": "优化角色约束",
+  "setCurrent": true
+}
+```
+
+### 11.4 `POST /api/prompts/:id/test`
+
+```json
+{
+  "versionId": "prompt_ver_xxx",
+  "variables": {
+    "char_name": "Emily",
+    "user_name": "Jack"
+  },
+  "message": "你是谁？",
+  "providerId": "provider_llm"
+}
+```
+
+Response：
+
+```json
+{
+  "data": {
+    "renderedPrompt": "你是 Emily。",
+    "output": "你好，我是 Emily。",
+    "usage": {
+      "totalTokens": 128
+    },
+    "latencyMs": 820
+  },
+  "requestId": "req_xxx"
+}
+```
+
+## 12. Models API
+
+Models 页本质上是 `ProviderConfig` 的聚合视图。
+
+### 12.1 `GET /api/models`
+
+Query：
+
+| 参数 | 说明 |
+| --- | --- |
+| type | llm、embedding、tts、asr |
+
+Response：
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": "provider_xxx",
+        "type": "llm",
+        "provider": "openai-compatible",
+        "name": "DeepSeek",
+        "model": "deepseek-chat",
+        "enabled": true,
+        "hasApiKey": true,
+        "lastTestStatus": "success",
+        "capabilities": {
+          "streaming": true,
+          "tools": false
+        }
+      }
+    ],
+    "presets": [
+      {
+        "provider": "deepseek",
+        "displayName": "DeepSeek V3",
+        "model": "deepseek-chat",
+        "type": "llm"
+      }
+    ]
+  },
+  "requestId": "req_xxx"
+}
+```
+
+### 12.2 `POST /api/models/test`
+
+统一测试入口，内部转发到具体 Provider。
+
+```json
+{
+  "providerId": "provider_xxx",
+  "type": "llm",
+  "input": "Hello"
+}
+```
+
+## 13. Playground API
+
+### 13.1 `POST /api/playground/chat`
+
+用于调试中心，不创建正式会话；可选择保存为 `PlaygroundRun`。
+
+```json
+{
+  "providerId": "provider_llm",
+  "systemPrompt": "你是测试助手",
+  "message": "测试一下",
+  "parameters": {
+    "temperature": 0.7,
+    "maxTokens": 2048
+  },
+  "saveRun": true
+}
+```
+
+Response：
+
+- 默认可复用 `/api/chat` 的 SSE 事件格式。
+- 非 streaming 模式返回 `output`、`usage`、`latencyMs`。
+
+### 13.2 `GET /api/playground/runs`
+
+返回历史调试记录。
+
+### 13.3 `GET /api/runtime-metrics`
+
+Query：
+
+| 参数 | 说明 |
+| --- | --- |
+| type | chat、tts、asr、embedding、rag |
+| from | 开始时间 |
+| to | 结束时间 |
+
+## 14. Settings API
+
+### 14.1 `GET /api/settings`
+
+返回工作区设置。
+
+```json
+{
+  "data": {
+    "workspaceName": "Next Digital Human",
+    "theme": "dark",
+    "language": "zh-CN",
+    "timeZone": "Asia/Shanghai",
+    "autoSave": true
+  },
+  "requestId": "req_xxx"
+}
+```
+
+### 14.2 `PATCH /api/settings`
+
+```json
+{
+  "workspaceName": "Next Digital Human",
+  "theme": "dark",
+  "language": "zh-CN",
+  "timeZone": "Asia/Shanghai",
+  "autoSave": true
+}
+```
+
+### 14.3 `POST /api/settings/export`
+
+```json
+{
+  "type": "conversations",
+  "format": "json"
+}
+```
+
+Response：
+
+```json
+{
+  "data": {
+    "jobId": "export_xxx",
+    "downloadUrl": "/api/settings/export/export_xxx/download"
+  },
+  "requestId": "req_xxx"
+}
+```
+
+### 14.4 `DELETE /api/settings/workspace`
+
+危险操作。MVP 本地模式可先禁用，只保留接口契约和二次确认。
+
+```json
+{
+  "confirm": "DELETE"
+}
+```
+
+## 15. About API
+
+### 15.1 `GET /api/about`
+
+```json
+{
+  "data": {
+    "name": "Next Digital Human",
+    "version": "v1.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/dcxl/digital-talk",
+    "website": "https://nextdigitalhuman.dev"
+  },
+  "requestId": "req_xxx"
+}
+```
+
+## 16. 请求取消
 
 前端必须用 `AbortController` 取消 `/api/chat` 请求。
 
@@ -380,7 +745,7 @@ controller.abort();
 - 标记消息为 `interrupted`
 - 发出 `conversation.interrupted`
 
-## 10. 版本策略
+## 17. 版本策略
 
 MVP 不引入 `/v1` 前缀。公开 API 稳定后再考虑：
 
@@ -388,4 +753,3 @@ MVP 不引入 `/v1` 前缀。公开 API 稳定后再考虑：
 /api/v1/chat
 /api/v1/providers
 ```
-
