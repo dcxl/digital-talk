@@ -12,11 +12,21 @@ import type {
 } from "../types";
 import { createBlankProviderForm } from "./constants";
 
+function getStringOption(options: unknown, key: string) {
+  if (!options || typeof options !== "object") return undefined;
+
+  const value = (options as Record<string, unknown>)[key];
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
 function toProviderForm(provider: ProviderItem): ProviderFormState {
+  const format = getStringOption(provider.options, "format");
+
   return {
     apiKey: "",
     baseUrl: provider.baseUrl ?? "",
     enabled: provider.enabled,
+    format: format === "wav" ? "wav" : "mp3",
     hasApiKey: provider.hasApiKey,
     id: provider.source === "env" ? undefined : provider.id,
     model: provider.model ?? "",
@@ -24,6 +34,7 @@ function toProviderForm(provider: ProviderItem): ProviderFormState {
     provider: provider.provider,
     source: provider.source,
     type: provider.type,
+    voice: getStringOption(provider.options, "voice") ?? "",
   };
 }
 

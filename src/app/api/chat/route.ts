@@ -298,7 +298,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const llmProvider = getLLMProvider();
-        const ttsProvider = getTTSProvider();
+        const ttsProvider = await getTTSProvider();
         const avatarProvider = getAvatarProvider();
         let assistantText = "";
         let audioUrl: string | undefined;

@@ -51,7 +51,8 @@ export function ProviderConfigForm({
 }: ProviderConfigFormProps) {
   const providerOptions = getProviderOptions(form);
   const canSave = Boolean(form.name.trim() && form.provider.trim()) && !isBusy;
-  const canTest = form.type === "llm" && !isBusy;
+  const canTest = (form.type === "llm" || form.type === "tts") && !isBusy;
+  const isTTS = form.type === "tts";
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -113,7 +114,9 @@ export function ProviderConfigForm({
           <input
             className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ baseUrl: event.target.value })}
-            placeholder="https://api.deepseek.com/v1"
+            placeholder={
+              isTTS ? "https://api.openai.com/v1" : "https://api.deepseek.com/v1"
+            }
             value={form.baseUrl}
           />
         </label>
@@ -123,10 +126,40 @@ export function ProviderConfigForm({
           <input
             className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ model: event.target.value })}
-            placeholder="deepseek-chat"
+            placeholder={isTTS ? "tts-1" : "deepseek-chat"}
             value={form.model}
           />
         </label>
+
+        {isTTS ? (
+          <>
+            <label className="block text-xs font-medium text-slate-600">
+              Voice
+              <input
+                className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
+                onChange={(event) => onChange({ voice: event.target.value })}
+                placeholder="alloy"
+                value={form.voice ?? ""}
+              />
+            </label>
+
+            <label className="block text-xs font-medium text-slate-600">
+              Format
+              <select
+                className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
+                onChange={(event) =>
+                  onChange({
+                    format: event.target.value === "wav" ? "wav" : "mp3",
+                  })
+                }
+                value={form.format ?? "mp3"}
+              >
+                <option value="mp3">MP3</option>
+                <option value="wav">WAV</option>
+              </select>
+            </label>
+          </>
+        ) : null}
 
         <label className="block text-xs font-medium text-slate-600 lg:col-span-2">
           API Key
@@ -165,7 +198,11 @@ export function ProviderConfigForm({
             className="inline-flex h-9 items-center gap-2 rounded-md bg-slate-950 px-3 text-sm text-white disabled:opacity-60"
             disabled={!canTest}
             onClick={onTest}
-            title={form.type === "llm" ? "测试 Provider" : "仅 LLM 支持测试"}
+            title={
+              form.type === "llm" || form.type === "tts"
+                ? "测试 Provider"
+                : "仅 LLM / TTS 支持测试"
+            }
             type="button"
           >
             <Play size={15} />

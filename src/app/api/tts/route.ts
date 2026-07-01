@@ -28,7 +28,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await getTTSProvider().synthesize({
+    const provider = await getTTSProvider();
+    const result = await provider.synthesize({
       format,
       text,
       voice,

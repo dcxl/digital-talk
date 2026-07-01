@@ -6,6 +6,7 @@ import {
 } from "@/services/conversations/repository";
 import { isDatabaseConfigured } from "@/services/database/prisma";
 import { testLLMProvider } from "@/services/providers/llm-provider-test";
+import { testTTSProvider } from "@/services/providers/tts-provider-test";
 import { decryptSecret } from "@/services/security/secret-crypto";
 
 export const runtime = "nodejs";
@@ -13,6 +14,13 @@ export const dynamic = "force-dynamic";
 
 function getString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function getStringOption(options: unknown, key: string) {
+  if (!options || typeof options !== "object") return undefined;
+
+  const value = (options as Record<string, unknown>)[key];
+  return getString(value);
 }
 
 export async function POST(
@@ -44,11 +52,11 @@ export async function POST(
     );
   }
 
-  if (provider.type !== "llm") {
+  if (provider.type !== "llm" && provider.type !== "tts") {
     return jsonError(
       {
         code: "bad_request",
-        message: "Only llm provider test is supported in MVP",
+        message: "Only llm and tts provider tests are supported",
         retryable: false,
       },
       { status: 400 },
@@ -56,21 +64,47 @@ export async function POST(
   }
 
   const body = (await request.json().catch(() => null)) as {
+    format?: unknown;
     input?: unknown;
     message?: unknown;
+    text?: unknown;
+    voice?: unknown;
   } | null;
 
   try {
-    const result = await testLLMProvider({
-      apiKey: provider.apiKeyEncrypted
-        ? decryptSecret(provider.apiKeyEncrypted)
-        : undefined,
-      baseUrl: provider.baseUrl ?? undefined,
-      message: getString(body?.input) ?? getString(body?.message),
-      model: provider.model ?? undefined,
-      name: provider.name,
-      provider: provider.provider,
-    });
+    const apiKey = provider.apiKeyEncrypted
+      ? decryptSecret(provider.apiKeyEncrypted)
+      : undefined;
+    const result =
+      provider.type === "tts"
+        ? await testTTSProvider({
+            apiKey,
+            baseUrl: provider.baseUrl ?? undefined,
+            format:
+              getString(body?.format) === "wav" ||
+              getStringOption(provider.options, "format") === "wav"
+                ? "wav"
+                : "mp3",
+            model: provider.model ?? undefined,
+            name: provider.name,
+            provider: provider.provider,
+            text:
+              getString(body?.input) ??
+              getString(body?.text) ??
+              getString(body?.message),
+            voice:
+              getString(body?.voice) ??
+              getStringOption(provider.options, "voice") ??
+              process.env.DEFAULT_TTS_VOICE,
+          })
+        : await testLLMProvider({
+            apiKey,
+            baseUrl: provider.baseUrl ?? undefined,
+            message: getString(body?.input) ?? getString(body?.message),
+            model: provider.model ?? undefined,
+            name: provider.name,
+            provider: provider.provider,
+          });
 
     await updateProviderTestStatus(
       provider.id,

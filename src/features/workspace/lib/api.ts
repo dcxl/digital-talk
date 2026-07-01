@@ -126,6 +126,13 @@ export async function saveProviderConfigRequest(input: ProviderFormState) {
     enabled: input.enabled,
   };
 
+  if (input.type === "tts") {
+    body.options = {
+      format: input.format ?? "mp3",
+      voice: input.voice?.trim() || "alloy",
+    };
+  }
+
   if (input.id && input.source !== "env") body.id = input.id;
   if (input.apiKey.trim()) body.apiKey = input.apiKey.trim();
 
@@ -153,11 +160,13 @@ export async function saveProviderConfigRequest(input: ProviderFormState) {
 }
 
 export async function testProviderConfigRequest(input: ProviderFormState) {
-  if (input.type !== "llm") {
-    throw new Error("当前仅支持 LLM Provider 测试");
+  if (input.type !== "llm" && input.type !== "tts") {
+    throw new Error("当前仅支持 LLM / TTS Provider 测试");
   }
 
   const isEnvFallback = input.source === "env" && !input.apiKey.trim();
+  const testText =
+    input.type === "tts" ? "TTS provider test ok" : "回复 provider ok";
   const endpoint =
     input.id && input.source !== "env"
       ? `/api/providers/${input.id}/test`
@@ -165,19 +174,22 @@ export async function testProviderConfigRequest(input: ProviderFormState) {
   const body =
     input.id && input.source !== "env"
       ? {
-          input: "回复 provider ok",
+          input: testText,
         }
       : isEnvFallback
         ? {
-            message: "回复 provider ok",
+            message: testText,
+            type: input.type,
           }
         : {
             apiKey: input.apiKey.trim(),
             baseUrl: input.baseUrl.trim(),
-            message: "回复 provider ok",
+            format: input.format ?? "mp3",
+            message: testText,
             model: input.model.trim(),
             provider: input.provider.trim(),
             type: input.type,
+            voice: input.voice?.trim(),
           };
 
   const response = await fetch(endpoint, {

@@ -62,6 +62,7 @@ export interface ProviderFormState {
   apiKey: string;
   baseUrl: string;
   enabled: boolean;
+  format?: "mp3" | "wav";
   hasApiKey?: boolean;
   id?: string;
   model: string;
@@ -69,10 +70,14 @@ export interface ProviderFormState {
   provider: string;
   source?: string;
   type: ProviderType;
+  voice?: string;
 }
 
 export interface ProviderTestResult {
+  audioUrl?: string;
+  durationMs?: number;
   latencyMs: number;
+  mimeType?: string;
   providerId?: string;
   providerName?: string;
   sample?: string;

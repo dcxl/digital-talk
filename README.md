@@ -70,6 +70,17 @@ DEFAULT_LLM_API_KEY="your_deepseek_key"
 DEFAULT_LLM_MODEL="deepseek-chat"
 ```
 
+For OpenAI-compatible TTS:
+
+```env
+TTS_PROVIDER=openai-compatible
+DEFAULT_TTS_BASE_URL="https://api.openai.com/v1"
+DEFAULT_TTS_API_KEY="your_tts_key"
+DEFAULT_TTS_MODEL="tts-1"
+DEFAULT_TTS_VOICE="alloy"
+DEFAULT_TTS_FORMAT="mp3"
+```
+
 ## Scripts
 
 - `npm run dev`: start local development server
@@ -99,6 +110,12 @@ docker compose start postgres
 | `DEFAULT_LLM_BASE_URL` | For real LLM | OpenAI-compatible chat completions base URL |
 | `DEFAULT_LLM_API_KEY` | For real LLM | LLM API key, never expose to client |
 | `DEFAULT_LLM_MODEL` | For real LLM | Model name, for example `deepseek-chat` |
+| `TTS_PROVIDER` | No | `mock`, `openai-compatible`, `openai`, or `custom-http` |
+| `DEFAULT_TTS_BASE_URL` | For real TTS | OpenAI-compatible speech base URL |
+| `DEFAULT_TTS_API_KEY` | For real TTS | TTS API key, never expose to client |
+| `DEFAULT_TTS_MODEL` | For real TTS | Speech model, for example `tts-1` |
+| `DEFAULT_TTS_VOICE` | For real TTS | Voice id, for example `alloy` |
+| `DEFAULT_TTS_FORMAT` | No | `mp3` or `wav` |
 | `NEXT_PUBLIC_APP_URL` | No | Public app URL |
 
 Do not commit `.env`.

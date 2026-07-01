@@ -53,8 +53,10 @@ export const providerOptionsByType: Record<
     { label: "Custom", value: "custom" },
   ],
   tts: [
-    { label: "Custom", value: "custom" },
     { label: "OpenAI Compatible", value: "openai-compatible" },
+    { label: "OpenAI", value: "openai" },
+    { label: "Custom HTTP", value: "custom-http" },
+    { label: "Mock", value: "mock" },
     { label: "Local", value: "local" },
   ],
 };
@@ -64,7 +66,7 @@ const defaultModelByType: Record<ProviderType, string> = {
   avatar: "",
   embedding: "text-embedding-3-small",
   llm: "deepseek-chat",
-  tts: "",
+  tts: "tts-1",
 };
 
 export function createBlankProviderForm(type: ProviderType): ProviderFormState {
@@ -76,5 +78,11 @@ export function createBlankProviderForm(type: ProviderType): ProviderFormState {
     name: `New ${type.toUpperCase()} Provider`,
     provider: providerOptionsByType[type][0]?.value ?? "custom",
     type,
+    ...(type === "tts"
+      ? {
+          format: "mp3" as const,
+          voice: "alloy",
+        }
+      : {}),
   };
 }
