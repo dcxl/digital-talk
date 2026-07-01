@@ -104,14 +104,37 @@ Next Digital Human 是一个开源 AI 数字人框架，帮助开发者快速构
 
 ## 5. 页面原型
 
-### 5.1 首页 / 数字人对话页
+### 5.1 Landing Page 项目官网首页
+
+- 项目定位与能力介绍
+- 数字人视觉展示
+- Get Started / GitHub / Docs 入口
+- AI Native、Real-time、Extensible、Production Ready 能力卡片
+
+### 5.2 Login Page 登录页
+
+- GitHub 登录
+- Google 登录
+- Email + Password 登录
+- MVP 可暂时使用默认用户跳过真实登录
+
+### 5.3 Dashboard 仪表盘首页
+
+- Conversations、Knowledge Docs、Avg. Latency、Tokens Today 指标
+- Runtime Status：LLM、TTS、ASR、Embedding Provider 状态
+- Recent Conversations
+- Token Usage 趋势
+- System Info
+
+### 5.4 Conversation 对话页面
 
 核心区域：
 
-- 左侧或中间：Avatar 展示区
+- 左侧：会话列表、搜索、历史入口
+- 中间：Avatar 展示区
 - 右侧或底部：聊天消息区
 - 底部：文本输入、语音输入、发送按钮
-- 顶部：模型选择、会话选择、设置入口
+- 顶部：状态、工具、设置入口
 
 关键状态：
 
@@ -124,14 +147,22 @@ Next Digital Human 是一个开源 AI 数字人框架，帮助开发者快速构
 | interrupted | 用户打断当前播报 |
 | error | 模型、语音或网络调用失败 |
 
-### 5.2 会话页
+### 5.5 History 会话历史页
 
 - 展示历史会话
 - 支持新建会话
 - 支持删除会话
 - 支持继续上下文对话
+- 支持收藏、归档、过滤
 
-### 5.3 知识库页
+### 5.6 Avatar 数字人配置页
+
+- 数字人列表
+- Avatar 预览
+- Driver：Static、Live2D、VRM
+- Voice、Language、Animation、Background 配置
+
+### 5.7 Knowledge 知识库页
 
 - 文档上传
 - 文档列表
@@ -140,13 +171,22 @@ Next Digital Human 是一个开源 AI 数字人框架，帮助开发者快速构
 - 向量化状态
 - 检索测试入口
 
-### 5.4 Provider 配置页
+### 5.8 Prompt 提示词管理页
+
+- System Prompt
+- Chat Prompt
+- Summary Prompt
+- Translate Prompt
+- Custom Prompt
+- 变量管理
+- 版本管理和测试面板
+
+### 5.9 Models 模型管理页
 
 - LLM Provider
+- Embedding Provider
 - TTS Provider
 - ASR Provider
-- Embedding Provider
-- Avatar Provider
 
 每个 Provider 支持：
 
@@ -155,7 +195,37 @@ Next Digital Human 是一个开源 AI 数字人框架，帮助开发者快速构
 - 模型名称
 - 基础连通性测试
 
-### 5.5 工具页
+### 5.10 Playground 调试中心
+
+- Chat 调试
+- Runtime Events
+- Logs
+- Metrics
+- 参数调节
+- Token / Latency 统计
+
+### 5.11 Settings 系统设置页
+
+- General Settings
+- API Keys
+- Providers
+- Workspace
+- Members
+- Billing
+- Security
+- System
+- Data Export
+- Danger Zone
+
+### 5.12 About 关于页
+
+- 项目信息
+- Version
+- License
+- Repository
+- Website
+
+### 5.13 工具页
 
 - 工具列表
 - 工具启用状态
@@ -166,31 +236,34 @@ Next Digital Human 是一个开源 AI 数字人框架，帮助开发者快速构
 
 ```text
 Next Digital Human
-├── Home
-│   ├── Avatar
-│   ├── Chat
-│   └── Input
-├── Conversations
-├── Knowledge Base
-├── Providers
+├── Landing
+├── Login
+├── Dashboard
+├── Conversation
+├── History
+├── Avatar
+├── Knowledge
+├── Prompt
+├── Models
 │   ├── LLM
-│   ├── TTS
-│   ├── ASR
 │   ├── Embedding
-│   └── Avatar
+│   ├── TTS
+│   └── ASR
+├── Playground
 ├── Tools
 ├── Settings
-└── Docs
+├── About
+└── GitHub
 ```
 
 ## 7. 优先级
 
 | 优先级 | 能力 |
 | --- | --- |
-| P0 | 文本聊天、流式输出、基础 Avatar、TTS 播放 |
-| P1 | ASR、RAG、会话历史、Provider 配置 |
-| P2 | Tool Calling、Barge-in、口型同步、文档站 |
-| P3 | 多租户、权限、商业化、复杂工作流 |
+| P0 | Conversation、文本聊天、流式输出、基础 Avatar、TTS 播放 |
+| P1 | History、Knowledge、Models、ASR、RAG、Provider 配置 |
+| P2 | Dashboard、Avatar、Prompt、Playground、Tool Calling、Barge-in |
+| P3 | Landing、Login、About、权限、商业化、复杂工作流 |
 
 ## 8. 成功标准
 
@@ -200,4 +273,3 @@ Next Digital Human
 - Avatar 能根据状态变化做基础动画。
 - Provider 可以替换，不和具体厂商强绑定。
 - 项目结构清晰，适合作为 GitHub 开源项目长期维护。
-

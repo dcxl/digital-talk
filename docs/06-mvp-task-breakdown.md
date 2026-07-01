@@ -24,6 +24,9 @@ MVP 只验证一个核心闭环：
 | M3 | 数字人体验 | Avatar 状态、语音播放 |
 | M4 | 数据持久化 | 会话、消息、配置 |
 | M5 | 开源完善 | README、示例配置、部署文档 |
+| M6 | 页面体系扩展 | Dashboard、History、Knowledge、Models 独立页面 |
+| M7 | 高级工作台 | Avatar、Prompt、Playground、Settings、About |
+| M8 | 官网与登录 | Landing、Login、文档站入口 |
 
 ## 3. M0 项目初始化
 
@@ -296,7 +299,171 @@ types/
 
 - 用户能按文档部署基础版本
 
-## 9. 建议 Issue 拆分
+## 9. M6 页面体系扩展
+
+### 任务 6.1 App Shell 与 Sidebar
+
+交付物：
+
+- 全局 Sidebar
+- 页面标题区
+- GitHub / About / Settings 入口
+- 当前路由高亮
+
+验收：
+
+- Dashboard、Conversation、History、Knowledge、Models 可通过 Sidebar 切换。
+- 移动端 Sidebar 可收起或进入 Drawer。
+
+### 任务 6.2 Dashboard 仪表盘
+
+交付物：
+
+- Conversations 指标
+- Knowledge Docs 指标
+- Avg. Latency 指标
+- Tokens Today 指标
+- Runtime Status
+- Recent Conversations
+
+验收：
+
+- 能从已有数据库读取会话数、文档数。
+- Provider 状态可基于配置和测试结果展示。
+
+### 任务 6.3 History 会话历史独立页
+
+交付物：
+
+- 会话表格
+- 搜索
+- 收藏
+- 归档
+- 删除
+
+验收：
+
+- 支持打开会话进入 Conversation。
+- 删除使用软删除。
+
+### 任务 6.4 Knowledge 知识库独立页
+
+交付物：
+
+- 知识库列表
+- 文档上传
+- 文档表格
+- Chunk 数与处理状态
+- 检索测试面板
+
+验收：
+
+- 上传文本类文档后可检索。
+- 检索结果可被 `/api/chat` 注入 RAG 上下文。
+
+### 任务 6.5 Models 模型管理独立页
+
+交付物：
+
+- LLM / Embedding / TTS / ASR Tabs
+- Provider 列表
+- 配置表单
+- Test Connection
+
+验收：
+
+- 能替代当前 Provider Drawer。
+- API Key 仍只在服务端加密保存。
+
+## 10. M7 高级工作台
+
+### 任务 7.1 Avatar 数字人配置页
+
+交付物：
+
+- Avatar 列表
+- 预览区
+- Driver / Voice / Language / Background 配置
+
+验收：
+
+- Static Avatar 可配置。
+- Live2D / VRM 先作为禁用选项保留。
+
+### 任务 7.2 Prompt 提示词管理页
+
+交付物：
+
+- Prompt 列表
+- Prompt 编辑器
+- 版本管理
+- Variables 面板
+- Test Panel
+
+验收：
+
+- System Prompt 可保存并参与 `/api/chat`。
+- 变量缺失时有校验提示。
+
+### 任务 7.3 Playground 调试中心
+
+交付物：
+
+- Chat 调试
+- Runtime Events
+- Logs
+- Metrics
+- 参数调节
+
+验收：
+
+- 可复用现有 `/api/chat`。
+- 能显示 streaming 事件、Token、Latency。
+
+### 任务 7.4 Settings / About
+
+交付物：
+
+- General Settings
+- Data Export
+- Danger Zone
+- About 项目信息
+
+验收：
+
+- 可导出 conversations 和 knowledge metadata。
+- About 展示版本、License、Repository。
+
+## 11. M8 官网与登录
+
+### 任务 8.1 Landing Page
+
+交付物：
+
+- Hero
+- 数字人视觉
+- 能力卡片
+- GitHub / Docs / Get Started 入口
+
+验收：
+
+- 未登录用户默认进入 Landing。
+- Get Started 进入 Login 或 Dashboard。
+
+### 任务 8.2 Login Page
+
+交付物：
+
+- GitHub OAuth 按钮
+- Google OAuth 按钮
+- Email / Password 表单
+
+验收：
+
+- MVP 可保持默认用户。
+- 后续接入 Auth 时不影响现有数据模型。
+
+## 12. 建议 Issue 拆分
 
 | Issue | 标题 | 优先级 |
 | --- | --- | --- |
@@ -315,11 +482,19 @@ types/
 | 13 | Add Provider config page | P1 |
 | 14 | Add README quick start | P1 |
 | 15 | Add deployment guide | P1 |
+| 16 | Add app shell and sidebar navigation | P1 |
+| 17 | Add dashboard overview page | P1 |
+| 18 | Add standalone history page | P1 |
+| 19 | Add standalone knowledge page | P1 |
+| 20 | Add standalone models page | P1 |
+| 21 | Add avatar configuration page | P2 |
+| 22 | Add prompt management page | P2 |
+| 23 | Add playground debug center | P2 |
+| 24 | Add settings and about pages | P2 |
+| 25 | Add landing and login pages | P3 |
 
-## 10. 不进入 MVP 的任务
+## 13. 不进入 MVP 的任务
 
-- ASR 语音输入
-- RAG 知识库
 - Tool Calling
 - Live2D
 - VRM / Three.js
@@ -329,7 +504,7 @@ types/
 
 这些能力进入 Beta 或 v1.0。
 
-## 11. MVP 完成定义
+## 14. MVP 完成定义
 
 MVP 完成时必须满足：
 
@@ -342,4 +517,3 @@ MVP 完成时必须满足：
 - 会话和消息能保存。
 - 至少支持一个 OpenAI Compatible LLM Provider。
 - 代码结构足够清晰，能继续扩展 ASR、RAG、Tool Calling。
-
