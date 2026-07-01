@@ -4,12 +4,16 @@ import {
   Bot,
   BrainCircuit,
   CircleStop,
+  CheckCircle2,
   Mic,
   Play,
+  RefreshCw,
   Send,
   Settings,
   Sparkles,
   Volume2,
+  X,
+  XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChatMessage, RuntimeEvent, RuntimeState } from "./types";
@@ -19,6 +23,18 @@ const suggestions = [
   "如何接入一个新的 LLM Provider？",
   "MVP 第一阶段应该先做什么？",
 ];
+
+interface ProviderSummary {
+  id: string;
+  type: string;
+  provider: string;
+  name: string;
+  enabled: boolean;
+  baseUrl?: string | null;
+  model?: string | null;
+  hasApiKey: boolean;
+  source?: string;
+}
 
 const stateLabel: Record<RuntimeState, string> = {
   idle: "待机",
@@ -60,6 +76,12 @@ export function DigitalHumanShell() {
   const [state, setState] = useState<RuntimeState>("idle");
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [input, setInput] = useState("");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [providers, setProviders] = useState<ProviderSummary[]>([]);
+  const [providerStatus, setProviderStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [providerStatusText, setProviderStatusText] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -87,6 +109,77 @@ export function DigitalHumanShell() {
     if (state === "error") return "服务端调用异常，可重试";
     return "准备接收新的问题";
   }, [state]);
+
+  async function loadProviders() {
+    setProviderStatus("loading");
+
+    try {
+      const response = await fetch("/api/providers");
+      const payload = (await response.json()) as {
+        data?: {
+          providers?: ProviderSummary[];
+        };
+        error?: {
+          message?: string;
+        };
+      };
+
+      if (!response.ok) throw new Error(payload.error?.message);
+
+      setProviders(payload.data?.providers ?? []);
+      setProviderStatus("success");
+      setProviderStatusText("配置已加载");
+    } catch (error) {
+      setProviderStatus("error");
+      setProviderStatusText(
+        error instanceof Error ? error.message : "加载 Provider 失败",
+      );
+    }
+  }
+
+  async function testProvider() {
+    setProviderStatus("loading");
+
+    try {
+      const response = await fetch("/api/providers/test", {
+        body: JSON.stringify({
+          message: "回复 provider ok",
+          type: "llm",
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
+      const payload = (await response.json()) as {
+        data?: {
+          result?: {
+            latencyMs: number;
+            sample: string;
+          };
+        };
+        error?: {
+          message?: string;
+        };
+      };
+
+      if (!response.ok) throw new Error(payload.error?.message);
+
+      setProviderStatus("success");
+      setProviderStatusText(
+        `测试通过 ${payload.data?.result?.latencyMs ?? 0}ms`,
+      );
+    } catch (error) {
+      setProviderStatus("error");
+      setProviderStatusText(
+        error instanceof Error ? error.message : "Provider 测试失败",
+      );
+    }
+  }
+
+  useEffect(() => {
+    if (isSettingsOpen) void loadProviders();
+  }, [isSettingsOpen]);
 
   function stopAudio() {
     const audio = audioRef.current;
@@ -333,7 +426,11 @@ export function DigitalHumanShell() {
               <Sparkles size={16} />
               OpenAI Compatible
             </button>
-            <button className="flex size-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm">
+            <button
+              className="flex size-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm"
+              onClick={() => setIsSettingsOpen(true)}
+              title="设置"
+            >
               <Settings size={16} />
             </button>
           </div>
@@ -503,6 +600,109 @@ export function DigitalHumanShell() {
           </div>
         </section>
       </section>
+
+      {isSettingsOpen ? (
+        <div className="fixed inset-0 z-50 bg-slate-950/30">
+          <aside className="ml-auto flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
+            <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-950">
+                  Provider Settings
+                </h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  当前 LLM 配置与连通性
+                </p>
+              </div>
+              <button
+                className="flex size-9 items-center justify-center rounded-md border border-slate-200 text-slate-600"
+                onClick={() => setIsSettingsOpen(false)}
+                title="关闭"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              {providers.map((provider) => (
+                <section
+                  key={provider.id}
+                  className="rounded-lg border border-slate-200 p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-950">
+                        {provider.name}
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {provider.provider} · {provider.model ?? "未配置模型"}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+                      {provider.enabled ? "启用" : "停用"}
+                    </span>
+                  </div>
+
+                  <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <dt className="text-slate-500">类型</dt>
+                      <dd className="mt-1 font-medium text-slate-800">
+                        {provider.type}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-500">API Key</dt>
+                      <dd className="mt-1 font-medium text-slate-800">
+                        {provider.hasApiKey ? "已配置" : "未配置"}
+                      </dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-slate-500">Base URL</dt>
+                      <dd className="mt-1 break-all font-medium text-slate-800">
+                        {provider.baseUrl ?? "未配置"}
+                      </dd>
+                    </div>
+                  </dl>
+                </section>
+              ))}
+
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
+                  {providerStatus === "success" ? (
+                    <CheckCircle2 size={16} className="text-emerald-600" />
+                  ) : providerStatus === "error" ? (
+                    <XCircle size={16} className="text-red-600" />
+                  ) : (
+                    <RefreshCw
+                      size={16}
+                      className={providerStatus === "loading" ? "animate-spin" : ""}
+                    />
+                  )}
+                  <span>{providerStatusText || "等待操作"}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 border-t border-slate-200 p-4">
+              <button
+                className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md border border-slate-200 text-sm text-slate-700 disabled:opacity-50"
+                disabled={providerStatus === "loading"}
+                onClick={loadProviders}
+              >
+                <RefreshCw size={16} />
+                刷新
+              </button>
+              <button
+                className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md bg-slate-950 text-sm text-white disabled:opacity-50"
+                disabled={providerStatus === "loading"}
+                onClick={testProvider}
+              >
+                <Play size={16} />
+                测试
+              </button>
+            </div>
+          </aside>
+        </div>
+      ) : null}
     </main>
   );
 }
