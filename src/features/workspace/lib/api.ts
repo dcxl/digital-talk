@@ -4,7 +4,9 @@ import type {
   KnowledgeBaseItem,
   KnowledgeDocumentItem,
   KnowledgeSearchResult,
+  ProviderFormState,
   ProviderItem,
+  ProviderTestResult,
   WorkspaceSnapshot,
 } from "../types";
 
@@ -94,6 +96,106 @@ export async function readKnowledgeBases() {
   return payload?.data?.knowledgeBases ?? [];
 }
 
+export async function readProviders() {
+  const payload =
+    await fetchJson<{ data?: { providers?: ProviderItem[] } }>("/api/providers");
+  return payload?.data?.providers ?? [];
+}
+
+function getApiErrorMessage(
+  payload: { error?: { message?: string } },
+  fallback: string,
+) {
+  return payload.error?.message ?? fallback;
+}
+
+export async function saveProviderConfigRequest(input: ProviderFormState) {
+  const body: Record<string, unknown> = {
+    type: input.type,
+    provider: input.provider.trim(),
+    name: input.name.trim(),
+    baseUrl: input.baseUrl.trim(),
+    model: input.model.trim(),
+    enabled: input.enabled,
+  };
+
+  if (input.id && input.source !== "env") body.id = input.id;
+  if (input.apiKey.trim()) body.apiKey = input.apiKey.trim();
+
+  const response = await fetch("/api/providers", {
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      provider?: ProviderItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.provider) {
+    throw new Error(getApiErrorMessage(payload, "保存 Provider 失败"));
+  }
+
+  return payload.data.provider;
+}
+
+export async function testProviderConfigRequest(input: ProviderFormState) {
+  if (input.type !== "llm") {
+    throw new Error("当前仅支持 LLM Provider 测试");
+  }
+
+  const isEnvFallback = input.source === "env" && !input.apiKey.trim();
+  const endpoint =
+    input.id && input.source !== "env"
+      ? `/api/providers/${input.id}/test`
+      : "/api/providers/test";
+  const body =
+    input.id && input.source !== "env"
+      ? {
+          input: "回复 provider ok",
+        }
+      : isEnvFallback
+        ? {
+            message: "回复 provider ok",
+          }
+        : {
+            apiKey: input.apiKey.trim(),
+            baseUrl: input.baseUrl.trim(),
+            message: "回复 provider ok",
+            model: input.model.trim(),
+            provider: input.provider.trim(),
+            type: input.type,
+          };
+
+  const response = await fetch(endpoint, {
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      result?: ProviderTestResult;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.result) {
+    throw new Error(getApiErrorMessage(payload, "Provider 测试失败"));
+  }
+
+  return payload.data.result;
+}
+
 export async function readKnowledgeDocuments(knowledgeBaseId: string) {
   const payload =
     await fetchJson<{ data?: { documents?: KnowledgeDocumentItem[] } }>(
@@ -120,7 +222,7 @@ export async function createKnowledgeBaseRequest(name: string) {
   };
 
   if (!response.ok || !payload.data?.knowledgeBase) {
-    throw new Error(payload.error?.message ?? "创建知识库失败");
+    throw new Error(getApiErrorMessage(payload, "创建知识库失败"));
   }
 
   return payload.data.knowledgeBase;
@@ -143,9 +245,7 @@ export async function uploadKnowledgeDocumentRequest(
     };
   };
 
-  if (!response.ok) {
-    throw new Error(payload.error?.message ?? "上传文档失败");
-  }
+  if (!response.ok) throw new Error(getApiErrorMessage(payload, "上传文档失败"));
 }
 
 export async function searchKnowledgeBaseRequest(
@@ -171,9 +271,7 @@ export async function searchKnowledgeBaseRequest(
     };
   };
 
-  if (!response.ok) {
-    throw new Error(payload.error?.message ?? "检索失败");
-  }
+  if (!response.ok) throw new Error(getApiErrorMessage(payload, "检索失败"));
 
   return payload.data?.results ?? [];
 }

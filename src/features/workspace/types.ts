@@ -37,14 +37,46 @@ export interface KnowledgeSearchResult {
   tokenCount?: number | null;
 }
 
+export type AsyncStatus = "idle" | "loading" | "success" | "error";
+
+export type ProviderType = "llm" | "embedding" | "tts" | "asr" | "avatar";
+
 export interface ProviderItem {
   id: string;
-  type: string;
+  type: ProviderType;
   provider: string;
   name: string;
   enabled: boolean;
+  baseUrl?: string | null;
+  createdAt?: string;
+  hasApiKey?: boolean;
+  lastTestAt?: string | null;
+  lastTestStatus?: string | null;
   model?: string | null;
+  options?: unknown;
   source?: string;
+  updatedAt?: string;
+}
+
+export interface ProviderFormState {
+  apiKey: string;
+  baseUrl: string;
+  enabled: boolean;
+  hasApiKey?: boolean;
+  id?: string;
+  model: string;
+  name: string;
+  provider: string;
+  source?: string;
+  type: ProviderType;
+}
+
+export interface ProviderTestResult {
+  latencyMs: number;
+  providerId?: string;
+  providerName?: string;
+  sample?: string;
+  success: boolean;
 }
 
 export interface WorkspaceSnapshot {
