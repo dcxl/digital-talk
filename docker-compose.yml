@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: digital-talk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: digital_talk
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - digital-talk-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d digital_talk"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  digital-talk-postgres-data:
