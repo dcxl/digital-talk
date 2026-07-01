@@ -5,18 +5,13 @@ import { AppHeader } from "./components/app-header";
 import { AvatarStage } from "./components/avatar-stage";
 import { ConversationPanel } from "./components/conversation-panel";
 import { ProviderSettingsDrawer } from "./components/provider-settings-drawer";
-import { welcomeMessage } from "./constants";
+import { useAudioPlayback } from "./hooks/use-audio-playback";
+import { useConversationHistory } from "./hooks/use-conversation-history";
 import { useKnowledgeBases } from "./hooks/use-knowledge-bases";
 import { useProviderSettings } from "./hooks/use-provider-settings";
+import { useVoiceInput } from "./hooks/use-voice-input";
 import { parseRuntimeEvent } from "./runtime-stream";
-import type {
-  AsyncStatus,
-  ChatMessage,
-  ConversationDetail,
-  ConversationSummary,
-  RuntimeEvent,
-  RuntimeState,
-} from "./types";
+import type { ChatMessage, RuntimeEvent, RuntimeState } from "./types";
 
 interface DigitalHumanShellProps {
   embedded?: boolean;
@@ -24,13 +19,8 @@ interface DigitalHumanShellProps {
 
 export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) {
   const [state, setState] = useState<RuntimeState>("idle");
-  const [conversationId, setConversationId] = useState<string | undefined>();
   const [input, setInput] = useState("");
-  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
-  const [historyStatus, setHistoryStatus] =
-    useState<Exclude<AsyncStatus, "success">>("idle");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
   const {
     createKnowledgeBase,
     knowledgeBases,
@@ -60,29 +50,51 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
     testProvider,
     updateProviderForm,
   } = useProviderSettings();
-  const abortRef = useRef<AbortController | null>(null);
-  const activeAssistantRef = useRef<string | null>(null);
-  const persistedAssistantRef = useRef<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-
   const canSend = state === "idle" || state === "speaking" || state === "error";
   const isBusy = ["thinking", "streaming", "synthesizing", "transcribing"].includes(
     state,
   );
+  const { audioRef, handleAudioEnded, playAudio, stopAudio } = useAudioPlayback({
+    setState,
+  });
+  const { stopListening, toggleListening } = useVoiceInput({
+    canSend,
+    setInput,
+    setState,
+    state,
+    stopAudio,
+  });
+  const {
+    conversationId,
+    conversations,
+    deleteCurrentConversation,
+    historyStatus,
+    loadConversations,
+    messages,
+    openConversation,
+    setConversationId,
+    setMessages,
+    startNewConversation,
+  } = useConversationHistory({
+    canSend,
+    setSelectedKnowledgeBaseId,
+    setState,
+    stopAudio,
+  });
+  const abortRef = useRef<AbortController | null>(null);
+  const activeAssistantRef = useRef<string | null>(null);
+  const persistedAssistantRef = useRef<string | null>(null);
+
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
-      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
   useEffect(() => {
     void loadConversations();
     void loadKnowledgeBases();
-  }, [loadKnowledgeBases]);
+  }, [loadConversations, loadKnowledgeBases]);
 
   useEffect(() => {
     if (selectedKnowledgeBaseId) {
@@ -102,219 +114,9 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
     return "准备接收新的问题";
   }, [state]);
 
-  async function loadConversations() {
-    setHistoryStatus("loading");
-
-    try {
-      const response = await fetch("/api/conversations");
-      const payload = (await response.json()) as {
-        data?: {
-          conversations?: ConversationSummary[];
-        };
-      };
-
-      if (!response.ok) throw new Error("Failed to load conversations");
-
-      setConversations(payload.data?.conversations ?? []);
-      setHistoryStatus("idle");
-    } catch {
-      setHistoryStatus("error");
-    }
-  }
-
-  async function openConversation(nextConversationId: string) {
-    if (!canSend) return;
-
-    stopAudio();
-    setHistoryStatus("loading");
-
-    try {
-      const response = await fetch(`/api/conversations/${nextConversationId}`);
-      const payload = (await response.json()) as {
-        data?: {
-          conversation?: ConversationDetail | null;
-        };
-      };
-
-      if (!response.ok || !payload.data?.conversation) {
-        throw new Error("Conversation not found");
-      }
-
-      setConversationId(payload.data.conversation.id);
-      setSelectedKnowledgeBaseId(payload.data.conversation.knowledgeBaseId ?? "");
-      setMessages(
-        payload.data.conversation.messages
-          .filter(
-            (message) => message.role === "user" || message.role === "assistant",
-          )
-          .map((message) => ({
-            id: message.id,
-            role: message.role as ChatMessage["role"],
-            content: message.content,
-            status: message.status,
-          })),
-      );
-      setState("idle");
-      setHistoryStatus("idle");
-    } catch {
-      setHistoryStatus("error");
-    }
-  }
-
-  function startNewConversation() {
-    if (!canSend) return;
-
-    stopAudio();
-    setConversationId(undefined);
-    setMessages([welcomeMessage]);
-    setState("idle");
-  }
-
-  async function deleteCurrentConversation() {
-    if (!conversationId || !canSend) return;
-
-    setHistoryStatus("loading");
-
-    try {
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: "DELETE",
-      });
-      const payload = (await response.json()) as {
-        error?: {
-          message?: string;
-        };
-      };
-
-      if (!response.ok) throw new Error(payload.error?.message);
-
-      setConversationId(undefined);
-      setMessages([welcomeMessage]);
-      setHistoryStatus("idle");
-      await loadConversations();
-    } catch {
-      setHistoryStatus("error");
-    }
-  }
-
-  async function transcribeAudio(audio: Blob) {
-    setState("transcribing");
-
-    try {
-      const formData = new FormData();
-      formData.append("audio", audio, "recording.webm");
-      formData.append("language", "zh");
-
-      const response = await fetch("/api/asr", {
-        body: formData,
-        method: "POST",
-      });
-      const payload = (await response.json()) as {
-        data?: {
-          text?: string;
-        };
-        error?: {
-          message?: string;
-        };
-      };
-
-      if (!response.ok) throw new Error(payload.error?.message);
-
-      setInput(payload.data?.text ?? "");
-      setState("idle");
-    } catch (error) {
-      setState("error");
-      setInput(error instanceof Error ? error.message : "ASR 转写失败");
-    }
-  }
-
-  async function startListening() {
-    if (state === "speaking") stopAudio();
-
-    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-      setState("error");
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      audioChunksRef.current = [];
-      mediaStreamRef.current = stream;
-      mediaRecorderRef.current = recorder;
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) audioChunksRef.current.push(event.data);
-      };
-      recorder.onstop = () => {
-        stream.getTracks().forEach((track) => track.stop());
-        mediaStreamRef.current = null;
-        mediaRecorderRef.current = null;
-
-        const audio = new Blob(audioChunksRef.current, {
-          type: recorder.mimeType || "audio/webm",
-        });
-        audioChunksRef.current = [];
-
-        if (audio.size > 0) {
-          void transcribeAudio(audio);
-        } else {
-          setState("idle");
-        }
-      };
-
-      recorder.start();
-      setState("listening");
-    } catch {
-      setState("error");
-    }
-  }
-
-  function stopListening() {
-    const recorder = mediaRecorderRef.current;
-    if (!recorder || recorder.state === "inactive") return;
-
-    recorder.stop();
-  }
-
-  function toggleListening() {
-    if (state === "listening") {
-      stopListening();
-      return;
-    }
-
-    if (canSend) void startListening();
-  }
-
   useEffect(() => {
     if (isSettingsOpen) void loadProviders();
   }, [isSettingsOpen, loadProviders]);
-
-  function stopAudio() {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    audio.pause();
-    audio.removeAttribute("src");
-    audio.load();
-  }
-
-  async function playAudio(audioUrl: string) {
-    const audio = audioRef.current;
-    if (!audio) {
-      setState("speaking");
-      window.setTimeout(() => setState("idle"), 1200);
-      return;
-    }
-
-    audio.src = audioUrl;
-    setState("speaking");
-
-    try {
-      await audio.play();
-    } catch {
-      setState("idle");
-    }
-  }
 
   function applyRuntimeEvent(event: RuntimeEvent, assistantId: string) {
     if (event.type === "assistant.created") {
@@ -569,12 +371,8 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
       <audio
         ref={audioRef}
         className="hidden"
-        onEnded={() =>
-          setState((current) => (current === "speaking" ? "idle" : current))
-        }
-        onError={() =>
-          setState((current) => (current === "speaking" ? "idle" : current))
-        }
+        onEnded={handleAudioEnded}
+        onError={handleAudioEnded}
       />
 
       {embedded ? null : (

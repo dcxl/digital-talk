@@ -1,4 +1,4 @@
-import { WorkspacePlaceholderPage } from "@/features/workspace/components/workspace-pages";
+import { WorkspacePlaceholderPage } from "@/features/workspace/pages/placeholder-page";
 
 export default function AboutRoute() {
   return (

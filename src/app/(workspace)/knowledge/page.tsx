@@ -1,4 +1,4 @@
-import { KnowledgePage } from "@/features/workspace/components/workspace-pages";
+import { KnowledgePage } from "@/features/workspace/pages/knowledge-page";
 
 export default function KnowledgeRoute() {
   return <KnowledgePage />;
