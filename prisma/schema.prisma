@@ -41,12 +41,27 @@ enum TestStatus {
   failed
 }
 
+enum KnowledgeBaseStatus {
+  active
+  disabled
+  deleted
+}
+
+enum DocumentStatus {
+  uploaded
+  parsing
+  chunked
+  embedded
+  failed
+}
+
 model User {
   id              String           @id @default(cuid())
   name            String?
   email           String?          @unique
   avatarUrl       String?
   conversations   Conversation[]
+  knowledgeBases  KnowledgeBase[]
   providerConfigs ProviderConfig[]
   appSettings     AppSetting[]
   createdAt       DateTime         @default(now())
@@ -62,12 +77,14 @@ model Conversation {
   status          ConversationStatus @default(active)
   modelProviderId String?
   knowledgeBaseId String?
+  knowledgeBase   KnowledgeBase?     @relation(fields: [knowledgeBaseId], references: [id], onDelete: SetNull)
   lastMessageAt   DateTime?
   messages        Message[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
   @@index([userId])
+  @@index([knowledgeBaseId])
   @@index([lastMessageAt])
   @@index([status])
 }
@@ -90,6 +107,64 @@ model Message {
   @@index([conversationId])
   @@index([role])
   @@index([createdAt])
+}
+
+model KnowledgeBase {
+  id            String              @id @default(cuid())
+  userId        String
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  status        KnowledgeBaseStatus @default(active)
+  documentCount Int                 @default(0)
+  chunkCount    Int                 @default(0)
+  conversations Conversation[]
+  documents     Document[]
+  chunks        DocumentChunk[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Document {
+  id              String          @id @default(cuid())
+  knowledgeBaseId String
+  knowledgeBase   KnowledgeBase   @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  name            String
+  originalName    String
+  mimeType        String
+  size            Int
+  storageKey      String
+  status          DocumentStatus  @default(uploaded)
+  errorMessage    String?
+  chunkCount      Int             @default(0)
+  chunks          DocumentChunk[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([knowledgeBaseId])
+  @@index([status])
+}
+
+model DocumentChunk {
+  id              String        @id @default(cuid())
+  documentId      String
+  document        Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  knowledgeBaseId String
+  knowledgeBase   KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  content         String
+  tokenCount      Int?
+  chunkIndex      Int
+  embedding       Json?
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+  @@index([knowledgeBaseId])
 }
 
 model ProviderConfig {
