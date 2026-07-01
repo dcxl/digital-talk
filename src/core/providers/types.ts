@@ -1,3 +1,5 @@
+import type { RuntimeState } from "@/core/runtime/events";
+
 export type ProviderCapability = "llm" | "tts" | "avatar" | "asr";
 
 export type ProviderHealth = "unknown" | "ready" | "degraded" | "down";
@@ -8,6 +10,13 @@ export interface ProviderDescriptor {
   capability: ProviderCapability;
   version?: string;
   health?: ProviderHealth;
+}
+
+export interface ProviderError {
+  code: string;
+  message: string;
+  retryable: boolean;
+  details?: Record<string, unknown>;
 }
 
 export type LLMRole = "system" | "user" | "assistant" | "tool";
@@ -48,4 +57,41 @@ export type LLMChatChunk =
 export interface LLMProvider extends ProviderDescriptor {
   capability: "llm";
   chat(input: LLMChatInput): AsyncIterable<LLMChatChunk>;
+}
+
+export interface TTSInput {
+  text: string;
+  voice?: string;
+  format?: "mp3" | "wav";
+  signal?: AbortSignal;
+}
+
+export interface TTSResult {
+  audioUrl: string;
+  mimeType: string;
+  durationMs: number;
+  marks?: Array<{
+    timeMs: number;
+    value: string;
+  }>;
+}
+
+export interface TTSProvider extends ProviderDescriptor {
+  capability: "tts";
+  synthesize(input: TTSInput): Promise<TTSResult>;
+}
+
+export interface AvatarStateInput {
+  state: RuntimeState;
+  reason?: string;
+}
+
+export interface AvatarStateResult {
+  state: RuntimeState;
+  updatedAt: string;
+}
+
+export interface AvatarProvider extends ProviderDescriptor {
+  capability: "avatar";
+  setState(input: AvatarStateInput): Promise<AvatarStateResult>;
 }

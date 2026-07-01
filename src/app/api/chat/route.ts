@@ -3,33 +3,14 @@ import {
   encodeRuntimeEvent,
   type RuntimeEvent,
 } from "@/core/runtime/events";
+import { getAvatarProvider } from "@/providers/avatar";
 import { getLLMProvider } from "@/providers/llm";
+import { getTTSProvider } from "@/providers/tts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const encoder = new TextEncoder();
-
-function wait(ms: number, signal: AbortSignal) {
-  return new Promise<void>((resolve, reject) => {
-    if (signal.aborted) {
-      reject(new Error("aborted"));
-      return;
-    }
-
-    const timer = globalThis.setTimeout(() => {
-      signal.removeEventListener("abort", onAbort);
-      resolve();
-    }, ms);
-
-    function onAbort() {
-      globalThis.clearTimeout(timer);
-      reject(new Error("aborted"));
-    }
-
-    signal.addEventListener("abort", onAbort, { once: true });
-  });
-}
 
 function enqueue(
   controller: ReadableStreamDefaultController<Uint8Array>,
@@ -40,10 +21,12 @@ function enqueue(
 
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as {
+    enableTTS?: unknown;
     message?: unknown;
     conversationId?: unknown;
   } | null;
   const message = typeof body?.message === "string" ? body.message.trim() : "";
+  const enableTTS = body?.enableTTS !== false;
 
   if (!message) {
     return Response.json(
@@ -63,6 +46,9 @@ export async function POST(request: NextRequest) {
 
       try {
         const llmProvider = getLLMProvider();
+        const ttsProvider = getTTSProvider();
+        const avatarProvider = getAvatarProvider();
+        let assistantText = "";
 
         enqueue(controller, {
           type: "assistant.created",
@@ -78,6 +64,10 @@ export async function POST(request: NextRequest) {
           state: "thinking",
           reason: "request_received",
         });
+        await avatarProvider.setState({
+          state: "thinking",
+          reason: "request_received",
+        });
 
         for await (const chunk of llmProvider.chat({
           conversationId:
@@ -90,10 +80,20 @@ export async function POST(request: NextRequest) {
           if (request.signal.aborted) return;
 
           if (chunk.type === "text.delta") {
+            assistantText += chunk.text;
             enqueue(controller, {
               type: "text.delta",
               messageId: assistantId,
               text: chunk.text,
+            });
+          }
+
+          if (chunk.type === "usage") {
+            enqueue(controller, {
+              type: "usage",
+              inputTokens: chunk.usage.promptTokens,
+              outputTokens: chunk.usage.completionTokens,
+              totalTokens: chunk.usage.totalTokens,
             });
           }
         }
@@ -104,22 +104,52 @@ export async function POST(request: NextRequest) {
           type: "text.done",
           messageId: assistantId,
         });
-        enqueue(controller, {
-          type: "tts.started",
-          messageId: assistantId,
-        });
 
-        await wait(520, request.signal);
+        if (enableTTS) {
+          enqueue(controller, {
+            type: "tts.started",
+            messageId: assistantId,
+          });
 
-        enqueue(controller, {
-          type: "tts.done",
-          messageId: assistantId,
-        });
-        enqueue(controller, {
-          type: "avatar.state",
-          state: "speaking",
-          reason: "tts_ready",
-        });
+          try {
+            const ttsResult = await ttsProvider.synthesize({
+              text: assistantText,
+              signal: request.signal,
+            });
+
+            enqueue(controller, {
+              type: "tts.done",
+              messageId: assistantId,
+              audioUrl: ttsResult.audioUrl,
+              durationMs: ttsResult.durationMs,
+              mimeType: ttsResult.mimeType,
+            });
+            await avatarProvider.setState({
+              state: "speaking",
+              reason: "tts_ready",
+            });
+            enqueue(controller, {
+              type: "avatar.state",
+              state: "speaking",
+              reason: "tts_ready",
+            });
+          } catch (error) {
+            if (!request.signal.aborted) {
+              enqueue(controller, {
+                type: "tts.failed",
+                messageId: assistantId,
+                message:
+                  error instanceof Error ? error.message : "TTS request failed",
+                retryable: true,
+              });
+              await avatarProvider.setState({
+                state: "idle",
+                reason: "tts_failed",
+              });
+            }
+          }
+        }
+
         enqueue(controller, {
           type: "done",
           messageId: assistantId,

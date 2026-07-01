@@ -70,6 +70,7 @@ export function DigitalHumanShell() {
   ]);
   const abortRef = useRef<AbortController | null>(null);
   const activeAssistantRef = useRef<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const canSend = state === "idle" || state === "speaking" || state === "error";
   const isBusy = ["thinking", "streaming", "synthesizing"].includes(state);
@@ -85,6 +86,33 @@ export function DigitalHumanShell() {
     if (state === "error") return "服务端调用异常，可重试";
     return "准备接收新的问题";
   }, [state]);
+
+  function stopAudio() {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.pause();
+    audio.removeAttribute("src");
+    audio.load();
+  }
+
+  async function playAudio(audioUrl: string) {
+    const audio = audioRef.current;
+    if (!audio) {
+      setState("speaking");
+      window.setTimeout(() => setState("idle"), 1200);
+      return;
+    }
+
+    audio.src = audioUrl;
+    setState("speaking");
+
+    try {
+      await audio.play();
+    } catch {
+      setState("idle");
+    }
+  }
 
   function applyRuntimeEvent(event: RuntimeEvent, assistantId: string) {
     if (event.type === "text.delta") {
@@ -120,10 +148,19 @@ export function DigitalHumanShell() {
     }
 
     if (event.type === "tts.done") {
-      setState("speaking");
-      window.setTimeout(() => {
-        setState((current) => (current === "speaking" ? "idle" : current));
-      }, 1800);
+      if (event.audioUrl) {
+        void playAudio(event.audioUrl);
+      } else {
+        setState("speaking");
+        window.setTimeout(() => {
+          setState((current) => (current === "speaking" ? "idle" : current));
+        }, event.durationMs ?? 1200);
+      }
+      return;
+    }
+
+    if (event.type === "tts.failed") {
+      setState("idle");
       return;
     }
 
@@ -178,6 +215,7 @@ export function DigitalHumanShell() {
     const content = text.trim();
     if (!content || !canSend) return;
 
+    if (state === "speaking") stopAudio();
     abortRef.current?.abort();
     setInput("");
 
@@ -258,12 +296,19 @@ export function DigitalHumanShell() {
   }
 
   function interrupt() {
+    stopAudio();
     abortRef.current?.abort();
     markInterrupted(activeAssistantRef.current ?? undefined);
   }
 
   return (
     <main className="min-h-screen bg-[#f7f8fb]">
+      <audio
+        ref={audioRef}
+        className="hidden"
+        onEnded={() => setState((current) => (current === "speaking" ? "idle" : current))}
+        onError={() => setState((current) => (current === "speaking" ? "idle" : current))}
+      />
       <header className="border-b border-slate-200 bg-white/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">

@@ -50,6 +50,20 @@ export type RuntimeEvent =
       type: "tts.done";
       messageId: string;
       audioUrl?: string;
+      durationMs?: number;
+      mimeType?: string;
+    }
+  | {
+      type: "tts.failed";
+      messageId: string;
+      message: string;
+      retryable: boolean;
+    }
+  | {
+      type: "usage";
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
     }
   | {
       type: "done";
