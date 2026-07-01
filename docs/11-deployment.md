@@ -55,5 +55,7 @@ npm run db:migrate
 - `npm run lint` 通过。
 - `npm run test` 通过。
 - `npm run build` 通过。
+- `/` Landing Page 可打开。
+- `/login` 可进入 Dashboard。
 - `/api/chat` 可流式返回。
 - Provider 测试接口可用。

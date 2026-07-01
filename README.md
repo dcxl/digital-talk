@@ -21,7 +21,7 @@ It is designed for building AI applications with digital avatars, streaming conv
 
 ## Current Status
 
-This repository is in MVP implementation. The current app includes streaming chat, DeepSeek/OpenAI-compatible Provider support, mock TTS playback, static Avatar state, Prisma persistence, and conversation history.
+This repository is in MVP implementation. The current app includes a landing page, MVP login entry, streaming chat, DeepSeek/OpenAI-compatible Provider support, mock TTS playback, static Avatar state, Prisma persistence, conversation history, knowledge management, prompt management, avatar configuration, provider management, playground, settings, and about pages.
 
 ## Quick Start
 
@@ -35,6 +35,13 @@ npm run dev
 ```
 
 Open http://127.0.0.1:3000.
+
+Default routes:
+
+- `/`: landing page
+- `/login`: MVP login entry
+- `/dashboard`: workspace overview
+- `/conversation`: digital human chat
 
 Use this local database URL in `.env`:
 
