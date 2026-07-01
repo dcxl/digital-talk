@@ -7,6 +7,7 @@ import {
   XCircle,
 } from "lucide-react";
 import type { AsyncStatus, ProviderFormState } from "../types";
+import { bailianCosyVoiceDefaults } from "../lib/provider-defaults";
 import { providerOptionsByType } from "./constants";
 
 interface ProviderConfigFormProps {
@@ -40,6 +41,33 @@ function StatusIcon({ status }: { status: AsyncStatus }) {
   return null;
 }
 
+function isBailianCosyVoice(provider: string) {
+  return provider === "bailian-cosyvoice";
+}
+
+function buildProviderPatch(
+  form: ProviderFormState,
+  provider: string,
+): Partial<ProviderFormState> {
+  const patch: Partial<ProviderFormState> = { provider };
+
+  if (form.type !== "tts" || !isBailianCosyVoice(provider)) return patch;
+
+  return {
+    ...patch,
+    baseUrl: form.baseUrl || bailianCosyVoiceDefaults.baseUrl,
+    format: form.format ?? "mp3",
+    model:
+      form.model && form.model !== "tts-1"
+        ? form.model
+        : bailianCosyVoiceDefaults.model,
+    voice:
+      form.voice && form.voice !== "alloy"
+        ? form.voice
+        : bailianCosyVoiceDefaults.voice,
+  };
+}
+
 export function ProviderConfigForm({
   form,
   isBusy,
@@ -53,6 +81,7 @@ export function ProviderConfigForm({
   const canSave = Boolean(form.name.trim() && form.provider.trim()) && !isBusy;
   const canTest = (form.type === "llm" || form.type === "tts") && !isBusy;
   const isTTS = form.type === "tts";
+  const isCosyVoice = isTTS && isBailianCosyVoice(form.provider);
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -98,7 +127,9 @@ export function ProviderConfigForm({
           Provider
           <select
             className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
-            onChange={(event) => onChange({ provider: event.target.value })}
+            onChange={(event) =>
+              onChange(buildProviderPatch(form, event.target.value))
+            }
             value={form.provider}
           >
             {providerOptions.map((option) => (
@@ -115,7 +146,11 @@ export function ProviderConfigForm({
             className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ baseUrl: event.target.value })}
             placeholder={
-              isTTS ? "https://api.openai.com/v1" : "https://api.deepseek.com/v1"
+              isCosyVoice
+                ? bailianCosyVoiceDefaults.baseUrl
+                : isTTS
+                  ? "https://api.openai.com/v1"
+                  : "https://api.deepseek.com/v1"
             }
             value={form.baseUrl}
           />
@@ -126,7 +161,13 @@ export function ProviderConfigForm({
           <input
             className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ model: event.target.value })}
-            placeholder={isTTS ? "tts-1" : "deepseek-chat"}
+            placeholder={
+              isCosyVoice
+                ? bailianCosyVoiceDefaults.model
+                : isTTS
+                  ? "tts-1"
+                  : "deepseek-chat"
+            }
             value={form.model}
           />
         </label>
@@ -138,7 +179,9 @@ export function ProviderConfigForm({
               <input
                 className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
                 onChange={(event) => onChange({ voice: event.target.value })}
-                placeholder="alloy"
+                placeholder={
+                  isCosyVoice ? bailianCosyVoiceDefaults.voice : "alloy"
+                }
                 value={form.voice ?? ""}
               />
             </label>

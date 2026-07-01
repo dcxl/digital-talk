@@ -1,5 +1,6 @@
 import type { TTSProvider } from "@/core/providers/types";
 import { getTTSProvider } from "@/providers/tts";
+import { createBailianCosyVoiceTTSProvider } from "@/providers/tts/bailian-cosyvoice-tts-provider";
 import { mockTTSProvider } from "@/providers/tts/mock-tts-provider";
 import { createOpenAICompatibleTTSProvider } from "@/providers/tts/openai-compatible-tts-provider";
 
@@ -23,6 +24,15 @@ function isOpenAICompatible(provider?: string) {
   );
 }
 
+function isBailianCosyVoice(provider?: string) {
+  return (
+    provider === "bailian-cosyvoice" ||
+    provider === "dashscope-cosyvoice" ||
+    provider === "aliyun-cosyvoice" ||
+    provider === "cosyvoice"
+  );
+}
+
 async function createTestProvider(
   input: TestTTSProviderInput,
 ): Promise<TTSProvider> {
@@ -32,6 +42,21 @@ async function createTestProvider(
 
   if (input.provider === "mock" || input.provider === "local") {
     return mockTTSProvider;
+  }
+
+  if (isBailianCosyVoice(input.provider)) {
+    if (!input.apiKey || !input.model || !input.voice) {
+      throw new Error("apiKey, model and voice are required for CosyVoice TTS");
+    }
+
+    return createBailianCosyVoiceTTSProvider({
+      apiKey: input.apiKey,
+      defaultFormat: input.format ?? "mp3",
+      endpoint: input.baseUrl,
+      model: input.model,
+      name: input.name ?? "Bailian CosyVoice TTS Provider Test",
+      voice: input.voice,
+    });
   }
 
   if (isOpenAICompatible(input.provider)) {

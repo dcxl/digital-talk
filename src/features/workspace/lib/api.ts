@@ -17,6 +17,7 @@ import type {
   ProviderTestResult,
   WorkspaceSnapshot,
 } from "../types";
+import { bailianCosyVoiceDefaults } from "./provider-defaults";
 
 export const emptySnapshot: WorkspaceSnapshot = {
   conversations: [],
@@ -130,7 +131,11 @@ export async function saveProviderConfigRequest(input: ProviderFormState) {
   if (input.type === "tts") {
     body.options = {
       format: input.format ?? "mp3",
-      voice: input.voice?.trim() || "alloy",
+      voice:
+        input.voice?.trim() ||
+        (input.provider === "bailian-cosyvoice"
+          ? bailianCosyVoiceDefaults.voice
+          : "alloy"),
     };
   }
 
@@ -167,7 +172,7 @@ export async function testProviderConfigRequest(input: ProviderFormState) {
 
   const isEnvFallback = input.source === "env" && !input.apiKey.trim();
   const testText =
-    input.type === "tts" ? "TTS provider test ok" : "回复 provider ok";
+    input.type === "tts" ? "你好，我是数字人语音测试。" : "回复 provider ok";
   const endpoint =
     input.id && input.source !== "env"
       ? `/api/providers/${input.id}/test`

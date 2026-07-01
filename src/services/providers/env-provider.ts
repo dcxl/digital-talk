@@ -16,12 +16,18 @@ export function getEnvLLMProvider() {
 
 export function getEnvTTSProvider() {
   const provider = process.env.TTS_PROVIDER?.trim() || "mock";
+  const name =
+    provider === "mock"
+      ? "Mock TTS"
+      : provider === "bailian-cosyvoice"
+        ? "Bailian CosyVoice TTS"
+        : "Environment TTS";
 
   return {
     id: "env-default-tts",
     type: "tts",
     provider,
-    name: provider === "mock" ? "Mock TTS" : "Environment TTS",
+    name,
     enabled: true,
     baseUrl: process.env.DEFAULT_TTS_BASE_URL || null,
     model: process.env.DEFAULT_TTS_MODEL || null,

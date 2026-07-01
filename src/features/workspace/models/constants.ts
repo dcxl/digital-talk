@@ -1,4 +1,5 @@
 import type { ProviderFormState, ProviderType } from "../types";
+import { bailianCosyVoiceDefaults } from "../lib/provider-defaults";
 
 export const providerTypeTabs: Array<{
   description: string;
@@ -53,6 +54,7 @@ export const providerOptionsByType: Record<
     { label: "Custom", value: "custom" },
   ],
   tts: [
+    { label: "阿里云百炼 CosyVoice", value: "bailian-cosyvoice" },
     { label: "OpenAI Compatible", value: "openai-compatible" },
     { label: "OpenAI", value: "openai" },
     { label: "Custom HTTP", value: "custom-http" },
@@ -66,13 +68,13 @@ const defaultModelByType: Record<ProviderType, string> = {
   avatar: "",
   embedding: "text-embedding-3-small",
   llm: "deepseek-chat",
-  tts: "tts-1",
+  tts: bailianCosyVoiceDefaults.model,
 };
 
 export function createBlankProviderForm(type: ProviderType): ProviderFormState {
   return {
     apiKey: "",
-    baseUrl: "",
+    baseUrl: type === "tts" ? bailianCosyVoiceDefaults.baseUrl : "",
     enabled: true,
     model: defaultModelByType[type],
     name: `New ${type.toUpperCase()} Provider`,
@@ -81,7 +83,7 @@ export function createBlankProviderForm(type: ProviderType): ProviderFormState {
     ...(type === "tts"
       ? {
           format: "mp3" as const,
-          voice: "alloy",
+          voice: bailianCosyVoiceDefaults.voice,
         }
       : {}),
   };
