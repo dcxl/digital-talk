@@ -11,7 +11,8 @@
     "db:studio": "prisma studio",
     "start": "next start",
     "lint": "prisma generate && eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "vitest run"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
@@ -32,6 +33,7 @@
     "prettier": "^3.9.4",
     "prisma": "^7.8.0",
     "tailwindcss": "^4.3.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   }
 }
