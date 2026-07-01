@@ -4,6 +4,9 @@ import type {
   KnowledgeBaseItem,
   KnowledgeDocumentItem,
   KnowledgeSearchResult,
+  PromptFormState,
+  PromptTemplateItem,
+  PromptTestResult,
   ProviderFormState,
   ProviderItem,
   ProviderTestResult,
@@ -274,4 +277,103 @@ export async function searchKnowledgeBaseRequest(
   if (!response.ok) throw new Error(getApiErrorMessage(payload, "检索失败"));
 
   return payload.data?.results ?? [];
+}
+
+export async function readPrompts() {
+  const payload =
+    await fetchJson<{ data?: { prompts?: PromptTemplateItem[] } }>(
+      "/api/prompts",
+    );
+  return payload?.data?.prompts ?? [];
+}
+
+function getPromptPayload(input: PromptFormState) {
+  return {
+    type: input.type,
+    name: input.name.trim(),
+    description: input.description.trim(),
+    content: input.content.trim(),
+    variables: input.variables,
+  };
+}
+
+export async function createPromptRequest(input: PromptFormState) {
+  const response = await fetch("/api/prompts", {
+    body: JSON.stringify(getPromptPayload(input)),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      prompt?: PromptTemplateItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.prompt) {
+    throw new Error(getApiErrorMessage(payload, "创建 Prompt 失败"));
+  }
+
+  return payload.data.prompt;
+}
+
+export async function createPromptVersionRequest(input: PromptFormState) {
+  if (!input.id) throw new Error("Prompt id is required");
+
+  const response = await fetch(`/api/prompts/${input.id}/versions`, {
+    body: JSON.stringify({
+      ...getPromptPayload(input),
+      changelog: input.changelog.trim(),
+      setCurrent: true,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      prompt?: PromptTemplateItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.prompt) {
+    throw new Error(getApiErrorMessage(payload, "保存 Prompt 版本失败"));
+  }
+
+  return payload.data.prompt;
+}
+
+export async function testPromptRequest(input: PromptFormState) {
+  if (!input.id) throw new Error("请先保存 Prompt");
+
+  const response = await fetch(`/api/prompts/${input.id}/test`, {
+    body: JSON.stringify({
+      message: input.testMessage,
+      variables: input.variableValues,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+  const payload = (await response.json()) as {
+    data?: PromptTestResult;
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data) {
+    throw new Error(getApiErrorMessage(payload, "Prompt 测试失败"));
+  }
+
+  return payload.data;
 }

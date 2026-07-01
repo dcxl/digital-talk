@@ -20,6 +20,7 @@ import {
   toRAGSourcePreview,
   type RAGSource,
 } from "@/services/knowledge/rag";
+import { getRuntimeSystemPrompt } from "@/services/prompts/runtime";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,10 +56,26 @@ async function buildLLMMessages(input: {
   controller: ReadableStreamDefaultController<Uint8Array>;
   knowledgeBaseId?: string;
   message: string;
+  systemPrompt?: string;
 }): Promise<RAGBuildResult> {
+  const systemMessages: LLMMessage[] = input.systemPrompt
+    ? [
+        {
+          role: "system",
+          content: input.systemPrompt,
+        },
+      ]
+    : [];
+
   if (!input.knowledgeBaseId || !isDatabaseConfigured()) {
     return {
-      messages: [{ role: "user", content: input.message }],
+      messages: [
+        ...systemMessages,
+        {
+          role: "user",
+          content: input.message,
+        },
+      ],
       sources: [],
     };
   }
@@ -90,7 +107,13 @@ async function buildLLMMessages(input: {
         query: input.message,
       });
       return {
-        messages: [{ role: "user", content: input.message }],
+        messages: [
+          ...systemMessages,
+          {
+            role: "user",
+            content: input.message,
+          },
+        ],
         sources: [],
       };
     }
@@ -104,6 +127,7 @@ async function buildLLMMessages(input: {
 
     return {
       messages: [
+        ...systemMessages,
         {
           role: "system",
           content: contextMessage,
@@ -123,7 +147,13 @@ async function buildLLMMessages(input: {
       retryable: true,
     });
     return {
-      messages: [{ role: "user", content: input.message }],
+      messages: [
+        ...systemMessages,
+        {
+          role: "user",
+          content: input.message,
+        },
+      ],
       sources: [],
     };
   }
@@ -273,6 +303,7 @@ export async function POST(request: NextRequest) {
         let assistantText = "";
         let audioUrl: string | undefined;
         let usage: TokenUsageMetadata | undefined;
+        const systemPrompt = await getRuntimeSystemPrompt();
 
         enqueue(controller, {
           type: "message.created",
@@ -308,6 +339,7 @@ export async function POST(request: NextRequest) {
           controller,
           knowledgeBaseId,
           message,
+          systemPrompt,
         });
 
         for await (const chunk of llmProvider.chat({

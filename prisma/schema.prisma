@@ -55,17 +55,33 @@ enum DocumentStatus {
   failed
 }
 
+enum PromptType {
+  system
+  chat
+  summary
+  translate
+  custom
+}
+
+enum PromptStatus {
+  active
+  disabled
+  deleted
+}
+
 model User {
-  id              String           @id @default(cuid())
-  name            String?
-  email           String?          @unique
-  avatarUrl       String?
-  conversations   Conversation[]
-  knowledgeBases  KnowledgeBase[]
-  providerConfigs ProviderConfig[]
-  appSettings     AppSetting[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id                    String           @id @default(cuid())
+  name                  String?
+  email                 String?          @unique
+  avatarUrl             String?
+  conversations         Conversation[]
+  knowledgeBases        KnowledgeBase[]
+  providerConfigs       ProviderConfig[]
+  promptTemplates       PromptTemplate[]
+  createdPromptVersions PromptVersion[]  @relation("PromptVersionsCreatedBy")
+  appSettings           AppSetting[]
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 }
 
 model Conversation {
@@ -192,6 +208,45 @@ model ProviderConfig {
   @@index([userId])
   @@index([type])
   @@index([enabled])
+}
+
+model PromptTemplate {
+  id               String          @id @default(cuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             PromptType
+  name             String
+  description      String?
+  currentVersionId String?         @unique
+  currentVersion   PromptVersion?  @relation("CurrentPromptVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+  versions         PromptVersion[] @relation("PromptTemplateVersions")
+  variables        Json?
+  status           PromptStatus    @default(active)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@unique([userId, type, name])
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+}
+
+model PromptVersion {
+  id               String          @id @default(cuid())
+  promptTemplateId String
+  promptTemplate   PromptTemplate  @relation("PromptTemplateVersions", fields: [promptTemplateId], references: [id], onDelete: Cascade)
+  currentFor       PromptTemplate? @relation("CurrentPromptVersion")
+  version          Int
+  content          String
+  variables        Json?
+  changelog        String?
+  createdByUserId  String?
+  createdBy        User?           @relation("PromptVersionsCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt        DateTime        @default(now())
+
+  @@unique([promptTemplateId, version])
+  @@index([promptTemplateId])
+  @@index([createdByUserId])
 }
 
 model AppSetting {

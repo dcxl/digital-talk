@@ -79,6 +79,60 @@ export interface ProviderTestResult {
   success: boolean;
 }
 
+export type PromptType = "system" | "chat" | "summary" | "translate" | "custom";
+
+export interface PromptVariable {
+  defaultValue?: string;
+  name: string;
+  required?: boolean;
+}
+
+export interface PromptVersionItem {
+  changelog?: string | null;
+  content: string;
+  createdAt: string;
+  createdByUserId?: string | null;
+  id: string;
+  promptTemplateId: string;
+  variables?: PromptVariable[] | null;
+  version: number;
+}
+
+export interface PromptTemplateItem {
+  createdAt: string;
+  currentVersion?: PromptVersionItem | null;
+  currentVersionId?: string | null;
+  description?: string | null;
+  id: string;
+  name: string;
+  status: string;
+  type: PromptType;
+  updatedAt: string;
+  variables?: PromptVariable[] | null;
+  versions: PromptVersionItem[];
+}
+
+export interface PromptFormState {
+  changelog: string;
+  content: string;
+  description: string;
+  id?: string;
+  name: string;
+  testMessage: string;
+  type: PromptType;
+  variableValues: Record<string, string>;
+  variables: PromptVariable[];
+}
+
+export interface PromptTestResult {
+  latencyMs: number;
+  output: string;
+  renderedPrompt: string;
+  usage?: {
+    totalTokens?: number;
+  };
+}
+
 export interface WorkspaceSnapshot {
   conversations: ConversationItem[];
   knowledgeBases: KnowledgeBaseItem[];
