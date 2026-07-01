@@ -67,7 +67,7 @@ export async function GET() {
 
     return jsonData({
       persistenceEnabled: true,
-      providers: providers.map(sanitizeProviderConfig),
+      providers: [getEnvLLMProvider(), ...providers.map(sanitizeProviderConfig)],
     });
   } catch (error) {
     return jsonError(
@@ -97,6 +97,7 @@ export async function POST(request: Request) {
     apiKey?: unknown;
     baseUrl?: unknown;
     enabled?: unknown;
+    id?: unknown;
     model?: unknown;
     name?: unknown;
     options?: unknown;
@@ -121,6 +122,10 @@ export async function POST(request: Request) {
 
   try {
     const config = await createProviderConfig({
+      id:
+        typeof body?.id === "string" && body.id !== "env-default-llm"
+          ? body.id
+          : undefined,
       apiKeyEncrypted:
         typeof body?.apiKey === "string" && body.apiKey
           ? encryptSecret(body.apiKey)

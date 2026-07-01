@@ -33,6 +33,7 @@ export interface UpdateMessageInput {
 }
 
 export interface UpsertProviderConfigInput {
+  id?: string;
   type: ProviderType;
   provider: string;
   name: string;
@@ -245,6 +246,25 @@ export async function getConversationWithMessages(
 export async function createProviderConfig(input: UpsertProviderConfigInput) {
   const prisma = getPrismaClient();
   const user = await ensureDefaultUser();
+
+  if (input.id) {
+    return prisma.providerConfig.update({
+      data: {
+        apiKeyEncrypted: input.apiKeyEncrypted,
+        baseUrl: input.baseUrl,
+        enabled: input.enabled ?? true,
+        model: input.model,
+        name: input.name,
+        options: input.options,
+        provider: input.provider,
+        type: input.type,
+      },
+      where: {
+        id: input.id,
+        userId: user.id,
+      },
+    });
+  }
 
   return prisma.providerConfig.create({
     data: {

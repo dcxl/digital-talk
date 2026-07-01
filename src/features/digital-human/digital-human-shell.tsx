@@ -10,6 +10,7 @@ import {
   Plus,
   Play,
   RefreshCw,
+  Save,
   Send,
   Settings,
   Sparkles,
@@ -44,6 +45,15 @@ interface ProviderSummary {
   model?: string | null;
   hasApiKey: boolean;
   source?: string;
+}
+
+interface ProviderFormState {
+  id?: string;
+  name: string;
+  provider: string;
+  baseUrl: string;
+  model: string;
+  apiKey: string;
 }
 
 interface ConversationSummary {
@@ -109,6 +119,13 @@ export function DigitalHumanShell() {
   >("idle");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [providers, setProviders] = useState<ProviderSummary[]>([]);
+  const [providerForm, setProviderForm] = useState<ProviderFormState>({
+    name: "DeepSeek",
+    provider: "openai-compatible",
+    baseUrl: "",
+    model: "",
+    apiKey: "",
+  });
   const [providerStatus, setProviderStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -154,7 +171,29 @@ export function DigitalHumanShell() {
 
       if (!response.ok) throw new Error(payload.error?.message);
 
-      setProviders(payload.data?.providers ?? []);
+      const nextProviders = payload.data?.providers ?? [];
+      const editableProvider =
+        nextProviders.find((provider) => provider.source !== "env") ??
+        nextProviders[0];
+
+      setProviders(nextProviders);
+      if (editableProvider) {
+        setProviderForm((current) => ({
+          id:
+            editableProvider.source === "env" ? undefined : editableProvider.id,
+          name:
+            editableProvider.source === "env"
+              ? "DeepSeek"
+              : editableProvider.name || current.name,
+          provider:
+            editableProvider.provider === "openai"
+              ? "openai-compatible"
+              : editableProvider.provider || current.provider,
+          baseUrl: editableProvider.baseUrl ?? current.baseUrl,
+          model: editableProvider.model ?? current.model,
+          apiKey: "",
+        }));
+      }
       setProviderStatus("success");
       setProviderStatusText("配置已加载");
     } catch (error) {
@@ -268,6 +307,53 @@ export function DigitalHumanShell() {
       setProviderStatus("error");
       setProviderStatusText(
         error instanceof Error ? error.message : "Provider 测试失败",
+      );
+    }
+  }
+
+  async function saveProvider() {
+    setProviderStatus("loading");
+
+    try {
+      const response = await fetch("/api/providers", {
+        body: JSON.stringify({
+          id: providerForm.id,
+          type: "llm",
+          provider: providerForm.provider,
+          name: providerForm.name,
+          baseUrl: providerForm.baseUrl,
+          model: providerForm.model,
+          apiKey: providerForm.apiKey,
+          enabled: true,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
+      const payload = (await response.json()) as {
+        data?: {
+          provider?: ProviderSummary;
+        };
+        error?: {
+          message?: string;
+        };
+      };
+
+      if (!response.ok) throw new Error(payload.error?.message);
+
+      setProviderForm((current) => ({
+        ...current,
+        id: payload.data?.provider?.id ?? current.id,
+        apiKey: "",
+      }));
+      setProviderStatus("success");
+      setProviderStatusText("配置已保存");
+      await loadProviders();
+    } catch (error) {
+      setProviderStatus("error");
+      setProviderStatusText(
+        error instanceof Error ? error.message : "Provider 保存失败",
       );
     }
   }
@@ -786,6 +872,97 @@ export function DigitalHumanShell() {
             </div>
 
             <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              <section className="rounded-lg border border-slate-200 p-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-950">
+                    LLM Provider
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    保存到数据库；API Key 只会加密存储
+                  </p>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  <label className="block text-xs font-medium text-slate-600">
+                    名称
+                    <input
+                      className="mt-1 h-9 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                      value={providerForm.name}
+                      onChange={(event) =>
+                        setProviderForm((current) => ({
+                          ...current,
+                          name: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="block text-xs font-medium text-slate-600">
+                    Provider
+                    <select
+                      className="mt-1 h-9 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                      value={providerForm.provider}
+                      onChange={(event) =>
+                        setProviderForm((current) => ({
+                          ...current,
+                          provider: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="openai-compatible">OpenAI Compatible</option>
+                      <option value="deepseek">DeepSeek</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </label>
+
+                  <label className="block text-xs font-medium text-slate-600">
+                    Base URL
+                    <input
+                      className="mt-1 h-9 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                      placeholder="https://api.deepseek.com/v1"
+                      value={providerForm.baseUrl}
+                      onChange={(event) =>
+                        setProviderForm((current) => ({
+                          ...current,
+                          baseUrl: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="block text-xs font-medium text-slate-600">
+                    Model
+                    <input
+                      className="mt-1 h-9 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                      placeholder="deepseek-chat"
+                      value={providerForm.model}
+                      onChange={(event) =>
+                        setProviderForm((current) => ({
+                          ...current,
+                          model: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="block text-xs font-medium text-slate-600">
+                    API Key
+                    <input
+                      className="mt-1 h-9 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                      placeholder="留空则不保存新密钥"
+                      type="password"
+                      value={providerForm.apiKey}
+                      onChange={(event) =>
+                        setProviderForm((current) => ({
+                          ...current,
+                          apiKey: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+              </section>
+
               {providers.map((provider) => (
                 <section
                   key={provider.id}
@@ -846,6 +1023,14 @@ export function DigitalHumanShell() {
             </div>
 
             <div className="flex gap-2 border-t border-slate-200 p-4">
+              <button
+                className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md border border-slate-200 text-sm text-slate-700 disabled:opacity-50"
+                disabled={providerStatus === "loading"}
+                onClick={saveProvider}
+              >
+                <Save size={16} />
+                保存
+              </button>
               <button
                 className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md border border-slate-200 text-sm text-slate-700 disabled:opacity-50"
                 disabled={providerStatus === "loading"}
