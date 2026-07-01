@@ -1,10 +1,12 @@
 "use client";
 
 import {
+  BookOpen,
   Bot,
   BrainCircuit,
   CircleStop,
   CheckCircle2,
+  FolderPlus,
   History,
   Mic,
   Plus,
@@ -14,6 +16,7 @@ import {
   Send,
   Settings,
   Sparkles,
+  Upload,
   Volume2,
   X,
   XCircle,
@@ -70,7 +73,24 @@ interface PersistedMessage {
 }
 
 interface ConversationDetail extends ConversationSummary {
+  knowledgeBaseId?: string | null;
   messages: PersistedMessage[];
+}
+
+interface KnowledgeBaseSummary {
+  id: string;
+  name: string;
+  description?: string | null;
+  documentCount: number;
+  chunkCount: number;
+}
+
+interface KnowledgeDocumentSummary {
+  id: string;
+  name: string;
+  originalName: string;
+  status: string;
+  chunkCount: number;
 }
 
 const stateLabel: Record<RuntimeState, string> = {
@@ -121,6 +141,18 @@ export function DigitalHumanShell() {
   const [historyStatus, setHistoryStatus] = useState<
     "idle" | "loading" | "error"
   >("idle");
+  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseSummary[]>(
+    [],
+  );
+  const [selectedKnowledgeBaseId, setSelectedKnowledgeBaseId] = useState("");
+  const [knowledgeDocuments, setKnowledgeDocuments] = useState<
+    KnowledgeDocumentSummary[]
+  >([]);
+  const [knowledgeName, setKnowledgeName] = useState("");
+  const [knowledgeStatus, setKnowledgeStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [knowledgeStatusText, setKnowledgeStatusText] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [providers, setProviders] = useState<ProviderSummary[]>([]);
   const [providerForm, setProviderForm] = useState<ProviderFormState>({
@@ -140,12 +172,16 @@ export function DigitalHumanShell() {
   const persistedAssistantRef = useRef<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const knowledgeFileInputRef = useRef<HTMLInputElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
 
   const canSend = state === "idle" || state === "speaking" || state === "error";
   const isBusy = ["thinking", "streaming", "synthesizing", "transcribing"].includes(
     state,
+  );
+  const selectedKnowledgeBase = knowledgeBases.find(
+    (knowledgeBase) => knowledgeBase.id === selectedKnowledgeBaseId,
   );
 
   useEffect(() => {
@@ -157,7 +193,16 @@ export function DigitalHumanShell() {
 
   useEffect(() => {
     void loadConversations();
+    void loadKnowledgeBases();
   }, []);
+
+  useEffect(() => {
+    if (selectedKnowledgeBaseId) {
+      void loadKnowledgeDocuments(selectedKnowledgeBaseId);
+    } else {
+      setKnowledgeDocuments([]);
+    }
+  }, [selectedKnowledgeBaseId]);
 
   const latestStatus = useMemo(() => {
     if (state === "speaking") return "Avatar 正在播报回复";
@@ -238,6 +283,144 @@ export function DigitalHumanShell() {
     }
   }
 
+  async function loadKnowledgeBases() {
+    setKnowledgeStatus("loading");
+
+    try {
+      const response = await fetch("/api/knowledge-bases");
+      const payload = (await response.json()) as {
+        data?: {
+          knowledgeBases?: KnowledgeBaseSummary[];
+        };
+        error?: {
+          message?: string;
+        };
+      };
+
+      if (!response.ok) throw new Error(payload.error?.message);
+
+      setKnowledgeBases(payload.data?.knowledgeBases ?? []);
+      setKnowledgeStatus("success");
+      setKnowledgeStatusText("知识库已同步");
+    } catch (error) {
+      setKnowledgeStatus("error");
+      setKnowledgeStatusText(
+        error instanceof Error ? error.message : "加载知识库失败",
+      );
+    }
+  }
+
+  async function loadKnowledgeDocuments(knowledgeBaseId: string) {
+    setKnowledgeStatus("loading");
+
+    try {
+      const response = await fetch(
+        `/api/knowledge-bases/${knowledgeBaseId}/documents`,
+      );
+      const payload = (await response.json()) as {
+        data?: {
+          documents?: KnowledgeDocumentSummary[];
+        };
+        error?: {
+          message?: string;
+        };
+      };
+
+      if (!response.ok) throw new Error(payload.error?.message);
+
+      setKnowledgeDocuments(payload.data?.documents ?? []);
+      setKnowledgeStatus("success");
+      setKnowledgeStatusText("文档已同步");
+    } catch (error) {
+      setKnowledgeStatus("error");
+      setKnowledgeStatusText(
+        error instanceof Error ? error.message : "加载文档失败",
+      );
+    }
+  }
+
+  async function createKnowledgeBase() {
+    const name = knowledgeName.trim();
+    if (!name) return;
+
+    setKnowledgeStatus("loading");
+
+    try {
+      const response = await fetch("/api/knowledge-bases", {
+        body: JSON.stringify({
+          name,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
+      const payload = (await response.json()) as {
+        data?: {
+          knowledgeBase?: KnowledgeBaseSummary;
+        };
+        error?: {
+          message?: string;
+        };
+      };
+
+      if (!response.ok || !payload.data?.knowledgeBase) {
+        throw new Error(payload.error?.message);
+      }
+
+      setKnowledgeBases((current) => [payload.data!.knowledgeBase!, ...current]);
+      setSelectedKnowledgeBaseId(payload.data.knowledgeBase.id);
+      setKnowledgeName("");
+      setKnowledgeStatus("success");
+      setKnowledgeStatusText("知识库已创建");
+    } catch (error) {
+      setKnowledgeStatus("error");
+      setKnowledgeStatusText(
+        error instanceof Error ? error.message : "创建知识库失败",
+      );
+    }
+  }
+
+  async function uploadKnowledgeDocument(file: File) {
+    if (!selectedKnowledgeBaseId) return;
+
+    setKnowledgeStatus("loading");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(
+        `/api/knowledge-bases/${selectedKnowledgeBaseId}/documents`,
+        {
+          body: formData,
+          method: "POST",
+        },
+      );
+      const payload = (await response.json()) as {
+        error?: {
+          message?: string;
+        };
+      };
+
+      if (!response.ok) throw new Error(payload.error?.message);
+
+      await loadKnowledgeBases();
+      await loadKnowledgeDocuments(selectedKnowledgeBaseId);
+      setKnowledgeStatus("success");
+      setKnowledgeStatusText("文档已上传");
+    } catch (error) {
+      setKnowledgeStatus("error");
+      setKnowledgeStatusText(
+        error instanceof Error ? error.message : "上传文档失败",
+      );
+    } finally {
+      if (knowledgeFileInputRef.current) {
+        knowledgeFileInputRef.current.value = "";
+      }
+    }
+  }
+
   async function openConversation(nextConversationId: string) {
     if (!canSend) return;
 
@@ -257,6 +440,7 @@ export function DigitalHumanShell() {
       }
 
       setConversationId(payload.data.conversation.id);
+      setSelectedKnowledgeBaseId(payload.data.conversation.knowledgeBaseId ?? "");
       setMessages(
         payload.data.conversation.messages
           .filter(
@@ -565,6 +749,30 @@ export function DigitalHumanShell() {
       return;
     }
 
+    if (event.type === "rag.retrieve.started") {
+      setKnowledgeStatus("loading");
+      setKnowledgeStatusText("知识库检索中");
+      return;
+    }
+
+    if (event.type === "rag.retrieve.completed") {
+      setKnowledgeStatus("success");
+      setKnowledgeStatusText(`命中 ${event.chunks.length} 个片段`);
+      return;
+    }
+
+    if (event.type === "rag.retrieve.empty") {
+      setKnowledgeStatus("success");
+      setKnowledgeStatusText("知识库无命中");
+      return;
+    }
+
+    if (event.type === "rag.retrieve.failed") {
+      setKnowledgeStatus("error");
+      setKnowledgeStatusText(event.message);
+      return;
+    }
+
     if (event.type === "error") {
       setState("error");
       setMessages((current) =>
@@ -644,7 +852,11 @@ export function DigitalHumanShell() {
 
     try {
       const response = await fetch("/api/chat", {
-        body: JSON.stringify({ conversationId, message: content }),
+        body: JSON.stringify({
+          conversationId,
+          knowledgeBaseId: selectedKnowledgeBaseId || undefined,
+          message: content,
+        }),
         headers: {
           "Content-Type": "application/json",
         },
@@ -870,6 +1082,105 @@ export function DigitalHumanShell() {
                 ))}
               </div>
             ) : null}
+
+            <div className="mt-3 space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <label className="flex min-w-0 flex-1 items-center gap-2">
+                  <BookOpen size={15} className="shrink-0 text-slate-500" />
+                  <select
+                    className="h-9 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-800 outline-none focus:border-slate-400"
+                    disabled={!canSend}
+                    value={selectedKnowledgeBaseId}
+                    onChange={(event) =>
+                      setSelectedKnowledgeBaseId(event.target.value)
+                    }
+                  >
+                    <option value="">不使用知识库</option>
+                    {knowledgeBases.map((knowledgeBase) => (
+                      <option key={knowledgeBase.id} value={knowledgeBase.id}>
+                        {knowledgeBase.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    className="flex size-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 disabled:opacity-40"
+                    disabled={knowledgeStatus === "loading"}
+                    onClick={loadKnowledgeBases}
+                    title="刷新知识库"
+                  >
+                    <RefreshCw
+                      size={15}
+                      className={
+                        knowledgeStatus === "loading" ? "animate-spin" : ""
+                      }
+                    />
+                  </button>
+                  <button
+                    className="flex size-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 disabled:opacity-40"
+                    disabled={!selectedKnowledgeBaseId || !canSend}
+                    onClick={() => knowledgeFileInputRef.current?.click()}
+                    title="上传文档"
+                  >
+                    <Upload size={15} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="h-9 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none focus:border-slate-400"
+                  disabled={!canSend}
+                  placeholder="新知识库名称"
+                  value={knowledgeName}
+                  onChange={(event) => setKnowledgeName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void createKnowledgeBase();
+                    }
+                  }}
+                />
+                <button
+                  className="flex size-9 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white disabled:opacity-40"
+                  disabled={!knowledgeName.trim() || knowledgeStatus === "loading"}
+                  onClick={createKnowledgeBase}
+                  title="创建知识库"
+                >
+                  <FolderPlus size={15} />
+                </button>
+              </div>
+
+              <input
+                ref={knowledgeFileInputRef}
+                accept=".csv,.json,.md,.markdown,.txt,text/*"
+                className="hidden"
+                type="file"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void uploadKnowledgeDocument(file);
+                }}
+              />
+
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                <span>
+                  {selectedKnowledgeBase
+                    ? `${selectedKnowledgeBase.documentCount} docs · ${selectedKnowledgeBase.chunkCount} chunks`
+                    : "未选择"}
+                </span>
+                <span>{knowledgeStatusText || "知识库待同步"}</span>
+                {knowledgeDocuments.slice(0, 2).map((document) => (
+                  <span
+                    key={document.id}
+                    className="max-w-44 truncate rounded bg-white px-2 py-1 text-slate-600"
+                    title={document.originalName}
+                  >
+                    {document.name}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
