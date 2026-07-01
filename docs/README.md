@@ -16,6 +16,7 @@ Next Digital Human 是一个面向个人开发者的开源 AI 数字人框架。
 - [08 Runtime 状态机](./08-state-machine.md)
 - [09 API 契约](./09-api-contracts.md)
 - [10 安全与部署约束](./10-security-deployment.md)
+- [11 部署指南](./11-deployment.md)
 
 ## 当前设计原则
 
