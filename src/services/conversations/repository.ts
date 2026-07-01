@@ -171,6 +171,28 @@ export async function listActiveConversations(userId = DEFAULT_USER_ID) {
   });
 }
 
+export async function getConversationWithMessages(
+  conversationId: string,
+  userId = DEFAULT_USER_ID,
+) {
+  const prisma = getPrismaClient();
+
+  return prisma.conversation.findFirst({
+    include: {
+      messages: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+    },
+    where: {
+      id: conversationId,
+      status: "active",
+      userId,
+    },
+  });
+}
+
 export async function createProviderConfig(input: UpsertProviderConfigInput) {
   const prisma = getPrismaClient();
   const user = await ensureDefaultUser();
