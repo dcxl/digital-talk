@@ -5,7 +5,9 @@ import {
   BrainCircuit,
   CircleStop,
   CheckCircle2,
+  History,
   Mic,
+  Plus,
   Play,
   RefreshCw,
   Send,
@@ -24,6 +26,14 @@ const suggestions = [
   "MVP 第一阶段应该先做什么？",
 ];
 
+const welcomeMessage: ChatMessage = {
+  id: "welcome",
+  role: "assistant",
+  content:
+    "你好，我是 Next Digital Human 的原型助手。现在可以先体验文本对话、流式输出和 Avatar 状态变化。",
+  status: "completed",
+};
+
 interface ProviderSummary {
   id: string;
   type: string;
@@ -34,6 +44,23 @@ interface ProviderSummary {
   model?: string | null;
   hasApiKey: boolean;
   source?: string;
+}
+
+interface ConversationSummary {
+  id: string;
+  title: string;
+  lastMessageAt?: string | null;
+}
+
+interface PersistedMessage {
+  id: string;
+  role: string;
+  content: string;
+  status: ChatMessage["status"];
+}
+
+interface ConversationDetail extends ConversationSummary {
+  messages: PersistedMessage[];
 }
 
 const stateLabel: Record<RuntimeState, string> = {
@@ -76,21 +103,17 @@ export function DigitalHumanShell() {
   const [state, setState] = useState<RuntimeState>("idle");
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [input, setInput] = useState("");
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [historyStatus, setHistoryStatus] = useState<
+    "idle" | "loading" | "error"
+  >("idle");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [providers, setProviders] = useState<ProviderSummary[]>([]);
   const [providerStatus, setProviderStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
   const [providerStatusText, setProviderStatusText] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "你好，我是 Next Digital Human 的原型助手。现在可以先体验文本对话、流式输出和 Avatar 状态变化。",
-      status: "completed",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
   const abortRef = useRef<AbortController | null>(null);
   const activeAssistantRef = useRef<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -100,6 +123,10 @@ export function DigitalHumanShell() {
 
   useEffect(() => {
     return () => abortRef.current?.abort();
+  }, []);
+
+  useEffect(() => {
+    void loadConversations();
   }, []);
 
   const latestStatus = useMemo(() => {
@@ -135,6 +162,73 @@ export function DigitalHumanShell() {
         error instanceof Error ? error.message : "加载 Provider 失败",
       );
     }
+  }
+
+  async function loadConversations() {
+    setHistoryStatus("loading");
+
+    try {
+      const response = await fetch("/api/conversations");
+      const payload = (await response.json()) as {
+        data?: {
+          conversations?: ConversationSummary[];
+        };
+      };
+
+      if (!response.ok) throw new Error("Failed to load conversations");
+
+      setConversations(payload.data?.conversations ?? []);
+      setHistoryStatus("idle");
+    } catch {
+      setHistoryStatus("error");
+    }
+  }
+
+  async function openConversation(nextConversationId: string) {
+    if (!canSend) return;
+
+    stopAudio();
+    setHistoryStatus("loading");
+
+    try {
+      const response = await fetch(`/api/conversations/${nextConversationId}`);
+      const payload = (await response.json()) as {
+        data?: {
+          conversation?: ConversationDetail | null;
+        };
+      };
+
+      if (!response.ok || !payload.data?.conversation) {
+        throw new Error("Conversation not found");
+      }
+
+      setConversationId(payload.data.conversation.id);
+      setMessages(
+        payload.data.conversation.messages
+          .filter(
+            (message) => message.role === "user" || message.role === "assistant",
+          )
+          .map((message) => ({
+            id: message.id,
+            role: message.role as ChatMessage["role"],
+            content: message.content,
+            status: message.status,
+          })),
+      );
+      setState("idle");
+      setHistoryStatus("idle");
+    } catch {
+      setHistoryStatus("error");
+    }
+  }
+
+  function startNewConversation() {
+    if (!canSend) return;
+
+    stopAudio();
+    setConversationId(undefined);
+    setMessages([welcomeMessage]);
+    setState("idle");
   }
 
   async function testProvider() {
@@ -281,6 +375,7 @@ export function DigitalHumanShell() {
 
     if (event.type === "done") {
       if (event.conversationId) setConversationId(event.conversationId);
+      void loadConversations();
     }
   }
 
@@ -497,10 +592,58 @@ export function DigitalHumanShell() {
 
         <section className="flex min-h-[520px] flex-col rounded-lg border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 p-4">
-            <h2 className="text-sm font-semibold text-slate-950">Conversation</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              MVP preview: API stream, text delta, TTS state, avatar events.
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-950">
+                  Conversation
+                </h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  {conversationId ? "已保存会话" : "新会话"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  className="flex size-9 items-center justify-center rounded-md border border-slate-200 text-slate-600 disabled:opacity-40"
+                  disabled={!canSend}
+                  onClick={startNewConversation}
+                  title="新建会话"
+                >
+                  <Plus size={16} />
+                </button>
+                <button
+                  className="flex size-9 items-center justify-center rounded-md border border-slate-200 text-slate-600 disabled:opacity-40"
+                  disabled={historyStatus === "loading"}
+                  onClick={loadConversations}
+                  title="刷新历史"
+                >
+                  <RefreshCw
+                    size={16}
+                    className={historyStatus === "loading" ? "animate-spin" : ""}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {conversations.length > 0 ? (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                {conversations.map((conversation) => (
+                  <button
+                    key={conversation.id}
+                    className={`flex max-w-56 shrink-0 items-center gap-2 rounded-md border px-3 py-2 text-left text-xs disabled:opacity-50 ${
+                      conversation.id === conversationId
+                        ? "border-slate-950 bg-slate-950 text-white"
+                        : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                    }`}
+                    disabled={!canSend}
+                    onClick={() => openConversation(conversation.id)}
+                    title={conversation.title}
+                  >
+                    <History size={14} />
+                    <span className="truncate">{conversation.title}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
