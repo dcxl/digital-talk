@@ -1,10 +1,5 @@
-import { WorkspacePlaceholderPage } from "@/features/workspace/pages/placeholder-page";
+import { PlaygroundPage } from "@/features/workspace/pages/playground-page";
 
 export default function PlaygroundRoute() {
-  return (
-    <WorkspacePlaceholderPage
-      items={["Chat 调试", "Runtime Events", "Logs", "Metrics"]}
-      title="调试中心"
-    />
-  );
+  return <PlaygroundPage />;
 }
