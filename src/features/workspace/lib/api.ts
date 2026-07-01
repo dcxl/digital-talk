@@ -4,6 +4,7 @@ import type {
   AvatarProfileItem,
   ConversationItem,
   DashboardSummary,
+  GeneralSettingsState,
   KnowledgeBaseItem,
   KnowledgeDocumentItem,
   KnowledgeSearchResult,
@@ -467,4 +468,60 @@ export async function previewAvatarProfileRequest(input: {
   }
 
   return payload.data.preview;
+}
+
+export const defaultGeneralSettings: GeneralSettingsState = {
+  autoSave: true,
+  language: "zh-CN",
+  theme: "system",
+  timeZone: "Asia/Shanghai",
+  workspaceName: "Next Digital Human",
+};
+
+export async function readSettings() {
+  const payload =
+    await fetchJson<{ data?: { general?: GeneralSettingsState } }>(
+      "/api/settings",
+    );
+  return payload?.data?.general ?? defaultGeneralSettings;
+}
+
+export async function saveSettingsRequest(input: GeneralSettingsState) {
+  const response = await fetch("/api/settings", {
+    body: JSON.stringify({
+      general: input,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "PATCH",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      general?: GeneralSettingsState;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.general) {
+    throw new Error(getApiErrorMessage(payload, "保存设置失败"));
+  }
+
+  return payload.data.general;
+}
+
+export async function exportWorkspaceRequest() {
+  const response = await fetch("/api/settings/export");
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => ({}))) as {
+      error?: {
+        message?: string;
+      };
+    };
+    throw new Error(getApiErrorMessage(payload, "导出失败"));
+  }
+
+  return response.blob();
 }

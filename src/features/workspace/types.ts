@@ -176,6 +176,20 @@ export interface AvatarPreviewResult {
   updatedAt: string;
 }
 
+export interface GeneralSettingsState {
+  autoSave: boolean;
+  language: string;
+  theme: "dark" | "light" | "system";
+  timeZone: string;
+  workspaceName: string;
+}
+
+export interface WorkspaceExportSummary {
+  conversationCount: number;
+  documentCount: number;
+  knowledgeBaseCount: number;
+}
+
 export interface WorkspaceSnapshot {
   conversations: ConversationItem[];
   knowledgeBases: KnowledgeBaseItem[];

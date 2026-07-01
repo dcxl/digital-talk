@@ -1,10 +1,5 @@
-import { WorkspacePlaceholderPage } from "@/features/workspace/pages/placeholder-page";
+import { SettingsPage } from "@/features/workspace/pages/settings-page";
 
 export default function SettingsRoute() {
-  return (
-    <WorkspacePlaceholderPage
-      items={["General Settings", "Data Export", "Danger Zone"]}
-      title="系统设置"
-    />
-  );
+  return <SettingsPage />;
 }
