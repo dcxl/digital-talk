@@ -18,7 +18,11 @@ import type {
   RuntimeState,
 } from "./types";
 
-export function DigitalHumanShell() {
+interface DigitalHumanShellProps {
+  embedded?: boolean;
+}
+
+export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) {
   const [state, setState] = useState<RuntimeState>("idle");
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [input, setInput] = useState("");
@@ -557,7 +561,11 @@ export function DigitalHumanShell() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f8fb]">
+    <main
+      className={
+        embedded ? "min-h-full bg-[#f7f8fb]" : "min-h-screen bg-[#f7f8fb]"
+      }
+    >
       <audio
         ref={audioRef}
         className="hidden"
@@ -569,9 +577,17 @@ export function DigitalHumanShell() {
         }
       />
 
-      <AppHeader onOpenSettings={() => setIsSettingsOpen(true)} />
+      {embedded ? null : (
+        <AppHeader onOpenSettings={() => setIsSettingsOpen(true)} />
+      )}
 
-      <section className="mx-auto grid max-w-7xl gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(360px,0.9fr)_minmax(0,1.1fr)]">
+      <section
+        className={
+          embedded
+            ? "grid gap-4 p-4 sm:p-6 lg:grid-cols-[minmax(360px,0.9fr)_minmax(0,1.1fr)]"
+            : "mx-auto grid max-w-7xl gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(360px,0.9fr)_minmax(0,1.1fr)]"
+        }
+      >
         <AvatarStage latestStatus={latestStatus} state={state} />
         <ConversationPanel
           canSend={canSend}

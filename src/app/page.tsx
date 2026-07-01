@@ -1,6 +1,5 @@
-import { DigitalHumanShell } from "@/features/digital-human/digital-human-shell";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return <DigitalHumanShell />;
+  redirect("/conversation");
 }
-
