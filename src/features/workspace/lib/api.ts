@@ -1,5 +1,6 @@
 import type {
   AvatarFormState,
+  AvatarAssetItem,
   AvatarPreviewResult,
   AvatarProfileItem,
   ConversationItem,
@@ -402,6 +403,14 @@ export async function readAvatarProfiles() {
   return payload?.data?.profiles ?? [];
 }
 
+export async function readAvatarAssets() {
+  const payload =
+    await fetchJson<{ data?: { assets?: AvatarAssetItem[] } }>(
+      "/api/avatar-assets",
+    );
+  return payload?.data?.assets ?? [];
+}
+
 function getAvatarPayload(input: AvatarFormState) {
   return {
     id: input.id,
@@ -480,6 +489,63 @@ export async function previewAvatarProfileRequest(input: {
   }
 
   return payload.data.preview;
+}
+
+export async function uploadAvatarAssetRequest(input: {
+  file: File;
+  name?: string;
+  profileId?: string;
+}) {
+  const formData = new FormData();
+  formData.append("file", input.file);
+  if (input.name) formData.append("name", input.name);
+  if (input.profileId) formData.append("profileId", input.profileId);
+
+  const response = await fetch("/api/avatar-assets/upload", {
+    body: formData,
+    method: "POST",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      asset?: AvatarAssetItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.asset) {
+    throw new Error(getApiErrorMessage(payload, "上传 Avatar 资产失败"));
+  }
+
+  return payload.data.asset;
+}
+
+export async function updateAvatarAssetRequest(
+  assetId: string,
+  input: Partial<Pick<AvatarAssetItem, "name" | "profileId" | "publicUrl">>,
+) {
+  const response = await fetch(`/api/avatar-assets/${assetId}`, {
+    body: JSON.stringify(input),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "PATCH",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      asset?: AvatarAssetItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.asset) {
+    throw new Error(getApiErrorMessage(payload, "更新 Avatar 资产失败"));
+  }
+
+  return payload.data.asset;
 }
 
 export const defaultGeneralSettings: GeneralSettingsState = {

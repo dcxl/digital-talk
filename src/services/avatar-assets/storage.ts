@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export interface StoreAvatarAssetInput {
@@ -16,6 +16,7 @@ export interface StoredAvatarAsset {
 }
 
 export interface AvatarAssetStorage {
+  get(storageKey: string): Promise<Buffer>;
   put(input: StoreAvatarAssetInput): Promise<StoredAvatarAsset>;
 }
 
@@ -28,7 +29,7 @@ const extensionByMimeType: Record<string, string> = {
 function getStorageRoot() {
   return (
     process.env.AVATAR_ASSET_STORAGE_DIR ||
-    path.join(process.cwd(), "storage", "avatar-assets")
+    path.join(/*turbopackIgnore: true*/ process.cwd(), "storage", "avatar-assets")
   );
 }
 
@@ -49,6 +50,19 @@ function toBuffer(bytes: StoreAvatarAssetInput["bytes"]) {
 }
 
 class LocalAvatarAssetStorage implements AvatarAssetStorage {
+  async get(storageKey: string) {
+    const root = getStorageRoot();
+    const filePath = path.join(root, storageKey);
+    const normalizedRoot = path.resolve(root);
+    const normalizedFile = path.resolve(filePath);
+
+    if (!normalizedFile.startsWith(normalizedRoot)) {
+      throw new Error("Invalid storage key");
+    }
+
+    return readFile(normalizedFile);
+  }
+
   async put(input: StoreAvatarAssetInput) {
     const buffer = toBuffer(input.bytes);
     const date = new Date().toISOString().slice(0, 10);

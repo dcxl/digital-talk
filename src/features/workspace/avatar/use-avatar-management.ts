@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  readAvatarAssets,
   previewAvatarProfileRequest,
   readAvatarProfiles,
   readProviders,
   saveAvatarProfileRequest,
+  updateAvatarAssetRequest,
+  uploadAvatarAssetRequest,
 } from "../lib/api";
 import type {
   AsyncStatus,
+  AvatarAssetItem,
   AvatarFormState,
   AvatarPreviewResult,
   AvatarPreviewState,
@@ -14,6 +18,10 @@ import type {
   ProviderItem,
 } from "../types";
 import { createBlankAvatarForm } from "./constants";
+
+function getAssetUrl(asset: AvatarAssetItem) {
+  return asset.publicUrl || `/api/avatar-assets/${asset.id}/content`;
+}
 
 function toAvatarForm(profile: AvatarProfileItem): AvatarFormState {
   return {
@@ -45,6 +53,7 @@ function selectAvatar(
 
 export function useAvatarManagement() {
   const [form, setForm] = useState<AvatarFormState>(createBlankAvatarForm());
+  const [assets, setAssets] = useState<AvatarAssetItem[]>([]);
   const [profiles, setProfiles] = useState<AvatarProfileItem[]>([]);
   const [providers, setProviders] = useState<ProviderItem[]>([]);
   const [preview, setPreview] = useState<AvatarPreviewResult | null>(null);
@@ -65,12 +74,14 @@ export function useAvatarManagement() {
     setStatus("loading");
 
     try {
-      const [nextProfiles, nextProviders] = await Promise.all([
+      const [nextAssets, nextProfiles, nextProviders] = await Promise.all([
+        readAvatarAssets(),
         readAvatarProfiles(),
         readProviders(),
       ]);
       const selected = selectAvatar(nextProfiles, preferredId);
 
+      setAssets(nextAssets);
       setProfiles(nextProfiles);
       setProviders(nextProviders);
       setSelectedProfileId(selected?.id ?? "");
@@ -152,13 +163,15 @@ export function useAvatarManagement() {
       setStatus("loading");
 
       try {
-        const [nextProfiles, nextProviders] = await Promise.all([
+        const [nextAssets, nextProfiles, nextProviders] = await Promise.all([
+          readAvatarAssets(),
           readAvatarProfiles(),
           readProviders(),
         ]);
         const selected = selectAvatar(nextProfiles);
 
         if (cancelled) return;
+        setAssets(nextAssets);
         setProfiles(nextProfiles);
         setProviders(nextProviders);
         setSelectedProfileId(selected?.id ?? "");
@@ -179,8 +192,65 @@ export function useAvatarManagement() {
     };
   }, []);
 
+  async function bindAvatarAsset(asset: AvatarAssetItem) {
+    const assetUrl = getAssetUrl(asset);
+    setStatus("loading");
+
+    try {
+      if (form.id) {
+        const [updatedAsset, updatedProfile] = await Promise.all([
+          updateAvatarAssetRequest(asset.id, {
+            profileId: form.id,
+          }),
+          saveAvatarProfileRequest({
+            ...form,
+            previewImageUrl: assetUrl,
+          }),
+        ]);
+
+        setAssets((current) =>
+          current.map((item) => (item.id === updatedAsset.id ? updatedAsset : item)),
+        );
+        setForm(toAvatarForm(updatedProfile));
+        setSelectedProfileId(updatedProfile.id);
+        setStatusText("Avatar Asset 已绑定");
+      } else {
+        setForm((current) => ({
+          ...current,
+          previewImageUrl: assetUrl,
+        }));
+        setStatusText("Asset 已选择，保存 Avatar 后生效");
+      }
+
+      setStatus("success");
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "Avatar Asset 绑定失败");
+    }
+  }
+
+  async function uploadAvatarAsset(file: File) {
+    setStatus("loading");
+
+    try {
+      const asset = await uploadAvatarAssetRequest({
+        file,
+        name: file.name,
+        profileId: form.id,
+      });
+
+      setAssets((current) => [asset, ...current]);
+      await bindAvatarAsset(asset);
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "Avatar Asset 上传失败");
+    }
+  }
+
   return {
+    assets,
     avatarProviders,
+    bindAvatarAsset,
     form,
     isBusy: status === "loading",
     loadAvatarWorkspace,
@@ -194,6 +264,7 @@ export function useAvatarManagement() {
     status,
     statusText,
     updateForm,
+    uploadAvatarAsset,
     voiceProviders,
   };
 }

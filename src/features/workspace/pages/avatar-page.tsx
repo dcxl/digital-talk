@@ -1,6 +1,7 @@
 "use client";
 
 import { PageFrame, RefreshButton } from "../components/page-frame";
+import { AvatarAssetsPanel } from "../avatar/avatar-assets-panel";
 import { AvatarConfigForm } from "../avatar/avatar-config-form";
 import { AvatarList } from "../avatar/avatar-list";
 import { AvatarPreviewStage } from "../avatar/avatar-preview-stage";
@@ -8,7 +9,9 @@ import { useAvatarManagement } from "../avatar/use-avatar-management";
 
 export function AvatarPage() {
   const {
+    assets,
     avatarProviders,
+    bindAvatarAsset,
     form,
     isBusy,
     loadAvatarWorkspace,
@@ -21,6 +24,7 @@ export function AvatarPage() {
     startCreateProfile,
     statusText,
     updateForm,
+    uploadAvatarAsset,
     voiceProviders,
   } = useAvatarManagement();
 
@@ -59,6 +63,15 @@ export function AvatarPage() {
             statusText={statusText}
             voiceProviders={voiceProviders}
           />
+          <div className="2xl:col-span-2">
+            <AvatarAssetsPanel
+              assets={assets}
+              isBusy={isBusy}
+              onBind={(asset) => void bindAvatarAsset(asset)}
+              onUpload={(file) => void uploadAvatarAsset(file)}
+              selectedAssetUrl={form.previewImageUrl}
+            />
+          </div>
         </div>
       </div>
     </PageFrame>

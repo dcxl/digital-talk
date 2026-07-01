@@ -181,6 +181,24 @@ export interface AvatarPreviewResult {
   updatedAt: string;
 }
 
+export interface AvatarAssetItem {
+  createdAt: string;
+  height?: number | null;
+  id: string;
+  metadata?: unknown;
+  mimeType: string;
+  name: string;
+  profileId?: string | null;
+  publicUrl?: string | null;
+  size: number;
+  source: "generated" | "remote" | "upload";
+  status: "active" | "deleted" | "failed" | "processing";
+  storageKey: string;
+  type: "image" | "live2d" | "vrm";
+  updatedAt: string;
+  width?: number | null;
+}
+
 export interface GeneralSettingsState {
   autoSave: boolean;
   language: string;
