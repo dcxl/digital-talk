@@ -145,6 +145,50 @@ export async function updateMessageStatus(
   });
 }
 
+export async function interruptAssistantMessage(input: {
+  conversationId?: string;
+  messageId?: string;
+}) {
+  const prisma = getPrismaClient();
+
+  if (input.messageId) {
+    return prisma.message.update({
+      data: {
+        status: "interrupted",
+      },
+      where: {
+        id: input.messageId,
+      },
+    });
+  }
+
+  if (!input.conversationId) return null;
+
+  const message = await prisma.message.findFirst({
+    orderBy: {
+      createdAt: "desc",
+    },
+    where: {
+      conversationId: input.conversationId,
+      role: "assistant",
+      status: {
+        in: ["pending", "streaming"],
+      },
+    },
+  });
+
+  if (!message) return null;
+
+  return prisma.message.update({
+    data: {
+      status: "interrupted",
+    },
+    where: {
+      id: message.id,
+    },
+  });
+}
+
 export async function updateMessage(input: UpdateMessageInput) {
   const prisma = getPrismaClient();
 

@@ -116,6 +116,7 @@ export function DigitalHumanShell() {
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
   const abortRef = useRef<AbortController | null>(null);
   const activeAssistantRef = useRef<string | null>(null);
+  const persistedAssistantRef = useRef<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const canSend = state === "idle" || state === "speaking" || state === "error";
@@ -303,6 +304,11 @@ export function DigitalHumanShell() {
   }
 
   function applyRuntimeEvent(event: RuntimeEvent, assistantId: string) {
+    if (event.type === "assistant.created") {
+      persistedAssistantRef.current = event.message.id;
+      return;
+    }
+
     if (event.type === "text.delta") {
       setState("streaming");
       setMessages((current) =>
@@ -471,6 +477,7 @@ export function DigitalHumanShell() {
       if (activeAssistantRef.current === assistantId) {
         activeAssistantRef.current = null;
       }
+      persistedAssistantRef.current = null;
     }
   }
 
@@ -492,6 +499,19 @@ export function DigitalHumanShell() {
   function interrupt() {
     stopAudio();
     abortRef.current?.abort();
+    if (conversationId || persistedAssistantRef.current) {
+      void fetch("/api/chat/interrupt", {
+        body: JSON.stringify({
+          conversationId,
+          messageId: persistedAssistantRef.current,
+          reason: "user_interrupt",
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
+    }
     markInterrupted(activeAssistantRef.current ?? undefined);
   }
 
