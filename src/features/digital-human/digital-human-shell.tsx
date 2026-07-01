@@ -378,11 +378,24 @@ export function DigitalHumanShell() {
     setProviderStatus("loading");
 
     try {
-      const response = await fetch("/api/providers/test", {
-        body: JSON.stringify({
-          message: "回复 provider ok",
-          type: "llm",
-        }),
+      const endpoint = providerForm.id
+        ? `/api/providers/${providerForm.id}/test`
+        : "/api/providers/test";
+      const response = await fetch(endpoint, {
+        body: JSON.stringify(
+          providerForm.id
+            ? {
+                input: "回复 provider ok",
+              }
+            : {
+                apiKey: providerForm.apiKey,
+                baseUrl: providerForm.baseUrl,
+                message: "回复 provider ok",
+                model: providerForm.model,
+                provider: providerForm.provider,
+                type: "llm",
+              },
+        ),
         headers: {
           "Content-Type": "application/json",
         },

@@ -5,6 +5,7 @@ import {
   listProviderConfigs,
 } from "@/services/conversations/repository";
 import { isDatabaseConfigured } from "@/services/database/prisma";
+import { sanitizeProviderConfig } from "@/services/providers/provider-presenter";
 import { encryptSecret } from "@/services/security/secret-crypto";
 
 export const runtime = "nodejs";
@@ -31,26 +32,6 @@ function getEnvLLMProvider() {
     model: process.env.DEFAULT_LLM_MODEL || null,
     hasApiKey: Boolean(process.env.DEFAULT_LLM_API_KEY),
     source: "env",
-  };
-}
-
-function sanitizeProviderConfig(
-  config: Awaited<ReturnType<typeof listProviderConfigs>>[number],
-) {
-  return {
-    id: config.id,
-    type: config.type,
-    provider: config.provider,
-    name: config.name,
-    enabled: config.enabled,
-    baseUrl: config.baseUrl,
-    model: config.model,
-    options: config.options,
-    hasApiKey: Boolean(config.apiKeyEncrypted),
-    lastTestStatus: config.lastTestStatus,
-    lastTestAt: config.lastTestAt,
-    createdAt: config.createdAt,
-    updatedAt: config.updatedAt,
   };
 }
 

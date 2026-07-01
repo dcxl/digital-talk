@@ -3,6 +3,7 @@ import type {
   MessageStatus,
   Prisma,
   ProviderType,
+  TestStatus,
 } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/services/database/prisma";
 
@@ -47,6 +48,18 @@ export interface UpsertProviderConfigInput {
 export interface ListProviderConfigsInput {
   type?: ProviderType;
   enabled?: boolean;
+}
+
+export interface UpdateProviderConfigInput {
+  id: string;
+  type?: ProviderType;
+  provider?: string;
+  name?: string;
+  enabled?: boolean;
+  baseUrl?: string | null;
+  apiKeyEncrypted?: string | null;
+  model?: string | null;
+  options?: Prisma.InputJsonValue;
 }
 
 export async function ensureDefaultUser() {
@@ -277,6 +290,64 @@ export async function createProviderConfig(input: UpsertProviderConfigInput) {
       provider: input.provider,
       type: input.type,
       userId: user.id,
+    },
+  });
+}
+
+export async function getProviderConfig(
+  providerId: string,
+  userId = DEFAULT_USER_ID,
+) {
+  const prisma = getPrismaClient();
+
+  return prisma.providerConfig.findFirst({
+    where: {
+      id: providerId,
+      userId,
+    },
+  });
+}
+
+export async function updateProviderConfig(input: UpdateProviderConfigInput) {
+  const prisma = getPrismaClient();
+  const user = await ensureDefaultUser();
+  const data: Prisma.ProviderConfigUpdateInput = {};
+
+  if (input.type !== undefined) data.type = input.type;
+  if (input.provider !== undefined) data.provider = input.provider;
+  if (input.name !== undefined) data.name = input.name;
+  if (input.enabled !== undefined) data.enabled = input.enabled;
+  if (input.baseUrl !== undefined) data.baseUrl = input.baseUrl;
+  if (input.apiKeyEncrypted !== undefined) {
+    data.apiKeyEncrypted = input.apiKeyEncrypted;
+  }
+  if (input.model !== undefined) data.model = input.model;
+  if (input.options !== undefined) data.options = input.options;
+
+  return prisma.providerConfig.update({
+    data,
+    where: {
+      id: input.id,
+      userId: user.id,
+    },
+  });
+}
+
+export async function updateProviderTestStatus(
+  providerId: string,
+  status: TestStatus,
+  userId = DEFAULT_USER_ID,
+) {
+  const prisma = getPrismaClient();
+
+  return prisma.providerConfig.update({
+    data: {
+      lastTestAt: new Date(),
+      lastTestStatus: status,
+    },
+    where: {
+      id: providerId,
+      userId,
     },
   });
 }

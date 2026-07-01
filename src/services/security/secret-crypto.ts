@@ -1,4 +1,9 @@
-import { createCipheriv, createHash, randomBytes } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+} from "node:crypto";
 
 const VERSION = "v1";
 
@@ -27,4 +32,24 @@ export function encryptSecret(value: string) {
     authTag.toString("base64url"),
     encrypted.toString("base64url"),
   ].join(":");
+}
+
+export function decryptSecret(value: string) {
+  const [version, iv, authTag, encrypted] = value.split(":");
+
+  if (version !== VERSION || !iv || !authTag || !encrypted) {
+    throw new Error("Invalid encrypted secret format");
+  }
+
+  const decipher = createDecipheriv(
+    "aes-256-gcm",
+    getEncryptionKey(),
+    Buffer.from(iv, "base64url"),
+  );
+  decipher.setAuthTag(Buffer.from(authTag, "base64url"));
+
+  return Buffer.concat([
+    decipher.update(Buffer.from(encrypted, "base64url")),
+    decipher.final(),
+  ]).toString("utf8");
 }
