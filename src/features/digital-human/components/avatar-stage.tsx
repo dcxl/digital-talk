@@ -3,17 +3,26 @@ import { stateLabel, stateTone } from "../constants";
 import type { RuntimeState } from "../types";
 
 interface AvatarStageProps {
+  avatarImageUrl?: string | null;
+  avatarName?: string | null;
   latestStatus: string;
   state: RuntimeState;
 }
 
-export function AvatarStage({ latestStatus, state }: AvatarStageProps) {
+export function AvatarStage({
+  avatarImageUrl,
+  avatarName,
+  latestStatus,
+  state,
+}: AvatarStageProps) {
   return (
     <section className="min-h-[520px] rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-semibold text-slate-950">Avatar Stage</h2>
-          <p className="mt-1 text-xs text-slate-500">{latestStatus}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {avatarName ? `${avatarName} · ${latestStatus}` : latestStatus}
+          </p>
         </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-medium ${stateTone[state]}`}
@@ -28,13 +37,22 @@ export function AvatarStage({ latestStatus, state }: AvatarStageProps) {
             state === "thinking" || state === "speaking" ? "avatar-ring" : ""
           }`}
         >
-          <div className="relative z-10 flex size-40 items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
-            {state === "thinking" || state === "streaming" ? (
-              <BrainCircuit size={64} />
-            ) : (
-              <Bot size={72} />
-            )}
-          </div>
+          {avatarImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              alt={avatarName ?? "Avatar"}
+              className="relative z-10 size-44 rounded-full object-cover shadow-2xl"
+              src={avatarImageUrl}
+            />
+          ) : (
+            <div className="relative z-10 flex size-40 items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
+              {state === "thinking" || state === "streaming" ? (
+                <BrainCircuit size={64} />
+              ) : (
+                <Bot size={72} />
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex h-12 items-end gap-2">

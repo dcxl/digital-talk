@@ -5,6 +5,7 @@ import { AppHeader } from "./components/app-header";
 import { AvatarStage } from "./components/avatar-stage";
 import { ConversationPanel } from "./components/conversation-panel";
 import { ProviderSettingsDrawer } from "./components/provider-settings-drawer";
+import { useAvatarProfile } from "./hooks/use-avatar-profile";
 import { useAudioPlayback } from "./hooks/use-audio-playback";
 import { useConversationHistory } from "./hooks/use-conversation-history";
 import { useKnowledgeBases } from "./hooks/use-knowledge-bases";
@@ -21,6 +22,7 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
   const [state, setState] = useState<RuntimeState>("idle");
   const [input, setInput] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { avatarProfile, loadAvatarProfile } = useAvatarProfile();
   const {
     createKnowledgeBase,
     knowledgeBases,
@@ -94,7 +96,8 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
   useEffect(() => {
     void loadConversations();
     void loadKnowledgeBases();
-  }, [loadConversations, loadKnowledgeBases]);
+    void loadAvatarProfile();
+  }, [loadAvatarProfile, loadConversations, loadKnowledgeBases]);
 
   useEffect(() => {
     if (selectedKnowledgeBaseId) {
@@ -386,7 +389,12 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
             : "mx-auto grid max-w-7xl gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(360px,0.9fr)_minmax(0,1.1fr)]"
         }
       >
-        <AvatarStage latestStatus={latestStatus} state={state} />
+        <AvatarStage
+          avatarImageUrl={avatarProfile?.previewImageUrl}
+          avatarName={avatarProfile?.name}
+          latestStatus={latestStatus}
+          state={state}
+        />
         <ConversationPanel
           canSend={canSend}
           conversationId={conversationId}
