@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ConversationStatus {
+  active
+  archived
+  deleted
+}
+
+enum MessageRole {
+  user
+  assistant
+  system
+  tool
+}
+
+enum MessageStatus {
+  pending
+  streaming
+  completed
+  failed
+  interrupted
+}
+
+enum ProviderType {
+  llm
+  tts
+  asr
+  embedding
+  avatar
+}
+
+enum TestStatus {
+  success
+  failed
+}
+
+model User {
+  id              String           @id @default(cuid())
+  name            String?
+  email           String?          @unique
+  avatarUrl       String?
+  conversations   Conversation[]
+  providerConfigs ProviderConfig[]
+  appSettings     AppSetting[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Conversation {
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  summary         String?
+  status          ConversationStatus @default(active)
+  modelProviderId String?
+  knowledgeBaseId String?
+  lastMessageAt   DateTime?
+  messages        Message[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([lastMessageAt])
+  @@index([status])
+}
+
+model Message {
+  id              String        @id @default(cuid())
+  conversationId  String
+  conversation    Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            MessageRole
+  content         String
+  status          MessageStatus @default(completed)
+  metadata        Json?
+  parentMessageId String?
+  parentMessage   Message?      @relation("MessageBranches", fields: [parentMessageId], references: [id])
+  childMessages   Message[]     @relation("MessageBranches")
+  audioUrl        String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([conversationId])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model ProviderConfig {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            ProviderType
+  provider        String
+  name            String
+  enabled         Boolean      @default(true)
+  baseUrl         String?
+  apiKeyEncrypted String?
+  model           String?
+  options         Json?
+  lastTestStatus  TestStatus?
+  lastTestAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([enabled])
+}
+
+model AppSetting {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+}
