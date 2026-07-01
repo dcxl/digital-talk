@@ -33,6 +33,17 @@ interface PersistedTurn {
   userMessageId: string;
 }
 
+interface TokenUsageMetadata {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
+interface RAGBuildResult {
+  messages: LLMMessage[];
+  sources: ReturnType<typeof toRAGSourcePreview>;
+}
+
 function enqueue(
   controller: ReadableStreamDefaultController<Uint8Array>,
   event: RuntimeEvent,
@@ -44,9 +55,12 @@ async function buildLLMMessages(input: {
   controller: ReadableStreamDefaultController<Uint8Array>;
   knowledgeBaseId?: string;
   message: string;
-}): Promise<LLMMessage[]> {
+}): Promise<RAGBuildResult> {
   if (!input.knowledgeBaseId || !isDatabaseConfigured()) {
-    return [{ role: "user", content: input.message }];
+    return {
+      messages: [{ role: "user", content: input.message }],
+      sources: [],
+    };
   }
 
   enqueue(input.controller, {
@@ -75,25 +89,32 @@ async function buildLLMMessages(input: {
         knowledgeBaseId: input.knowledgeBaseId,
         query: input.message,
       });
-      return [{ role: "user", content: input.message }];
+      return {
+        messages: [{ role: "user", content: input.message }],
+        sources: [],
+      };
     }
 
+    const sourcePreview = toRAGSourcePreview(sources);
     enqueue(input.controller, {
       type: "rag.retrieve.completed",
-      chunks: toRAGSourcePreview(sources),
+      chunks: sourcePreview,
       knowledgeBaseId: input.knowledgeBaseId,
     });
 
-    return [
-      {
-        role: "system",
-        content: contextMessage,
-      },
-      {
-        role: "user",
-        content: input.message,
-      },
-    ];
+    return {
+      messages: [
+        {
+          role: "system",
+          content: contextMessage,
+        },
+        {
+          role: "user",
+          content: input.message,
+        },
+      ],
+      sources: sourcePreview,
+    };
   } catch (error) {
     enqueue(input.controller, {
       type: "rag.retrieve.failed",
@@ -101,8 +122,42 @@ async function buildLLMMessages(input: {
       message: error instanceof Error ? error.message : "RAG retrieve failed",
       retryable: true,
     });
-    return [{ role: "user", content: input.message }];
+    return {
+      messages: [{ role: "user", content: input.message }],
+      sources: [],
+    };
   }
+}
+
+function buildAssistantMetadata(input: {
+  knowledgeBaseId?: string;
+  ragSources: ReturnType<typeof toRAGSourcePreview>;
+  usage?: TokenUsageMetadata;
+}) {
+  const metadata: {
+    inputTokens?: number;
+    outputTokens?: number;
+    rag?: {
+      knowledgeBaseId: string;
+      sources: ReturnType<typeof toRAGSourcePreview>;
+    };
+    totalTokens?: number;
+  } = {};
+
+  if (input.usage) {
+    metadata.inputTokens = input.usage.inputTokens;
+    metadata.outputTokens = input.usage.outputTokens;
+    metadata.totalTokens = input.usage.totalTokens;
+  }
+
+  if (input.knowledgeBaseId && input.ragSources.length > 0) {
+    metadata.rag = {
+      knowledgeBaseId: input.knowledgeBaseId,
+      sources: input.ragSources,
+    };
+  }
+
+  return Object.keys(metadata).length > 0 ? metadata : undefined;
 }
 
 async function createPersistenceTurn(input: {
@@ -217,13 +272,7 @@ export async function POST(request: NextRequest) {
         const avatarProvider = getAvatarProvider();
         let assistantText = "";
         let audioUrl: string | undefined;
-        let usage:
-          | {
-              inputTokens: number;
-              outputTokens: number;
-              totalTokens: number;
-            }
-          | undefined;
+        let usage: TokenUsageMetadata | undefined;
 
         enqueue(controller, {
           type: "message.created",
@@ -255,7 +304,7 @@ export async function POST(request: NextRequest) {
           state: "thinking",
           reason: "request_received",
         });
-        const llmMessages = await buildLLMMessages({
+        const rag = await buildLLMMessages({
           controller,
           knowledgeBaseId,
           message,
@@ -263,7 +312,7 @@ export async function POST(request: NextRequest) {
 
         for await (const chunk of llmProvider.chat({
           conversationId: turn.conversationId,
-          messages: llmMessages,
+          messages: rag.messages,
           signal: request.signal,
         })) {
           if (request.signal.aborted) {
@@ -358,7 +407,11 @@ export async function POST(request: NextRequest) {
             audioUrl,
             content: assistantText,
             messageId: assistantId,
-            metadata: usage,
+            metadata: buildAssistantMetadata({
+              knowledgeBaseId,
+              ragSources: rag.sources,
+              usage,
+            }),
             status: "completed",
           });
         }
