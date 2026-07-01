@@ -43,6 +43,11 @@ export interface UpsertProviderConfigInput {
   options?: Prisma.InputJsonValue;
 }
 
+export interface ListProviderConfigsInput {
+  type?: ProviderType;
+  enabled?: boolean;
+}
+
 export async function ensureDefaultUser() {
   const prisma = getPrismaClient();
 
@@ -208,6 +213,21 @@ export async function createProviderConfig(input: UpsertProviderConfigInput) {
       provider: input.provider,
       type: input.type,
       userId: user.id,
+    },
+  });
+}
+
+export async function listProviderConfigs(input: ListProviderConfigsInput = {}) {
+  const prisma = getPrismaClient();
+
+  return prisma.providerConfig.findMany({
+    orderBy: {
+      updatedAt: "desc",
+    },
+    where: {
+      enabled: input.enabled,
+      type: input.type,
+      userId: DEFAULT_USER_ID,
     },
   });
 }
