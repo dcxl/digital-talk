@@ -79,6 +79,9 @@ model Conversation {
   knowledgeBaseId String?
   knowledgeBase   KnowledgeBase?     @relation(fields: [knowledgeBaseId], references: [id], onDelete: SetNull)
   lastMessageAt   DateTime?
+  isStarred       Boolean            @default(false)
+  archivedAt      DateTime?
+  deletedAt       DateTime?
   messages        Message[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
@@ -86,6 +89,8 @@ model Conversation {
   @@index([userId])
   @@index([knowledgeBaseId])
   @@index([lastMessageAt])
+  @@index([isStarred])
+  @@index([archivedAt])
   @@index([status])
 }
 

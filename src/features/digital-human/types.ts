@@ -30,9 +30,16 @@ export interface ProviderFormState {
 }
 
 export interface ConversationSummary {
+  _count?: {
+    messages: number;
+  };
+  archivedAt?: string | null;
+  deletedAt?: string | null;
   id: string;
+  isStarred?: boolean;
   title: string;
   lastMessageAt?: string | null;
+  status?: string;
 }
 
 export interface PersistedMessage {

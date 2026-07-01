@@ -1,4 +1,5 @@
 import type {
+  ConversationStatus,
   MessageRole,
   MessageStatus,
   Prisma,
@@ -13,6 +14,14 @@ export interface CreateConversationInput {
   message: string;
   modelProviderId?: string;
   knowledgeBaseId?: string;
+}
+
+export interface ListConversationsInput {
+  limit?: number;
+  q?: string;
+  starred?: boolean;
+  status?: ConversationStatus;
+  userId?: string;
 }
 
 export interface AppendMessageInput {
@@ -31,6 +40,14 @@ export interface UpdateMessageInput {
   status?: MessageStatus;
   audioUrl?: string;
   metadata?: Prisma.InputJsonValue;
+}
+
+export interface UpdateConversationInput {
+  conversationId: string;
+  isStarred?: boolean;
+  status?: ConversationStatus;
+  title?: string;
+  userId?: string;
 }
 
 export interface UpsertProviderConfigInput {
@@ -219,18 +236,41 @@ export async function updateMessage(input: UpdateMessageInput) {
   });
 }
 
-export async function listActiveConversations(userId = DEFAULT_USER_ID) {
+export async function listConversations(input: ListConversationsInput = {}) {
   const prisma = getPrismaClient();
+  const keyword = input.q?.trim();
+  const limit = Math.min(Math.max(input.limit ?? 30, 1), 100);
 
   return prisma.conversation.findMany({
+    include: {
+      _count: {
+        select: {
+          messages: true,
+        },
+      },
+    },
     orderBy: {
       lastMessageAt: "desc",
     },
-    take: 30,
+    take: limit,
     where: {
-      status: "active",
-      userId,
+      isStarred: input.starred,
+      status: input.status ?? "active",
+      title: keyword
+        ? {
+            contains: keyword,
+            mode: "insensitive",
+          }
+        : undefined,
+      userId: input.userId ?? DEFAULT_USER_ID,
     },
+  });
+}
+
+export async function listActiveConversations(userId = DEFAULT_USER_ID) {
+  return listConversations({
+    status: "active",
+    userId,
   });
 }
 
@@ -250,8 +290,55 @@ export async function getConversationWithMessages(
     },
     where: {
       id: conversationId,
-      status: "active",
+      status: {
+        not: "deleted",
+      },
       userId,
+    },
+  });
+}
+
+export async function getConversation(
+  conversationId: string,
+  userId = DEFAULT_USER_ID,
+) {
+  const prisma = getPrismaClient();
+
+  return prisma.conversation.findFirst({
+    where: {
+      id: conversationId,
+      userId,
+    },
+  });
+}
+
+export async function updateConversation(input: UpdateConversationInput) {
+  const prisma = getPrismaClient();
+  const status = input.status;
+  const data: Prisma.ConversationUpdateInput = {};
+
+  if (input.title !== undefined) data.title = input.title.trim() || "新会话";
+  if (input.isStarred !== undefined) data.isStarred = input.isStarred;
+  if (status !== undefined) {
+    data.status = status;
+    if (status === "active") {
+      data.archivedAt = null;
+      data.deletedAt = null;
+    }
+    if (status === "archived") {
+      data.archivedAt = new Date();
+      data.deletedAt = null;
+    }
+    if (status === "deleted") {
+      data.deletedAt = new Date();
+    }
+  }
+
+  return prisma.conversation.update({
+    data,
+    where: {
+      id: input.conversationId,
+      userId: input.userId ?? DEFAULT_USER_ID,
     },
   });
 }
@@ -260,16 +347,10 @@ export async function deleteConversation(
   conversationId: string,
   userId = DEFAULT_USER_ID,
 ) {
-  const prisma = getPrismaClient();
-
-  return prisma.conversation.update({
-    data: {
-      status: "deleted",
-    },
-    where: {
-      id: conversationId,
-      userId,
-    },
+  return updateConversation({
+    conversationId,
+    status: "deleted",
+    userId,
   });
 }
 
