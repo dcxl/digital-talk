@@ -16,6 +16,7 @@ import {
   Send,
   Settings,
   Sparkles,
+  Trash2,
   Upload,
   Volume2,
   X,
@@ -467,6 +468,32 @@ export function DigitalHumanShell() {
     setConversationId(undefined);
     setMessages([welcomeMessage]);
     setState("idle");
+  }
+
+  async function deleteCurrentConversation() {
+    if (!conversationId || !canSend) return;
+
+    setHistoryStatus("loading");
+
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: "DELETE",
+      });
+      const payload = (await response.json()) as {
+        error?: {
+          message?: string;
+        };
+      };
+
+      if (!response.ok) throw new Error(payload.error?.message);
+
+      setConversationId(undefined);
+      setMessages([welcomeMessage]);
+      setHistoryStatus("idle");
+      await loadConversations();
+    } catch {
+      setHistoryStatus("error");
+    }
   }
 
   async function transcribeAudio(audio: Blob) {
@@ -1047,6 +1074,14 @@ export function DigitalHumanShell() {
                   title="新建会话"
                 >
                   <Plus size={16} />
+                </button>
+                <button
+                  className="flex size-9 items-center justify-center rounded-md border border-slate-200 text-slate-600 disabled:opacity-40"
+                  disabled={!conversationId || !canSend}
+                  onClick={deleteCurrentConversation}
+                  title="删除当前会话"
+                >
+                  <Trash2 size={16} />
                 </button>
                 <button
                   className="flex size-9 items-center justify-center rounded-md border border-slate-200 text-slate-600 disabled:opacity-40"

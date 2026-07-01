@@ -256,6 +256,23 @@ export async function getConversationWithMessages(
   });
 }
 
+export async function deleteConversation(
+  conversationId: string,
+  userId = DEFAULT_USER_ID,
+) {
+  const prisma = getPrismaClient();
+
+  return prisma.conversation.update({
+    data: {
+      status: "deleted",
+    },
+    where: {
+      id: conversationId,
+      userId,
+    },
+  });
+}
+
 export async function createProviderConfig(input: UpsertProviderConfigInput) {
   const prisma = getPrismaClient();
   const user = await ensureDefaultUser();
