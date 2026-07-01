@@ -6,6 +6,7 @@ import {
 import { getAvatarProvider } from "@/providers/avatar";
 import { getLLMProvider } from "@/providers/llm";
 import { getTTSProvider } from "@/providers/tts";
+import type { LLMMessage } from "@/core/providers/types";
 import {
   appendMessage,
   createConversationWithUserMessage,
@@ -13,6 +14,12 @@ import {
   updateMessageStatus,
 } from "@/services/conversations/repository";
 import { isDatabaseConfigured } from "@/services/database/prisma";
+import { searchDocumentChunks } from "@/services/knowledge/repository";
+import {
+  toRAGContextMessage,
+  toRAGSourcePreview,
+  type RAGSource,
+} from "@/services/knowledge/rag";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,6 +38,71 @@ function enqueue(
   event: RuntimeEvent,
 ) {
   controller.enqueue(encoder.encode(encodeRuntimeEvent(event)));
+}
+
+async function buildLLMMessages(input: {
+  controller: ReadableStreamDefaultController<Uint8Array>;
+  knowledgeBaseId?: string;
+  message: string;
+}): Promise<LLMMessage[]> {
+  if (!input.knowledgeBaseId || !isDatabaseConfigured()) {
+    return [{ role: "user", content: input.message }];
+  }
+
+  enqueue(input.controller, {
+    type: "rag.retrieve.started",
+    knowledgeBaseId: input.knowledgeBaseId,
+    query: input.message,
+  });
+
+  try {
+    const chunks = await searchDocumentChunks({
+      knowledgeBaseId: input.knowledgeBaseId,
+      limit: 4,
+      query: input.message,
+    });
+    const sources: RAGSource[] = chunks.map((chunk) => ({
+      chunkId: chunk.id,
+      content: chunk.content,
+      documentId: chunk.documentId,
+      documentName: chunk.document.name,
+    }));
+    const contextMessage = toRAGContextMessage(sources);
+
+    if (!contextMessage) {
+      enqueue(input.controller, {
+        type: "rag.retrieve.empty",
+        knowledgeBaseId: input.knowledgeBaseId,
+        query: input.message,
+      });
+      return [{ role: "user", content: input.message }];
+    }
+
+    enqueue(input.controller, {
+      type: "rag.retrieve.completed",
+      chunks: toRAGSourcePreview(sources),
+      knowledgeBaseId: input.knowledgeBaseId,
+    });
+
+    return [
+      {
+        role: "system",
+        content: contextMessage,
+      },
+      {
+        role: "user",
+        content: input.message,
+      },
+    ];
+  } catch (error) {
+    enqueue(input.controller, {
+      type: "rag.retrieve.failed",
+      knowledgeBaseId: input.knowledgeBaseId,
+      message: error instanceof Error ? error.message : "RAG retrieve failed",
+      retryable: true,
+    });
+    return [{ role: "user", content: input.message }];
+  }
 }
 
 async function createPersistenceTurn(input: {
@@ -183,10 +255,15 @@ export async function POST(request: NextRequest) {
           state: "thinking",
           reason: "request_received",
         });
+        const llmMessages = await buildLLMMessages({
+          controller,
+          knowledgeBaseId,
+          message,
+        });
 
         for await (const chunk of llmProvider.chat({
           conversationId: turn.conversationId,
-          messages: [{ role: "user", content: message }],
+          messages: llmMessages,
           signal: request.signal,
         })) {
           if (request.signal.aborted) {
