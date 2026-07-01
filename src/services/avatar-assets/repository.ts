@@ -33,6 +33,18 @@ export interface ListAvatarAssetsInput {
   userId?: string;
 }
 
+export interface UpdateAvatarAssetInput {
+  assetId: string;
+  height?: number | null;
+  metadata?: unknown;
+  name?: string;
+  profileId?: string | null;
+  publicUrl?: string | null;
+  status?: AvatarAssetStatus;
+  userId?: string;
+  width?: number | null;
+}
+
 function toInputJson(value: unknown) {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
@@ -104,6 +116,30 @@ export async function softDeleteAvatarAsset(
     where: {
       id: assetId,
       userId,
+    },
+  });
+}
+
+export async function updateAvatarAsset(input: UpdateAvatarAssetInput) {
+  const prisma = getPrismaClient();
+  const data: Prisma.AvatarAssetUncheckedUpdateInput = {};
+
+  if (input.height !== undefined) data.height = input.height;
+  if (input.metadata !== undefined) {
+    data.metadata =
+      input.metadata === null ? undefined : toInputJson(input.metadata);
+  }
+  if (input.name !== undefined) data.name = input.name;
+  if (input.profileId !== undefined) data.profileId = input.profileId;
+  if (input.publicUrl !== undefined) data.publicUrl = input.publicUrl;
+  if (input.status !== undefined) data.status = input.status;
+  if (input.width !== undefined) data.width = input.width;
+
+  return prisma.avatarAsset.update({
+    data,
+    where: {
+      id: input.assetId,
+      userId: input.userId ?? DEFAULT_USER_ID,
     },
   });
 }
