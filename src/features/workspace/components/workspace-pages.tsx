@@ -34,10 +34,63 @@ interface WorkspaceSnapshot {
   providers: ProviderItem[];
 }
 
+interface DashboardSummary {
+  metrics: {
+    activeProviderCount: number;
+    avgLatencyMs: number;
+    conversationCount: number;
+    knowledgeChunkCount: number;
+    knowledgeDocumentCount: number;
+    providerCount: number;
+    tokensToday: number;
+  };
+  recentConversations: ConversationItem[];
+  runtimeStatus: Array<{
+    id: string;
+    lastTestAt?: string | null;
+    model?: string | null;
+    name: string;
+    provider: string;
+    status: string;
+    type: string;
+  }>;
+  systemInfo: {
+    environment: string;
+    persistenceEnabled: boolean;
+    uptimeSeconds: number;
+    version: string;
+  };
+  tokenUsage: Array<{
+    date: string;
+    totalTokens: number;
+  }>;
+}
+
 const emptySnapshot: WorkspaceSnapshot = {
   conversations: [],
   knowledgeBases: [],
   providers: [],
+};
+
+const emptyDashboardSummary: DashboardSummary = {
+  metrics: {
+    activeProviderCount: 0,
+    avgLatencyMs: 0,
+    conversationCount: 0,
+    knowledgeChunkCount: 0,
+    knowledgeDocumentCount: 0,
+    providerCount: 0,
+    tokensToday: 0,
+  },
+  recentConversations: [],
+  runtimeStatus: [],
+  systemInfo: {
+    environment: "development",
+    persistenceEnabled: false,
+    uptimeSeconds: 0,
+    version: "0.1.0",
+  },
+  tokenUsage: [],
 };
 
 async function fetchJson<T>(url: string): Promise<T | null> {
@@ -168,43 +221,60 @@ function useWorkspaceSnapshot() {
 }
 
 export function DashboardPage() {
-  const { isLoading, loadSnapshot, snapshot } = useWorkspaceSnapshot();
-  const documentCount = snapshot.knowledgeBases.reduce(
-    (total, item) => total + item.documentCount,
-    0,
-  );
-  const chunkCount = snapshot.knowledgeBases.reduce(
-    (total, item) => total + item.chunkCount,
-    0,
-  );
-  const activeProviders = snapshot.providers.filter((item) => item.enabled);
+  const [summary, setSummary] = useState<DashboardSummary>(emptyDashboardSummary);
+  const [isLoading, setIsLoading] = useState(true);
+
+  async function loadSummary() {
+    setIsLoading(true);
+    const payload =
+      await fetchJson<{ data?: DashboardSummary }>("/api/dashboard/summary");
+
+    setSummary(payload?.data ?? emptyDashboardSummary);
+    setIsLoading(false);
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void fetchJson<{ data?: DashboardSummary }>("/api/dashboard/summary").then(
+      (payload) => {
+        if (cancelled) return;
+        setSummary(payload?.data ?? emptyDashboardSummary);
+        setIsLoading(false);
+      },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const metrics = [
     {
       label: "Conversations",
-      value: snapshot.conversations.length.toLocaleString("zh-CN"),
+      value: summary.metrics.conversationCount.toLocaleString("zh-CN"),
       helper: "Active sessions",
     },
     {
       label: "Knowledge Docs",
-      value: documentCount.toLocaleString("zh-CN"),
-      helper: `${chunkCount.toLocaleString("zh-CN")} chunks`,
+      value: summary.metrics.knowledgeDocumentCount.toLocaleString("zh-CN"),
+      helper: `${summary.metrics.knowledgeChunkCount.toLocaleString("zh-CN")} chunks`,
     },
     {
       label: "Providers",
-      value: activeProviders.length.toLocaleString("zh-CN"),
-      helper: `${snapshot.providers.length.toLocaleString("zh-CN")} configured`,
+      value: summary.metrics.activeProviderCount.toLocaleString("zh-CN"),
+      helper: `${summary.metrics.providerCount.toLocaleString("zh-CN")} configured`,
     },
     {
       label: "Tokens Today",
-      value: "0",
-      helper: "Metric table pending",
+      value: summary.metrics.tokensToday.toLocaleString("zh-CN"),
+      helper: `Avg latency ${summary.metrics.avgLatencyMs} ms`,
     },
   ];
 
   return (
     <PageFrame
-      actions={<RefreshButton isLoading={isLoading} onClick={loadSnapshot} />}
+      actions={<RefreshButton isLoading={isLoading} onClick={loadSummary} />}
       eyebrow="Overview"
       title="运行概览"
     >
@@ -228,7 +298,7 @@ export function DashboardPage() {
             </h3>
           </div>
           <div className="divide-y divide-slate-100">
-            {snapshot.providers.map((provider) => (
+            {summary.runtimeStatus.map((provider) => (
               <div
                 className="flex items-center justify-between gap-3 px-4 py-3"
                 key={provider.id}
@@ -242,11 +312,11 @@ export function DashboardPage() {
                   </p>
                 </div>
                 <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
-                  {provider.enabled ? "Online" : "Disabled"}
+                  {provider.status}
                 </span>
               </div>
             ))}
-            {snapshot.providers.length === 0 ? (
+            {summary.runtimeStatus.length === 0 ? (
               <div className="px-4 py-8 text-sm text-slate-500">
                 暂无 Provider 配置
               </div>
@@ -261,7 +331,7 @@ export function DashboardPage() {
             </h3>
           </div>
           <div className="divide-y divide-slate-100">
-            {snapshot.conversations.slice(0, 6).map((conversation) => (
+            {summary.recentConversations.map((conversation) => (
               <Link
                 className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50"
                 href="/conversation"
@@ -278,7 +348,7 @@ export function DashboardPage() {
                 <ArrowRight size={15} />
               </Link>
             ))}
-            {snapshot.conversations.length === 0 ? (
+            {summary.recentConversations.length === 0 ? (
               <div className="px-4 py-8 text-sm text-slate-500">暂无会话</div>
             ) : null}
           </div>

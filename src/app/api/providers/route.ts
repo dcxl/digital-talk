@@ -5,6 +5,7 @@ import {
   listProviderConfigs,
 } from "@/services/conversations/repository";
 import { isDatabaseConfigured } from "@/services/database/prisma";
+import { getEnvLLMProvider } from "@/services/providers/env-provider";
 import { sanitizeProviderConfig } from "@/services/providers/provider-presenter";
 import { encryptSecret } from "@/services/security/secret-crypto";
 
@@ -18,22 +19,6 @@ const providerTypes = new Set<ProviderType>([
   "embedding",
   "avatar",
 ]);
-
-function getEnvLLMProvider() {
-  const provider = process.env.LLM_PROVIDER?.trim() || "mock";
-
-  return {
-    id: "env-default-llm",
-    type: "llm",
-    provider,
-    name: provider === "mock" ? "Mock LLM" : "Environment LLM",
-    enabled: true,
-    baseUrl: process.env.DEFAULT_LLM_BASE_URL || null,
-    model: process.env.DEFAULT_LLM_MODEL || null,
-    hasApiKey: Boolean(process.env.DEFAULT_LLM_API_KEY),
-    source: "env",
-  };
-}
 
 export async function GET() {
   if (!isDatabaseConfigured()) {
