@@ -25,7 +25,13 @@ export interface ChatMessage {
 
 export type RuntimeEvent =
   | {
+      type: "message.created";
+      conversationId?: string;
+      message: ChatMessage;
+    }
+  | {
       type: "assistant.created";
+      conversationId?: string;
       message: ChatMessage;
     }
   | {
@@ -67,6 +73,7 @@ export type RuntimeEvent =
     }
   | {
       type: "done";
+      conversationId?: string;
       messageId: string;
     }
   | {

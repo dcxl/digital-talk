@@ -58,6 +58,7 @@ function parseRuntimeEvent(block: string): RuntimeEvent | null {
 
 export function DigitalHumanShell() {
   const [state, setState] = useState<RuntimeState>("idle");
+  const [conversationId, setConversationId] = useState<string | undefined>();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -182,6 +183,11 @@ export function DigitalHumanShell() {
             : message,
         ),
       );
+      return;
+    }
+
+    if (event.type === "done") {
+      if (event.conversationId) setConversationId(event.conversationId);
     }
   }
 
@@ -242,7 +248,7 @@ export function DigitalHumanShell() {
 
     try {
       const response = await fetch("/api/chat", {
-        body: JSON.stringify({ message: content }),
+        body: JSON.stringify({ conversationId, message: content }),
         headers: {
           "Content-Type": "application/json",
         },

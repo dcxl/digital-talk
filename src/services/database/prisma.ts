@@ -5,24 +5,42 @@ type GlobalWithPrisma = typeof globalThis & {
   prisma?: PrismaClient;
 };
 
-function createPrismaClient() {
+function getDatabaseUrl() {
   const databaseUrl = process.env.DATABASE_URL;
 
   if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required to create PrismaClient");
+    throw new Error("DATABASE_URL is required");
   }
 
+  return databaseUrl;
+}
+
+export function isDatabaseConfigured() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) return false;
+
+  try {
+    const url = new URL(databaseUrl);
+    return Boolean(url.hostname && url.hostname.toLowerCase() !== "host");
+  } catch {
+    return false;
+  }
+}
+
+function createPrismaClient() {
   return new PrismaClient({
     adapter: new PrismaPg({
-      connectionString: databaseUrl,
+      connectionString: getDatabaseUrl(),
     }),
   });
 }
 
 const globalForPrisma = globalThis as GlobalWithPrisma;
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+export function getPrismaClient() {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient();
+  }
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+  return globalForPrisma.prisma;
 }

@@ -4,7 +4,7 @@ import type {
   Prisma,
   ProviderType,
 } from "@/generated/prisma/client";
-import { prisma } from "@/services/database/prisma";
+import { getPrismaClient } from "@/services/database/prisma";
 
 export const DEFAULT_USER_ID = "default-user";
 
@@ -24,6 +24,14 @@ export interface AppendMessageInput {
   parentMessageId?: string;
 }
 
+export interface UpdateMessageInput {
+  messageId: string;
+  content?: string;
+  status?: MessageStatus;
+  audioUrl?: string;
+  metadata?: Prisma.InputJsonValue;
+}
+
 export interface UpsertProviderConfigInput {
   type: ProviderType;
   provider: string;
@@ -36,6 +44,8 @@ export interface UpsertProviderConfigInput {
 }
 
 export async function ensureDefaultUser() {
+  const prisma = getPrismaClient();
+
   return prisma.user.upsert({
     create: {
       id: DEFAULT_USER_ID,
@@ -56,6 +66,7 @@ export function createConversationTitle(message: string) {
 export async function createConversationWithUserMessage(
   input: CreateConversationInput,
 ) {
+  const prisma = getPrismaClient();
   const user = await ensureDefaultUser();
   const now = new Date();
 
@@ -85,6 +96,8 @@ export async function createConversationWithUserMessage(
 }
 
 export async function appendMessage(input: AppendMessageInput) {
+  const prisma = getPrismaClient();
+
   return prisma.$transaction(async (tx) => {
     const message = await tx.message.create({
       data: {
@@ -115,6 +128,8 @@ export async function updateMessageStatus(
   messageId: string,
   status: MessageStatus,
 ) {
+  const prisma = getPrismaClient();
+
   return prisma.message.update({
     data: {
       status,
@@ -125,7 +140,25 @@ export async function updateMessageStatus(
   });
 }
 
+export async function updateMessage(input: UpdateMessageInput) {
+  const prisma = getPrismaClient();
+
+  return prisma.message.update({
+    data: {
+      audioUrl: input.audioUrl,
+      content: input.content,
+      metadata: input.metadata,
+      status: input.status,
+    },
+    where: {
+      id: input.messageId,
+    },
+  });
+}
+
 export async function listActiveConversations(userId = DEFAULT_USER_ID) {
+  const prisma = getPrismaClient();
+
   return prisma.conversation.findMany({
     orderBy: {
       lastMessageAt: "desc",
@@ -139,6 +172,7 @@ export async function listActiveConversations(userId = DEFAULT_USER_ID) {
 }
 
 export async function createProviderConfig(input: UpsertProviderConfigInput) {
+  const prisma = getPrismaClient();
   const user = await ensureDefaultUser();
 
   return prisma.providerConfig.create({
