@@ -95,3 +95,27 @@ export interface AvatarProvider extends ProviderDescriptor {
   capability: "avatar";
   setState(input: AvatarStateInput): Promise<AvatarStateResult>;
 }
+
+export interface ASRInput {
+  audio: Blob;
+  language?: string;
+  signal?: AbortSignal;
+}
+
+export interface ASRSegment {
+  startMs: number;
+  endMs: number;
+  text: string;
+}
+
+export interface ASRResult {
+  text: string;
+  language?: string;
+  durationMs?: number;
+  segments: ASRSegment[];
+}
+
+export interface ASRProvider extends ProviderDescriptor {
+  capability: "asr";
+  transcribe(input: ASRInput): Promise<ASRResult>;
+}
