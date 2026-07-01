@@ -75,6 +75,8 @@ interface ConversationDetail extends ConversationSummary {
 
 const stateLabel: Record<RuntimeState, string> = {
   idle: "待机",
+  listening: "录音中",
+  transcribing: "转写中",
   thinking: "思考中",
   streaming: "生成中",
   synthesizing: "合成语音",
@@ -85,6 +87,8 @@ const stateLabel: Record<RuntimeState, string> = {
 
 const stateTone: Record<RuntimeState, string> = {
   idle: "bg-slate-100 text-slate-700",
+  listening: "bg-violet-100 text-violet-800",
+  transcribing: "bg-fuchsia-100 text-fuchsia-800",
   thinking: "bg-amber-100 text-amber-800",
   streaming: "bg-blue-100 text-blue-800",
   synthesizing: "bg-cyan-100 text-cyan-800",
@@ -135,12 +139,20 @@ export function DigitalHumanShell() {
   const activeAssistantRef = useRef<string | null>(null);
   const persistedAssistantRef = useRef<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
 
   const canSend = state === "idle" || state === "speaking" || state === "error";
-  const isBusy = ["thinking", "streaming", "synthesizing"].includes(state);
+  const isBusy = ["thinking", "streaming", "synthesizing", "transcribing"].includes(
+    state,
+  );
 
   useEffect(() => {
-    return () => abortRef.current?.abort();
+    return () => {
+      abortRef.current?.abort();
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
   }, []);
 
   useEffect(() => {
@@ -149,6 +161,8 @@ export function DigitalHumanShell() {
 
   const latestStatus = useMemo(() => {
     if (state === "speaking") return "Avatar 正在播报回复";
+    if (state === "listening") return "正在接收麦克风输入";
+    if (state === "transcribing") return "ASR 正在转写语音";
     if (state === "streaming") return "LLM 正在流式生成";
     if (state === "thinking") return "请求已提交，等待首包";
     if (state === "error") return "服务端调用异常，可重试";
@@ -269,6 +283,95 @@ export function DigitalHumanShell() {
     setConversationId(undefined);
     setMessages([welcomeMessage]);
     setState("idle");
+  }
+
+  async function transcribeAudio(audio: Blob) {
+    setState("transcribing");
+
+    try {
+      const formData = new FormData();
+      formData.append("audio", audio, "recording.webm");
+      formData.append("language", "zh");
+
+      const response = await fetch("/api/asr", {
+        body: formData,
+        method: "POST",
+      });
+      const payload = (await response.json()) as {
+        data?: {
+          text?: string;
+        };
+        error?: {
+          message?: string;
+        };
+      };
+
+      if (!response.ok) throw new Error(payload.error?.message);
+
+      setInput(payload.data?.text ?? "");
+      setState("idle");
+    } catch (error) {
+      setState("error");
+      setInput(error instanceof Error ? error.message : "ASR 转写失败");
+    }
+  }
+
+  async function startListening() {
+    if (state === "speaking") stopAudio();
+
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+      setState("error");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      mediaStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+        mediaRecorderRef.current = null;
+
+        const audio = new Blob(audioChunksRef.current, {
+          type: recorder.mimeType || "audio/webm",
+        });
+        audioChunksRef.current = [];
+
+        if (audio.size > 0) {
+          void transcribeAudio(audio);
+        } else {
+          setState("idle");
+        }
+      };
+
+      recorder.start();
+      setState("listening");
+    } catch {
+      setState("error");
+    }
+  }
+
+  function stopListening() {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === "inactive") return;
+
+    recorder.stop();
+  }
+
+  function toggleListening() {
+    if (state === "listening") {
+      stopListening();
+      return;
+    }
+
+    if (canSend) void startListening();
   }
 
   async function testProvider() {
@@ -584,6 +687,10 @@ export function DigitalHumanShell() {
 
   function interrupt() {
     stopAudio();
+    if (state === "listening") {
+      stopListening();
+      return;
+    }
     abortRef.current?.abort();
     if (conversationId || persistedAssistantRef.current) {
       void fetch("/api/chat/interrupt", {
@@ -797,11 +904,20 @@ export function DigitalHumanShell() {
 
             <div className="flex gap-2">
               <button
-                className="flex size-11 shrink-0 items-center justify-center rounded-md border border-slate-200 text-slate-600 disabled:opacity-40"
-                disabled={state !== "idle"}
-                title="语音输入"
+                className={`flex size-11 shrink-0 items-center justify-center rounded-md border disabled:opacity-40 ${
+                  state === "listening"
+                    ? "border-violet-200 bg-violet-600 text-white"
+                    : "border-slate-200 text-slate-600"
+                }`}
+                disabled={!canSend && state !== "listening"}
+                onClick={toggleListening}
+                title={state === "listening" ? "停止录音" : "语音输入"}
               >
-                <Mic size={18} />
+                {state === "listening" ? (
+                  <CircleStop size={18} />
+                ) : (
+                  <Mic size={18} />
+                )}
               </button>
               <textarea
                 className="min-h-11 flex-1 resize-none rounded-md border border-slate-200 px-3 py-3 text-sm outline-none focus:border-slate-400 disabled:bg-slate-50"

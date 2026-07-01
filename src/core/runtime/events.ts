@@ -1,5 +1,7 @@
 export type RuntimeState =
   | "idle"
+  | "listening"
+  | "transcribing"
   | "thinking"
   | "streaming"
   | "synthesizing"
