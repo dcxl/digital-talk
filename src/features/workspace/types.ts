@@ -133,6 +133,49 @@ export interface PromptTestResult {
   };
 }
 
+export type AvatarDriver = "static" | "live2d" | "vrm";
+export type AvatarProfileStatus = "active" | "disabled" | "deleted";
+export type AvatarPreviewState = "idle" | "thinking" | "speaking" | "error";
+
+export interface AvatarProfileItem {
+  background?: string | null;
+  config?: unknown;
+  createdAt: string;
+  driver: AvatarDriver;
+  id: string;
+  isDefault: boolean;
+  language?: string | null;
+  name: string;
+  previewImageUrl?: string | null;
+  providerConfig?: ProviderItem | null;
+  providerConfigId?: string | null;
+  status: AvatarProfileStatus;
+  updatedAt: string;
+  voice?: string | null;
+  voiceProvider?: ProviderItem | null;
+  voiceProviderId?: string | null;
+}
+
+export interface AvatarFormState {
+  background: string;
+  driver: AvatarDriver;
+  id?: string;
+  isDefault: boolean;
+  language: string;
+  name: string;
+  previewImageUrl: string;
+  providerConfigId: string;
+  status: AvatarProfileStatus;
+  voice: string;
+  voiceProviderId: string;
+}
+
+export interface AvatarPreviewResult {
+  state: AvatarPreviewState;
+  text: string;
+  updatedAt: string;
+}
+
 export interface WorkspaceSnapshot {
   conversations: ConversationItem[];
   knowledgeBases: KnowledgeBaseItem[];

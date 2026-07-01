@@ -69,6 +69,18 @@ enum PromptStatus {
   deleted
 }
 
+enum AvatarDriver {
+  static
+  live2d
+  vrm
+}
+
+enum AvatarProfileStatus {
+  active
+  disabled
+  deleted
+}
+
 model User {
   id                    String           @id @default(cuid())
   name                  String?
@@ -77,6 +89,7 @@ model User {
   conversations         Conversation[]
   knowledgeBases        KnowledgeBase[]
   providerConfigs       ProviderConfig[]
+  avatarProfiles        AvatarProfile[]
   promptTemplates       PromptTemplate[]
   createdPromptVersions PromptVersion[]  @relation("PromptVersionsCreatedBy")
   appSettings           AppSetting[]
@@ -202,12 +215,40 @@ model ProviderConfig {
   options         Json?
   lastTestStatus  TestStatus?
   lastTestAt      DateTime?
+  avatarProfiles  AvatarProfile[] @relation("AvatarProviderConfig")
+  voiceProfiles   AvatarProfile[] @relation("AvatarVoiceProviderConfig")
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
   @@index([userId])
   @@index([type])
   @@index([enabled])
+}
+
+model AvatarProfile {
+  id               String              @id @default(cuid())
+  userId           String
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  driver           AvatarDriver        @default(static)
+  providerConfigId String?
+  providerConfig   ProviderConfig?     @relation("AvatarProviderConfig", fields: [providerConfigId], references: [id], onDelete: SetNull)
+  voiceProviderId  String?
+  voiceProvider    ProviderConfig?     @relation("AvatarVoiceProviderConfig", fields: [voiceProviderId], references: [id], onDelete: SetNull)
+  voice            String?
+  language         String?
+  background       String?
+  previewImageUrl  String?
+  config           Json?
+  isDefault        Boolean             @default(false)
+  status           AvatarProfileStatus @default(active)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([driver])
+  @@index([status])
+  @@index([isDefault])
 }
 
 model PromptTemplate {

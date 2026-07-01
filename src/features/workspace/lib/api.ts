@@ -1,4 +1,7 @@
 import type {
+  AvatarFormState,
+  AvatarPreviewResult,
+  AvatarProfileItem,
   ConversationItem,
   DashboardSummary,
   KnowledgeBaseItem,
@@ -376,4 +379,92 @@ export async function testPromptRequest(input: PromptFormState) {
   }
 
   return payload.data;
+}
+
+export async function readAvatarProfiles() {
+  const payload =
+    await fetchJson<{ data?: { profiles?: AvatarProfileItem[] } }>(
+      "/api/avatar-profiles",
+    );
+  return payload?.data?.profiles ?? [];
+}
+
+function getAvatarPayload(input: AvatarFormState) {
+  return {
+    id: input.id,
+    name: input.name.trim(),
+    driver: input.driver,
+    providerConfigId: input.providerConfigId || null,
+    voiceProviderId: input.voiceProviderId || null,
+    voice: input.voice.trim() || null,
+    language: input.language.trim() || null,
+    background: input.background.trim() || null,
+    previewImageUrl: input.previewImageUrl.trim() || null,
+    isDefault: input.isDefault,
+    status: input.status,
+    config: {
+      scene: input.background.trim() || "studio",
+    },
+  };
+}
+
+export async function saveAvatarProfileRequest(input: AvatarFormState) {
+  const response = await fetch(
+    input.id ? `/api/avatar-profiles/${input.id}` : "/api/avatar-profiles",
+    {
+      body: JSON.stringify(getAvatarPayload(input)),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: input.id ? "PATCH" : "POST",
+    },
+  );
+  const payload = (await response.json()) as {
+    data?: {
+      profile?: AvatarProfileItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.profile) {
+    throw new Error(getApiErrorMessage(payload, "保存 Avatar 失败"));
+  }
+
+  return payload.data.profile;
+}
+
+export async function previewAvatarProfileRequest(input: {
+  profileId: string;
+  state: AvatarPreviewResult["state"];
+  text: string;
+}) {
+  const response = await fetch(
+    `/api/avatar-profiles/${input.profileId}/preview`,
+    {
+      body: JSON.stringify({
+        state: input.state,
+        text: input.text,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    },
+  );
+  const payload = (await response.json()) as {
+    data?: {
+      preview?: AvatarPreviewResult;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.preview) {
+    throw new Error(getApiErrorMessage(payload, "Avatar 预览失败"));
+  }
+
+  return payload.data.preview;
 }
