@@ -81,20 +81,48 @@ enum AvatarProfileStatus {
   deleted
 }
 
+enum AvatarAssetType {
+  image
+  live2d
+  vrm
+}
+
+enum AvatarAssetStatus {
+  active
+  processing
+  failed
+  deleted
+}
+
+enum AvatarAssetSource {
+  upload
+  generated
+  remote
+}
+
+enum AvatarGenerationJobStatus {
+  pending
+  running
+  completed
+  failed
+}
+
 model User {
-  id                    String           @id @default(cuid())
+  id                    String                @id @default(cuid())
   name                  String?
-  email                 String?          @unique
+  email                 String?               @unique
   avatarUrl             String?
   conversations         Conversation[]
   knowledgeBases        KnowledgeBase[]
   providerConfigs       ProviderConfig[]
   avatarProfiles        AvatarProfile[]
+  avatarAssets          AvatarAsset[]
+  avatarGenerationJobs  AvatarGenerationJob[]
   promptTemplates       PromptTemplate[]
-  createdPromptVersions PromptVersion[]  @relation("PromptVersionsCreatedBy")
+  createdPromptVersions PromptVersion[]       @relation("PromptVersionsCreatedBy")
   appSettings           AppSetting[]
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
 }
 
 model Conversation {
@@ -202,23 +230,24 @@ model DocumentChunk {
 }
 
 model ProviderConfig {
-  id              String       @id @default(cuid())
-  userId          String
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type            ProviderType
-  provider        String
-  name            String
-  enabled         Boolean      @default(true)
-  baseUrl         String?
-  apiKeyEncrypted String?
-  model           String?
-  options         Json?
-  lastTestStatus  TestStatus?
-  lastTestAt      DateTime?
-  avatarProfiles  AvatarProfile[] @relation("AvatarProviderConfig")
-  voiceProfiles   AvatarProfile[] @relation("AvatarVoiceProviderConfig")
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id                   String                @id @default(cuid())
+  userId               String
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type                 ProviderType
+  provider             String
+  name                 String
+  enabled              Boolean               @default(true)
+  baseUrl              String?
+  apiKeyEncrypted      String?
+  model                String?
+  options              Json?
+  lastTestStatus       TestStatus?
+  lastTestAt           DateTime?
+  avatarProfiles       AvatarProfile[]       @relation("AvatarProviderConfig")
+  voiceProfiles        AvatarProfile[]       @relation("AvatarVoiceProviderConfig")
+  avatarGenerationJobs AvatarGenerationJob[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 
   @@index([userId])
   @@index([type])
@@ -226,29 +255,86 @@ model ProviderConfig {
 }
 
 model AvatarProfile {
-  id               String              @id @default(cuid())
+  id               String                @id @default(cuid())
   userId           String
-  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   name             String
-  driver           AvatarDriver        @default(static)
+  driver           AvatarDriver          @default(static)
   providerConfigId String?
-  providerConfig   ProviderConfig?     @relation("AvatarProviderConfig", fields: [providerConfigId], references: [id], onDelete: SetNull)
+  providerConfig   ProviderConfig?       @relation("AvatarProviderConfig", fields: [providerConfigId], references: [id], onDelete: SetNull)
   voiceProviderId  String?
-  voiceProvider    ProviderConfig?     @relation("AvatarVoiceProviderConfig", fields: [voiceProviderId], references: [id], onDelete: SetNull)
+  voiceProvider    ProviderConfig?       @relation("AvatarVoiceProviderConfig", fields: [voiceProviderId], references: [id], onDelete: SetNull)
+  assets           AvatarAsset[]
+  generationJobs   AvatarGenerationJob[]
   voice            String?
   language         String?
   background       String?
   previewImageUrl  String?
   config           Json?
-  isDefault        Boolean             @default(false)
-  status           AvatarProfileStatus @default(active)
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  isDefault        Boolean               @default(false)
+  status           AvatarProfileStatus   @default(active)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
 
   @@index([userId])
   @@index([driver])
   @@index([status])
   @@index([isDefault])
+}
+
+model AvatarAsset {
+  id             String                @id @default(cuid())
+  userId         String
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profileId      String?
+  profile        AvatarProfile?        @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  type           AvatarAssetType       @default(image)
+  name           String
+  status         AvatarAssetStatus     @default(active)
+  source         AvatarAssetSource
+  storageKey     String
+  publicUrl      String?
+  mimeType       String
+  size           Int
+  width          Int?
+  height         Int?
+  metadata       Json?
+  generationJobs AvatarGenerationJob[] @relation("AvatarGenerationResultAsset")
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@index([userId])
+  @@index([profileId])
+  @@index([type])
+  @@index([status])
+  @@index([source])
+}
+
+model AvatarGenerationJob {
+  id               String                    @id @default(cuid())
+  userId           String
+  user             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profileId        String?
+  profile          AvatarProfile?            @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  providerConfigId String?
+  providerConfig   ProviderConfig?           @relation(fields: [providerConfigId], references: [id], onDelete: SetNull)
+  status           AvatarGenerationJobStatus @default(pending)
+  prompt           String
+  negativePrompt   String?
+  style            String?
+  resultAssetId    String?
+  resultAsset      AvatarAsset?              @relation("AvatarGenerationResultAsset", fields: [resultAssetId], references: [id], onDelete: SetNull)
+  errorMessage     String?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  @@index([userId])
+  @@index([profileId])
+  @@index([providerConfigId])
+  @@index([resultAssetId])
+  @@index([status])
 }
 
 model PromptTemplate {
