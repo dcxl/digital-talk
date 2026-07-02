@@ -36,6 +36,7 @@ export const providerOptionsByType: Record<
   }>
 > = {
   asr: [
+    { label: "阿里云百炼实时识别", value: "dashscope-asr" },
     { label: "自定义", value: "custom" },
     { label: "OpenAI 兼容", value: "openai-compatible" },
     { label: "本地", value: "local" },
