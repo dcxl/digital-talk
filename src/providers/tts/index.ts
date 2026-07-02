@@ -115,7 +115,7 @@ export async function getTTSProvider(): Promise<TTSProvider> {
   const [provider] = await listProviderConfigs({
     enabled: true,
     type: "tts",
-  });
+  }).catch(() => []);
 
   if (!provider) return createEnvTTSProvider();
   if (provider.provider === "mock" || provider.provider === "local") {
