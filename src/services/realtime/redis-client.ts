@@ -49,19 +49,52 @@ function parseBulkString(buffer: Buffer, offset: number) {
   };
 }
 
-function parseRedisResponse(buffer: Buffer): unknown {
-  const type = String.fromCharCode(buffer[0]);
-  const lineEnd = buffer.indexOf("\r\n", 0, "utf8");
+function parseRedisValue(
+  buffer: Buffer,
+  offset: number,
+): { nextOffset: number; value: unknown } | undefined {
+  const type = String.fromCharCode(buffer[offset]);
+  const lineEnd = buffer.indexOf("\r\n", offset, "utf8");
   if (lineEnd < 0) return undefined;
 
-  if (type === "+") return buffer.subarray(1, lineEnd).toString("utf8");
-  if (type === ":") return Number(buffer.subarray(1, lineEnd).toString("utf8"));
-  if (type === "-") {
-    throw new Error(buffer.subarray(1, lineEnd).toString("utf8"));
+  if (type === "+") {
+    return {
+      nextOffset: lineEnd + 2,
+      value: buffer.subarray(offset + 1, lineEnd).toString("utf8"),
+    };
   }
-  if (type === "$") return parseBulkString(buffer, 1)?.value;
+  if (type === ":") {
+    return {
+      nextOffset: lineEnd + 2,
+      value: Number(buffer.subarray(offset + 1, lineEnd).toString("utf8")),
+    };
+  }
+  if (type === "-") {
+    throw new Error(buffer.subarray(offset + 1, lineEnd).toString("utf8"));
+  }
+  if (type === "$") return parseBulkString(buffer, offset + 1);
+  if (type === "*") {
+    const count = Number(buffer.subarray(offset + 1, lineEnd).toString("utf8"));
+    if (count === -1) return { nextOffset: lineEnd + 2, value: null };
+
+    const values: unknown[] = [];
+    let nextOffset = lineEnd + 2;
+
+    for (let index = 0; index < count; index += 1) {
+      const parsed = parseRedisValue(buffer, nextOffset);
+      if (!parsed) return undefined;
+      values.push(parsed.value);
+      nextOffset = parsed.nextOffset;
+    }
+
+    return { nextOffset, value: values };
+  }
 
   throw new Error("Unsupported Redis response");
+}
+
+function parseRedisResponse(buffer: Buffer): unknown {
+  return parseRedisValue(buffer, 0)?.value;
 }
 
 async function sendRawCommand(parts: string[]) {

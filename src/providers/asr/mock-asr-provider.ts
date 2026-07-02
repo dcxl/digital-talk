@@ -1,4 +1,4 @@
-import type { ASRProvider } from "@/core/providers/types";
+import type { StreamingASRProvider } from "@/core/providers/types";
 
 function wait(ms: number, signal?: AbortSignal) {
   return new Promise<void>((resolve, reject) => {
@@ -21,7 +21,9 @@ function wait(ms: number, signal?: AbortSignal) {
   });
 }
 
-export const mockASRProvider: ASRProvider = {
+const mockText = "这是 mock ASR 转写结果";
+
+export const mockASRProvider: StreamingASRProvider = {
   id: "mock-asr",
   name: "Mock ASR Provider",
   capability: "asr",
@@ -32,16 +34,47 @@ export const mockASRProvider: ASRProvider = {
     await wait(180, input.signal);
 
     return {
-      text: "这是 mock ASR 转写结果",
+      text: mockText,
       language: input.language ?? "zh",
       durationMs: Math.max(300, Math.min(3000, input.audio.size)),
       segments: [
         {
           startMs: 0,
           endMs: Math.max(300, Math.min(3000, input.audio.size)),
-          text: "这是 mock ASR 转写结果",
+          text: mockText,
         },
       ],
+    };
+  },
+
+  async *stream(input) {
+    let totalSize = 0;
+
+    for await (const chunk of input.chunks) {
+      await wait(80, input.signal);
+      totalSize += chunk.audio.size;
+
+      yield {
+        type: "partial",
+        sequence: chunk.sequence,
+        text: mockText.slice(0, Math.min(mockText.length, 6 + chunk.sequence * 4)),
+      };
+    }
+
+    const durationMs = Math.max(300, Math.min(3000, totalSize));
+
+    yield {
+      type: "final",
+      durationMs,
+      language: input.language ?? "zh",
+      segments: [
+        {
+          endMs: durationMs,
+          startMs: 0,
+          text: mockText,
+        },
+      ],
+      text: mockText,
     };
   },
 };

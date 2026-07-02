@@ -4,11 +4,13 @@ import { redisCommand } from "./redis-client";
 import type {
   CreateRealtimeSessionInput,
   RealtimeSession,
+  RealtimeSessionEvent,
   RealtimeSessionStore,
   RealtimeTransport,
 } from "./types";
 
 const sessionKeyPrefix = "rt:session:";
+const eventKeyPrefix = "rt:events:";
 const defaultSessionTtlSeconds = 900;
 
 function getSessionTtlSeconds() {
@@ -18,6 +20,10 @@ function getSessionTtlSeconds() {
 
 function getSessionKey(sessionId: string) {
   return `${sessionKeyPrefix}${sessionId}`;
+}
+
+function getEventKey(sessionId: string) {
+  return `${eventKeyPrefix}${sessionId}`;
 }
 
 function normalizeTransport(value?: RealtimeTransport) {
@@ -56,8 +62,18 @@ export function createRealtimeSessionRecord(
 }
 
 export class RedisRealtimeSessionStore implements RealtimeSessionStore {
+  async appendEvent(
+    sessionId: string,
+    event: RealtimeSessionEvent,
+    ttlSeconds: number,
+  ) {
+    const key = getEventKey(sessionId);
+    await redisCommand("RPUSH", key, JSON.stringify(event));
+    await redisCommand("EXPIRE", key, String(ttlSeconds));
+  }
+
   async delete(sessionId: string) {
-    await redisCommand("DEL", getSessionKey(sessionId));
+    await redisCommand("DEL", getSessionKey(sessionId), getEventKey(sessionId));
   }
 
   async get(sessionId: string) {
@@ -65,6 +81,15 @@ export class RedisRealtimeSessionStore implements RealtimeSessionStore {
     if (!value || typeof value !== "string") return null;
 
     return JSON.parse(value) as RealtimeSession;
+  }
+
+  async listEvents(sessionId: string) {
+    const value = await redisCommand("LRANGE", getEventKey(sessionId), "0", "-1");
+    if (!Array.isArray(value)) return [];
+
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => JSON.parse(item) as RealtimeSessionEvent);
   }
 
   async ping() {

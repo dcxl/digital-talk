@@ -1,4 +1,4 @@
-import type { RealtimeSession } from "./types";
+import type { RealtimeSession, RealtimeSessionEvent } from "./types";
 
 export function presentRealtimeSession(session: RealtimeSession) {
   return {
@@ -19,5 +19,16 @@ export function presentRealtimeSession(session: RealtimeSession) {
     updatedAt: session.updatedAt,
     userId: session.userId,
     voiceProviderId: session.voiceProviderId ?? null,
+  };
+}
+
+export function presentRealtimeSessionEvent(event: RealtimeSessionEvent) {
+  return {
+    createdAt: event.createdAt,
+    id: event.id,
+    payload: event.payload ?? null,
+    sequence: event.sequence,
+    sessionId: event.sessionId,
+    type: event.type,
   };
 }

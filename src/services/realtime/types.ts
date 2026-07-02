@@ -29,6 +29,21 @@ export interface RealtimeSession {
   voiceProviderId?: string | null;
 }
 
+export type RealtimeSessionEventType =
+  | "asr.final"
+  | "asr.partial"
+  | "session.closed"
+  | "session.interrupted";
+
+export interface RealtimeSessionEvent {
+  createdAt: string;
+  id: string;
+  payload?: Record<string, unknown>;
+  sequence: number;
+  sessionId: string;
+  type: RealtimeSessionEventType;
+}
+
 export interface CreateRealtimeSessionInput {
   avatarProfileId?: string;
   conversationId?: string;
@@ -41,8 +56,14 @@ export interface CreateRealtimeSessionInput {
 }
 
 export interface RealtimeSessionStore {
+  appendEvent(
+    sessionId: string,
+    event: RealtimeSessionEvent,
+    ttlSeconds: number,
+  ): Promise<void>;
   delete(sessionId: string): Promise<void>;
   get(sessionId: string): Promise<RealtimeSession | null>;
+  listEvents(sessionId: string): Promise<RealtimeSessionEvent[]>;
   ping(): Promise<void>;
   set(session: RealtimeSession, ttlSeconds: number): Promise<void>;
 }

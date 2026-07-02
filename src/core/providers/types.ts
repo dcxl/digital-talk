@@ -125,6 +125,39 @@ export interface ASRProvider extends ProviderDescriptor {
   transcribe(input: ASRInput): Promise<ASRResult>;
 }
 
+export interface AudioChunk {
+  audio: Blob;
+  mimeType?: string;
+  sequence: number;
+  timestampMs?: number;
+}
+
+export interface StreamingASRInput {
+  chunks: AsyncIterable<AudioChunk>;
+  language?: string;
+  signal?: AbortSignal;
+}
+
+export type ASRChunk =
+  | {
+      type: "partial";
+      text: string;
+      sequence: number;
+      startMs?: number;
+      endMs?: number;
+    }
+  | {
+      type: "final";
+      text: string;
+      durationMs?: number;
+      language?: string;
+      segments: ASRSegment[];
+    };
+
+export interface StreamingASRProvider extends ASRProvider {
+  stream(input: StreamingASRInput): AsyncIterable<ASRChunk>;
+}
+
 export interface ImageGenerationInput {
   height?: number;
   negativePrompt?: string;
