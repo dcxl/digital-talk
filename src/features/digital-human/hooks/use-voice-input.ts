@@ -16,6 +16,7 @@ interface UseVoiceInputInput {
   canSend: boolean;
   conversationId?: string | null;
   knowledgeBaseId?: string | null;
+  onBargeIn?: (reason: string) => void;
   onTranscriptFinal?: (result: VoiceTranscriptResult) => void;
   setInput: (input: string) => void;
   setState: React.Dispatch<React.SetStateAction<RuntimeState>>;
@@ -28,6 +29,7 @@ export function useVoiceInput({
   canSend,
   conversationId,
   knowledgeBaseId,
+  onBargeIn,
   onTranscriptFinal,
   setInput,
   setState,
@@ -94,7 +96,13 @@ export function useVoiceInput({
   }
 
   async function startListening() {
-    if (state === "speaking") stopAudio();
+    if (state === "speaking") {
+      if (onBargeIn) {
+        onBargeIn("user_barge_in");
+      } else {
+        stopAudio();
+      }
+    }
 
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
       setState("error");

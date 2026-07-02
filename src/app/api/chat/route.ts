@@ -315,6 +315,19 @@ export async function POST(request: NextRequest) {
         let audioUrl: string | undefined;
         let usage: TokenUsageMetadata | undefined;
         const systemPrompt = await getRuntimeSystemPrompt();
+        const markTurnInterrupted = async () => {
+          if (turn.persisted) {
+            await updateMessageStatus(assistantId, "interrupted").catch(
+              () => undefined,
+            );
+          }
+          await avatarProvider
+            .setState({
+              state: "interrupted",
+              reason: "request_aborted",
+            })
+            .catch(() => undefined);
+        };
 
         enqueue(controller, {
           type: "message.created",
@@ -359,9 +372,7 @@ export async function POST(request: NextRequest) {
           signal: request.signal,
         })) {
           if (request.signal.aborted) {
-            if (turn.persisted) {
-              await updateMessageStatus(assistantId, "interrupted");
-            }
+            await markTurnInterrupted();
             return;
           }
 
@@ -388,9 +399,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (request.signal.aborted) {
-          if (turn.persisted) {
-            await updateMessageStatus(assistantId, "interrupted");
-          }
+          await markTurnInterrupted();
           return;
         }
 
@@ -429,6 +438,11 @@ export async function POST(request: NextRequest) {
               reason: "tts_ready",
             });
           } catch (error) {
+            if (request.signal.aborted) {
+              await markTurnInterrupted();
+              return;
+            }
+
             if (!request.signal.aborted) {
               enqueue(controller, {
                 type: "tts.failed",
@@ -443,6 +457,11 @@ export async function POST(request: NextRequest) {
               });
             }
           }
+        }
+
+        if (request.signal.aborted) {
+          await markTurnInterrupted();
+          return;
         }
 
         if (turn.persisted) {

@@ -89,6 +89,7 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
       canSend,
       conversationId,
       knowledgeBaseId: selectedKnowledgeBaseId,
+      onBargeIn: (reason) => interrupt(reason),
       onTranscriptFinal: (result) =>
         void sendMessage(result.text, {
           conversationId: result.conversationId,
@@ -102,12 +103,17 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
   const abortRef = useRef<AbortController | null>(null);
   const activeAssistantRef = useRef<string | null>(null);
   const persistedAssistantRef = useRef<string | null>(null);
+  const speakingAssistantRef = useRef<string | null>(null);
 
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    if (state !== "speaking") speakingAssistantRef.current = null;
+  }, [state]);
 
   useEffect(() => {
     void loadConversations();
@@ -176,6 +182,7 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
     }
 
     if (event.type === "tts.done") {
+      speakingAssistantRef.current = event.messageId;
       if (event.audioUrl) {
         void playAudio(event.audioUrl);
       } else {
@@ -362,23 +369,32 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
       ),
     );
     setState("interrupted");
-    window.setTimeout(() => setState("idle"), 500);
+    window.setTimeout(
+      () => setState((current) => (current === "interrupted" ? "idle" : current)),
+      500,
+    );
   }
 
-  function interrupt() {
+  function interrupt(reason = "user_interrupt") {
+    const assistantMessageId =
+      activeAssistantRef.current ??
+      persistedAssistantRef.current ??
+      speakingAssistantRef.current ??
+      undefined;
+
     stopAudio();
-    interruptRealtimeSession("user_interrupt");
+    interruptRealtimeSession(reason);
     if (state === "listening") {
       stopListening();
       return;
     }
     abortRef.current?.abort();
-    if (conversationId || persistedAssistantRef.current) {
+    if (conversationId || assistantMessageId) {
       void fetch("/api/chat/interrupt", {
         body: JSON.stringify({
           conversationId,
-          messageId: persistedAssistantRef.current,
-          reason: "user_interrupt",
+          messageId: assistantMessageId,
+          reason,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -386,7 +402,7 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
         method: "POST",
       });
     }
-    markInterrupted(activeAssistantRef.current ?? undefined);
+    markInterrupted(assistantMessageId);
   }
 
   return (
