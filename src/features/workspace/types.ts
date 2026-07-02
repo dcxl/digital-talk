@@ -184,8 +184,17 @@ export interface AvatarFormState {
 export interface AvatarPreviewResult {
   runtime?: {
     adapterName: string;
+    asset?: {
+      id: string;
+      type: "image" | "live2d" | "vrm";
+    };
+    diagnostics?: {
+      errors: string[];
+      warnings: string[];
+    };
     driver: AvatarDriver;
     fallbackDriver?: AvatarDriver;
+    loadLatencyMs?: number;
     status: "degraded" | "error" | "placeholder" | "ready";
   };
   state: AvatarPreviewState;

@@ -36,6 +36,7 @@ export interface AvatarRuntimeSnapshot {
   };
   driver: AvatarRuntimeDriver;
   fallbackDriver?: AvatarRuntimeDriver;
+  loadLatencyMs: number;
   mouth: {
     openness: number;
     source: "audio-volume" | "none" | "speech-mark" | "viseme";

@@ -7,6 +7,9 @@ interface RuntimeResponse {
   data?: {
     runtime?: AvatarRuntimeSnapshot;
   };
+  error?: {
+    message?: string;
+  };
 }
 
 export function useAvatarRuntime(avatarId?: null | string) {
@@ -28,10 +31,17 @@ export function useAvatarRuntime(avatarId?: null | string) {
 
     try {
       const response = await fetch(`/api/avatar-profiles/${avatarId}/runtime`);
-      if (!response.ok) throw new Error(`Runtime request failed: ${response.status}`);
+      const payload = (await response.json().catch(() => null)) as
+        | RuntimeResponse
+        | null;
 
-      const payload = (await response.json()) as RuntimeResponse;
-      setRuntime(payload.data?.runtime ?? null);
+      if (!response.ok) {
+        throw new Error(
+          payload?.error?.message ?? `Runtime request failed: ${response.status}`,
+        );
+      }
+
+      setRuntime(payload?.data?.runtime ?? null);
     } catch (nextError) {
       setRuntime(null);
       setError(nextError instanceof Error ? nextError.message : "数字人运行时加载失败");

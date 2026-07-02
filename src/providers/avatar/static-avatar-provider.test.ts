@@ -11,7 +11,9 @@ describe("static avatar runtime provider", () => {
 
     expect(runtime.driver).toBe("static");
     expect(runtime.status).toBe("ready");
+    expect(runtime.loadLatencyMs).toBeGreaterThanOrEqual(0);
     expect(runtime.mouth.openness).toBe(0.6);
+    expect(runtime.motion.motionCandidates).toContain("Speaking");
   });
 
   it("falls missing Live2D packages and VRM profiles back to static", async () => {
@@ -26,8 +28,26 @@ describe("static avatar runtime provider", () => {
     });
 
     expect(live2d.fallbackDriver).toBe("static");
+    expect(live2d.loadLatencyMs).toBeGreaterThanOrEqual(0);
     expect(live2d.status).toBe("degraded");
     expect(vrm.fallbackDriver).toBe("static");
     expect(vrm.status).toBe("placeholder");
+  });
+
+  it("applies profile motion map overrides", async () => {
+    const runtime = await staticAvatarProvider.getRuntime({
+      driver: "live2d",
+      motionMap: {
+        speaking: {
+          expression: "qizi1",
+          motion: "Scene1",
+        },
+      },
+      state: "speaking",
+    });
+
+    expect(runtime.motion.source).toBe("profile-config");
+    expect(runtime.motion.expressionCandidates).toEqual(["qizi1"]);
+    expect(runtime.motion.motionCandidates).toEqual(["Scene1"]);
   });
 });

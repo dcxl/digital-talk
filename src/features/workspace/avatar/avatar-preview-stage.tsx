@@ -65,6 +65,7 @@ export function AvatarPreviewStage({
               avatarName={form.name}
               driver={form.driver}
               mouthOpen={previewMouthOpen}
+              showDiagnostics
               state={runtimeState}
               volume={previewVolume}
             />

@@ -5,6 +5,7 @@ import type { RuntimeState } from "@/core/runtime/events";
 import { useAvatarRuntime } from "../hooks/use-avatar-runtime";
 import type { AvatarRuntimeDriver } from "../types";
 import { Live2DCanvas } from "./live2d-canvas";
+import { RuntimeDiagnostics } from "./runtime-diagnostics";
 import { StaticAvatarView } from "./static-avatar-view";
 
 interface AvatarRuntimeStageProps {
@@ -13,6 +14,7 @@ interface AvatarRuntimeStageProps {
   avatarName?: null | string;
   driver: AvatarRuntimeDriver;
   mouthOpen: number;
+  showDiagnostics?: boolean;
   state: RuntimeState;
   volume: number;
 }
@@ -23,6 +25,7 @@ export function AvatarRuntimeStage({
   avatarName,
   driver,
   mouthOpen,
+  showDiagnostics = false,
   state,
   volume,
 }: AvatarRuntimeStageProps) {
@@ -108,6 +111,16 @@ export function AvatarRuntimeStage({
           <p className="truncate">{statusText}</p>
         </div>
       </div>
+
+      {showDiagnostics && runtime ? (
+        <RuntimeDiagnostics renderError={renderError} runtime={runtime} />
+      ) : null}
+
+      {showDiagnostics && !runtime && error ? (
+        <div className="w-full rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+          {error}
+        </div>
+      ) : null}
     </div>
   );
 }

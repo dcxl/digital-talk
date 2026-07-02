@@ -1,3 +1,4 @@
+import { performance } from "node:perf_hooks";
 import type {
   AvatarRuntimeDriver,
   AvatarRuntimeInput,
@@ -117,6 +118,7 @@ function getLive2DRuntime(input: AvatarRuntimeInput) {
 export function resolveAvatarRuntime(
   input: AvatarRuntimeInput,
 ): AvatarRuntimeResult {
+  const startedAt = performance.now();
   const driver = normalizeDriver(input.driver);
   const adapter = driver === "live2d" ? getLive2DRuntime(input) : null;
   const resolvedAdapter = adapter ?? adapters[driver];
@@ -125,6 +127,7 @@ export function resolveAvatarRuntime(
   return {
     ...resolvedAdapter,
     driver,
+    loadLatencyMs: Math.max(0, Math.round(performance.now() - startedAt)),
     mouth: {
       openness: getMouthOpen(input),
       source: input.state === "speaking" ? "audio-volume" : "none",
