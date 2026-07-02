@@ -4,11 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import type { RuntimeState } from "@/core/runtime/events";
 import { ensureCubismCore } from "../lib/cubism-core";
 
-const MAX_RENDER_DPR = 1;
-const MAX_RENDER_FPS = 24;
-const MOUTH_GAIN = 2.8;
-const SPEAKING_MOUTH_FLOOR = 0.16;
-
 interface Live2DCanvasProps {
   entrypoint: string;
   mouthOpen: number;
@@ -22,19 +17,10 @@ type Live2DModule = typeof import("pixi-live2d-display/cubism4");
 type Live2DModelInstance = InstanceType<Live2DModule["Live2DModel"]>;
 
 interface Live2DInternalSize {
-  breath?: unknown;
-  eyeBlink?: unknown;
   height?: number;
   originalHeight?: number;
   originalWidth?: number;
-  physics?: unknown;
   width?: number;
-}
-
-interface Live2DInternalModel extends Live2DInternalSize {
-  motionManager?: {
-    stopAllMotions?: () => void;
-  };
 }
 
 declare global {
@@ -74,28 +60,6 @@ function fitModel(input: {
   input.model.y = height / 2;
 }
 
-function clamp01(value: number) {
-  return Math.min(1, Math.max(0, value));
-}
-
-function getMouthTarget(value: number, state: RuntimeState) {
-  if (state !== "speaking") return 0;
-  return clamp01(Math.max(SPEAKING_MOUTH_FLOOR, value * MOUTH_GAIN));
-}
-
-function stabilizeModel(model: Live2DModelInstance) {
-  model.autoUpdate = false;
-  model.focus(0, 0, true);
-  model.internalModel?.motionManager?.stopAllMotions?.();
-
-  const internalModel = model.internalModel as Live2DInternalModel | undefined;
-  if (!internalModel) return;
-
-  internalModel.physics = undefined;
-  internalModel.breath = undefined;
-  internalModel.eyeBlink = undefined;
-}
-
 function applyMouthOpen(model: Live2DModelInstance, value: number) {
   const coreModel = model.internalModel?.coreModel as
     | {
@@ -126,7 +90,6 @@ export function Live2DCanvas({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const modelRef = useRef<Live2DModelInstance | null>(null);
   const mouthOpenRef = useRef(mouthOpen);
-  const renderedMouthOpenRef = useRef(0);
   const stateRef = useRef(state);
   const [status, setStatus] = useState("Live2D 加载中");
 
@@ -161,15 +124,12 @@ export function Live2DCanvas({
           antialias: true,
           autoDensity: true,
           backgroundAlpha: 0,
-          resolution: Math.min(window.devicePixelRatio || 1, MAX_RENDER_DPR),
+          resolution: window.devicePixelRatio || 1,
           view: canvas,
         });
-        app.ticker.maxFPS = MAX_RENDER_FPS;
 
         const model = await live2d.Live2DModel.from(entrypoint, {
           autoInteract: false,
-          autoUpdate: false,
-          motionPreload: live2d.MotionPreloadStrategy.NONE,
         });
 
         if (disposed) {
@@ -177,7 +137,6 @@ export function Live2DCanvas({
           return;
         }
 
-        stabilizeModel(model);
         modelRef.current = model;
         app.stage.addChild(model);
         fitModel({ app, container, model });
@@ -194,19 +153,15 @@ export function Live2DCanvas({
         resizeObserver.observe(container);
 
         app.ticker.add(() => {
-          const currentModel = modelRef.current;
-          if (!currentModel) return;
-
-          if (stateRef.current === "speaking") {
-            currentModel.onTickerUpdate();
+          if (!modelRef.current) return;
+          applyMouthOpen(modelRef.current, mouthOpenRef.current);
+          if (stateRef.current === "thinking") {
+            modelRef.current.focus(0.08, -0.08);
+          } else if (stateRef.current === "speaking") {
+            modelRef.current.focus(0, 0.04);
+          } else {
+            modelRef.current.focus(0, 0);
           }
-
-          const target = getMouthTarget(mouthOpenRef.current, stateRef.current);
-          const current = renderedMouthOpenRef.current;
-          const smoothing = target > current ? 0.5 : 0.32;
-          const nextValue = current + (target - current) * smoothing;
-          renderedMouthOpenRef.current = nextValue < 0.02 ? 0 : nextValue;
-          applyMouthOpen(currentModel, renderedMouthOpenRef.current);
         });
 
         setStatus("Live2D 已加载");
@@ -240,11 +195,18 @@ export function Live2DCanvas({
     if (!model) return;
 
     if (state === "speaking") {
-      model.focus(0, 0, true);
+      void model.motion("Speaking").catch(() => undefined);
       return;
     }
-    model.internalModel?.motionManager?.stopAllMotions?.();
-    model.focus(0, 0, true);
+    if (state === "thinking") {
+      void model.expression("angry").catch(() => undefined);
+      return;
+    }
+    if (state === "interrupted" || state === "error") {
+      void model.expression("cry").catch(() => undefined);
+      return;
+    }
+    void model.expression().catch(() => undefined);
   }, [state]);
 
   return (
