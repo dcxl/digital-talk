@@ -19,6 +19,7 @@ Next Digital Human 是一个面向个人开发者的开源 AI 数字人框架。
 - [11 部署指南](./11-deployment.md)
 - [12 v0.2 Digital Human Core 阶段文档](./12-v0.2-digital-human-core.md)
 - [13 v0.3 Realtime Digital Human 路线](./13-v0.3-realtime-roadmap.md)
+- [14 v0.4 Avatar Runtime 路线](./14-v0.4-avatar-runtime-roadmap.md)
 
 ## 当前设计原则
 
@@ -34,5 +35,7 @@ Next Digital Human 是一个面向个人开发者的开源 AI 数字人框架。
 | --- | --- |
 | v0.1 MVP | 数字人页面、文本聊天、流式 LLM、Mock TTS、基础 Avatar 状态 |
 | v0.2 Digital Human Core | 真实 TTS、Avatar 资产、虚拟人物生成、口型/音频同步 |
-| Beta | ASR 语音输入、RAG 增强、Live2D / VRM、实时化能力 |
-| v1.0 | Tool Calling、插件化工具、WebRTC、文档站、示例应用 |
+| v0.3 Realtime Digital Human | ASR 语音输入、Realtime Session、低延迟 TTS、barge-in |
+| v0.4 Avatar Runtime | Live2D 资产、真实 Avatar 渲染、口型同步、runtime fallback |
+| Beta | VRM、WebSocket/WebRTC、RAG 增强、Tool Calling |
+| v1.0 | 插件化工具、文档站、示例应用、生产部署基线 |
