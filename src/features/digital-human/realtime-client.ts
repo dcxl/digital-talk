@@ -22,7 +22,17 @@ interface ASRTranscript {
 }
 
 interface RealtimeASRResponse {
+  conversationId?: string | null;
+  message?: {
+    id: string;
+  } | null;
   transcript?: ASRTranscript | null;
+}
+
+export interface VoiceTranscriptResult {
+  conversationId?: string | null;
+  messageId?: string | null;
+  text: string;
 }
 
 function getPayloadError<T>(payload: ApiPayload<T>, fallback: string) {
@@ -77,7 +87,7 @@ export async function transcribeRealtimeAudio(input: {
   audio: Blob;
   language?: string;
   sessionId: string;
-}) {
+}): Promise<VoiceTranscriptResult> {
   const formData = new FormData();
   formData.append("audio", input.audio, "recording.webm");
   if (input.language) formData.append("language", input.language);
@@ -95,10 +105,17 @@ export async function transcribeRealtimeAudio(input: {
     throw new Error(getPayloadError(payload, "Realtime ASR 转写失败"));
   }
 
-  return payload.data?.transcript?.text?.trim() ?? "";
+  return {
+    conversationId: payload.data?.conversationId,
+    messageId: payload.data?.message?.id,
+    text: payload.data?.transcript?.text?.trim() ?? "",
+  };
 }
 
-export async function transcribeLegacyAudio(audio: Blob, language = "zh") {
+export async function transcribeLegacyAudio(
+  audio: Blob,
+  language = "zh",
+): Promise<VoiceTranscriptResult> {
   const formData = new FormData();
   formData.append("audio", audio, "recording.webm");
   formData.append("language", language);
@@ -115,5 +132,7 @@ export async function transcribeLegacyAudio(audio: Blob, language = "zh") {
     throw new Error(getPayloadError(payload, "ASR 转写失败"));
   }
 
-  return payload.data?.text?.trim() ?? "";
+  return {
+    text: payload.data?.text?.trim() ?? "",
+  };
 }

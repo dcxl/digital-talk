@@ -1,7 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
 import { jsonData, jsonError } from "@/core/http/responses";
+import type { Prisma } from "@/generated/prisma/client";
 import { getStreamingASRProvider } from "@/providers/asr";
+import {
+  appendMessage,
+  createConversationWithUserMessage,
+} from "@/services/conversations/repository";
+import { isDatabaseConfigured } from "@/services/database/prisma";
 import {
   presentRealtimeSession,
   presentRealtimeSessionEvent,
@@ -87,6 +93,110 @@ function updateSessionStatus(session: RealtimeSession, status: RealtimeSession["
   });
 }
 
+function getNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function getString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function getTranscriptSegments(value: unknown): Prisma.InputJsonArray {
+  if (!Array.isArray(value)) return [];
+
+  const segments: Prisma.InputJsonObject[] = [];
+
+  for (const segment of value) {
+    if (!segment || typeof segment !== "object") continue;
+
+    const record = segment as Record<string, unknown>;
+    const text = getString(record.text);
+    if (!text) continue;
+
+    segments.push({
+      endMs: getNumber(record.endMs) ?? null,
+      startMs: getNumber(record.startMs) ?? null,
+      text,
+    });
+  }
+
+  return segments;
+}
+
+function buildTranscriptMetadata(input: {
+  finalTranscript: Record<string, unknown>;
+  sessionId: string;
+}): Prisma.InputJsonObject {
+  const durationMs = getNumber(input.finalTranscript.durationMs);
+  const language = getString(input.finalTranscript.language);
+  const segments = getTranscriptSegments(input.finalTranscript.segments);
+
+  return {
+    ...(durationMs !== undefined ? { durationMs } : {}),
+    ...(language ? { language } : {}),
+    realtimeSessionId: input.sessionId,
+    ...(segments.length > 0 ? { segments } : {}),
+    source: "realtime_asr",
+  };
+}
+
+async function persistFinalTranscript(input: {
+  finalTranscript: Record<string, unknown> | null;
+  session: RealtimeSession;
+}) {
+  const text =
+    typeof input.finalTranscript?.text === "string"
+      ? input.finalTranscript.text.trim()
+      : "";
+
+  if (!text || !isDatabaseConfigured()) return null;
+
+  const metadata = buildTranscriptMetadata({
+    finalTranscript: input.finalTranscript ?? {},
+    sessionId: input.session.id,
+  });
+
+  if (input.session.conversationId) {
+    const message = await appendMessage({
+      content: text,
+      conversationId: input.session.conversationId,
+      metadata,
+      role: "user",
+      status: "completed",
+    });
+
+    return {
+      conversationId: input.session.conversationId,
+      message: {
+        content: message.content,
+        id: message.id,
+        role: message.role,
+        status: message.status,
+      },
+    };
+  }
+
+  const conversation = await createConversationWithUserMessage({
+    knowledgeBaseId: input.session.knowledgeBaseId ?? undefined,
+    message: text,
+    messageMetadata: metadata,
+    modelProviderId: input.session.modelProviderId ?? undefined,
+  });
+  const message = conversation.messages[0];
+
+  if (!message) return null;
+
+  return {
+    conversationId: conversation.id,
+    message: {
+      content: message.content,
+      id: message.id,
+      role: message.role,
+      status: message.status,
+    },
+  };
+}
+
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ sessionId: string }> },
@@ -139,6 +249,10 @@ export async function POST(
 
     const events: RealtimeSessionEvent[] = [];
     let finalTranscript: RealtimeSessionEvent["payload"] | null = null;
+    let persistedTranscript: Awaited<
+      ReturnType<typeof persistFinalTranscript>
+    > = null;
+    let persistenceError: string | undefined;
     let sequence = 0;
 
     try {
@@ -171,8 +285,20 @@ export async function POST(
       );
     }
 
+    try {
+      persistedTranscript = await persistFinalTranscript({
+        finalTranscript,
+        session: transcribingSession,
+      });
+    } catch (error) {
+      persistenceError =
+        error instanceof Error ? error.message : "Transcript persistence failed";
+    }
+
     const completedSession = touchRealtimeSession({
       ...transcribingSession,
+      conversationId:
+        persistedTranscript?.conversationId ?? transcribingSession.conversationId,
       metadata: {
         ...(transcribingSession.metadata ?? {}),
         lastTranscript:
@@ -186,7 +312,11 @@ export async function POST(
     await store.set(completedSession, ttlSeconds);
 
     return jsonData({
+      conversationId:
+        persistedTranscript?.conversationId ?? completedSession.conversationId,
       events: events.map(presentRealtimeSessionEvent),
+      message: persistedTranscript?.message ?? null,
+      persistenceError,
       session: presentRealtimeSession(completedSession),
       transcript: finalTranscript,
     });

@@ -7,6 +7,7 @@ import {
   interruptRealtimeSession as interruptSession,
   transcribeLegacyAudio,
   transcribeRealtimeAudio,
+  type VoiceTranscriptResult,
 } from "../realtime-client";
 import type { RuntimeState } from "../types";
 
@@ -15,7 +16,7 @@ interface UseVoiceInputInput {
   canSend: boolean;
   conversationId?: string | null;
   knowledgeBaseId?: string | null;
-  onTranscriptFinal?: (text: string) => void;
+  onTranscriptFinal?: (result: VoiceTranscriptResult) => void;
   setInput: (input: string) => void;
   setState: React.Dispatch<React.SetStateAction<RuntimeState>>;
   state: RuntimeState;
@@ -70,21 +71,21 @@ export function useVoiceInput({
 
     try {
       const sessionId = await getRealtimeSessionId();
-      const text = await transcribeRealtimeAudio({
+      const result = await transcribeRealtimeAudio({
         audio,
         language: "zh",
         sessionId,
       });
 
-      setInput(text);
+      setInput(result.text);
       setState("idle");
-      if (text) onTranscriptFinal?.(text);
+      if (result.text) onTranscriptFinal?.(result);
     } catch (error) {
       try {
-        const text = await transcribeLegacyAudio(audio);
-        setInput(text);
+        const result = await transcribeLegacyAudio(audio);
+        setInput(result.text);
         setState("idle");
-        if (text) onTranscriptFinal?.(text);
+        if (result.text) onTranscriptFinal?.(result);
       } catch {
         setState("error");
         setInput(error instanceof Error ? error.message : "ASR 转写失败");

@@ -192,9 +192,10 @@ function buildAssistantMetadata(input: {
 
 async function createPersistenceTurn(input: {
   conversationId?: string;
+  knowledgeBaseId?: string;
   message: string;
   modelProviderId?: string;
-  knowledgeBaseId?: string;
+  userMessageId?: string;
 }): Promise<PersistedTurn> {
   if (!isDatabaseConfigured()) {
     return {
@@ -207,15 +208,20 @@ async function createPersistenceTurn(input: {
 
   try {
     if (input.conversationId) {
-      const userMessage = await appendMessage({
-        content: input.message,
-        conversationId: input.conversationId,
-        role: "user",
-        status: "completed",
-      });
+      const userMessageId =
+        input.userMessageId ??
+        (
+          await appendMessage({
+            content: input.message,
+            conversationId: input.conversationId,
+            role: "user",
+            status: "completed",
+          })
+        ).id;
       const assistantMessage = await appendMessage({
         content: "",
         conversationId: input.conversationId,
+        parentMessageId: userMessageId,
         role: "assistant",
         status: "streaming",
       });
@@ -224,7 +230,7 @@ async function createPersistenceTurn(input: {
         assistantMessageId: assistantMessage.id,
         conversationId: input.conversationId,
         persisted: true,
-        userMessageId: userMessage.id,
+        userMessageId,
       };
     }
 
@@ -237,6 +243,7 @@ async function createPersistenceTurn(input: {
     const assistantMessage = await appendMessage({
       content: "",
       conversationId: conversation.id,
+      parentMessageId: userMessage?.id,
       role: "assistant",
       status: "streaming",
     });
@@ -264,6 +271,7 @@ export async function POST(request: NextRequest) {
     conversationId?: unknown;
     knowledgeBaseId?: unknown;
     modelProviderId?: unknown;
+    userMessageId?: unknown;
   } | null;
   const message = typeof body?.message === "string" ? body.message.trim() : "";
   const enableTTS = body?.enableTTS !== false;
@@ -273,6 +281,8 @@ export async function POST(request: NextRequest) {
     typeof body?.knowledgeBaseId === "string" ? body.knowledgeBaseId : undefined;
   const modelProviderId =
     typeof body?.modelProviderId === "string" ? body.modelProviderId : undefined;
+  const userMessageId =
+    typeof body?.userMessageId === "string" ? body.userMessageId : undefined;
 
   if (!message) {
     return Response.json(
@@ -293,6 +303,7 @@ export async function POST(request: NextRequest) {
         knowledgeBaseId,
         message,
         modelProviderId,
+        userMessageId,
       });
       const assistantId = turn.assistantMessageId;
 

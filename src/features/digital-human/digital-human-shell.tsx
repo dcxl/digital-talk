@@ -19,6 +19,11 @@ interface DigitalHumanShellProps {
   embedded?: boolean;
 }
 
+interface SendMessageOptions {
+  conversationId?: string | null;
+  userMessageId?: string | null;
+}
+
 export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) {
   const [state, setState] = useState<RuntimeState>("idle");
   const [input, setInput] = useState("");
@@ -84,7 +89,11 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
       canSend,
       conversationId,
       knowledgeBaseId: selectedKnowledgeBaseId,
-      onTranscriptFinal: (text) => void sendMessage(text),
+      onTranscriptFinal: (result) =>
+        void sendMessage(result.text, {
+          conversationId: result.conversationId,
+          userMessageId: result.messageId,
+        }),
       setInput,
       setState,
       state,
@@ -260,16 +269,22 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
     if (event) applyRuntimeEvent(event, assistantId);
   }
 
-  async function sendMessage(text: string) {
+  async function sendMessage(text: string, options: SendMessageOptions = {}) {
     const content = text.trim();
     if (!content || !canSend) return;
+
+    const targetConversationId = options.conversationId ?? conversationId;
+    const userMessageId = options.userMessageId ?? crypto.randomUUID();
 
     if (state === "speaking") stopAudio();
     abortRef.current?.abort();
     setInput("");
+    if (targetConversationId && targetConversationId !== conversationId) {
+      setConversationId(targetConversationId);
+    }
 
     const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
+      id: userMessageId,
       role: "user",
       content,
       status: "completed",
@@ -292,9 +307,10 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
     try {
       const response = await fetch("/api/chat", {
         body: JSON.stringify({
-          conversationId,
+          conversationId: targetConversationId,
           knowledgeBaseId: selectedKnowledgeBaseId || undefined,
           message: content,
+          userMessageId: options.userMessageId ?? undefined,
         }),
         headers: {
           "Content-Type": "application/json",
