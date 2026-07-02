@@ -18,6 +18,7 @@ Next Digital Human 是一个面向个人开发者的开源 AI 数字人框架。
 - [10 安全与部署约束](./10-security-deployment.md)
 - [11 部署指南](./11-deployment.md)
 - [12 v0.2 Digital Human Core 阶段文档](./12-v0.2-digital-human-core.md)
+- [13 v0.3 Realtime Digital Human 路线](./13-v0.3-realtime-roadmap.md)
 
 ## 当前设计原则
 
