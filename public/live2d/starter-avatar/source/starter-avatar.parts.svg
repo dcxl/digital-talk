@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Starter Avatar Parts</title>
+  <desc>Layered source art for a simple Live2D starter avatar.</desc>
+  <rect id="background" width="1024" height="1024" fill="none"/>
+
+  <g id="hair_back">
+    <path d="M318 350c5-126 86-217 200-217 119 0 196 91 199 222 3 117-28 207-78 264H396c-52-57-83-151-78-269z" fill="#20263a"/>
+    <path d="M370 257c42-79 171-102 253-32 51 43 73 105 76 179-48-94-118-146-205-153-48-4-88 1-124 6z" fill="#303a5c" opacity=".9"/>
+  </g>
+
+  <g id="body">
+    <path d="M334 862c18-144 76-230 178-230 107 0 165 87 183 230H334z" fill="#38415f"/>
+    <path d="M411 700c28 44 65 66 103 66s75-22 103-66c34 34 56 88 67 162H344c11-74 33-128 67-162z" fill="#48557a"/>
+    <path d="M453 655h122l-21 88h-80l-21-88z" fill="#f1c7b3"/>
+  </g>
+
+  <g id="neck">
+    <path d="M455 608h120v95c-34 30-86 30-120 0v-95z" fill="#f1c7b3"/>
+  </g>
+
+  <g id="head">
+    <path d="M320 386c0-121 78-219 195-219 119 0 197 98 197 219 0 132-86 244-197 244S320 518 320 386z" fill="#ffd8c8"/>
+    <path d="M330 404c-29-4-48 15-43 48 5 34 31 58 58 53l-15-101z" fill="#f1c7b3"/>
+    <path d="M700 404c29-4 48 15 43 48-5 34-31 58-58 53l15-101z" fill="#f1c7b3"/>
+  </g>
+
+  <g id="hair_front">
+    <path d="M315 381c22-130 102-214 202-214 105 0 179 83 202 213-62-62-133-94-214-96-72-2-132 31-190 97z" fill="#222941"/>
+    <path d="M456 171c-54 73-88 139-101 213 51-53 98-82 142-89-13-42-25-82-41-124z" fill="#303a5c"/>
+    <path d="M546 170c23 67 41 118 58 181 33 11 67 30 103 57-15-112-70-200-161-238z" fill="#303a5c"/>
+  </g>
+
+  <g id="brow_left">
+    <path d="M388 371c35-22 76-24 111-7" fill="none" stroke="#39405d" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <g id="brow_right">
+    <path d="M531 364c35-17 76-15 111 7" fill="none" stroke="#39405d" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <g id="eye_left">
+    <path d="M388 425c30-32 82-32 112 0-30 31-82 31-112 0z" fill="#fff"/>
+    <circle cx="444" cy="425" r="24" fill="#4a63a8"/>
+    <circle cx="444" cy="425" r="12" fill="#172039"/>
+    <circle cx="435" cy="416" r="6" fill="#fff"/>
+  </g>
+
+  <g id="eye_right">
+    <path d="M530 425c30-32 82-32 112 0-30 31-82 31-112 0z" fill="#fff"/>
+    <circle cx="586" cy="425" r="24" fill="#4a63a8"/>
+    <circle cx="586" cy="425" r="12" fill="#172039"/>
+    <circle cx="577" cy="416" r="6" fill="#fff"/>
+  </g>
+
+  <g id="cheek_left">
+    <ellipse cx="384" cy="492" rx="31" ry="18" fill="#ff9aa8" opacity=".42"/>
+  </g>
+
+  <g id="cheek_right">
+    <ellipse cx="646" cy="492" rx="31" ry="18" fill="#ff9aa8" opacity=".42"/>
+  </g>
+
+  <g id="mouth">
+    <path d="M481 535c21 18 47 18 68 0" fill="none" stroke="#a44d5f" stroke-width="12" stroke-linecap="round"/>
+    <ellipse id="mouth_open_reference" cx="515" cy="543" rx="31" ry="18" fill="#8b263b" opacity=".35"/>
+  </g>
+</svg>

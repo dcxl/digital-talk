@@ -1,0 +1,33 @@
+{
+  "name": "starter-avatar",
+  "driver": "live2d",
+  "version": 1,
+  "source": "starter-avatar.parts.svg",
+  "recommendedCanvas": {
+    "width": 1024,
+    "height": 1024
+  },
+  "parts": [
+    { "id": "body", "name": "Body", "type": "body" },
+    { "id": "neck", "name": "Neck", "type": "body" },
+    { "id": "head", "name": "Head", "type": "head" },
+    { "id": "hair_back", "name": "Hair Back", "type": "hair" },
+    { "id": "hair_front", "name": "Hair Front", "type": "hair" },
+    { "id": "eye_left", "name": "Eye Left", "type": "eye", "parameter": "ParamEyeLOpen" },
+    { "id": "eye_right", "name": "Eye Right", "type": "eye", "parameter": "ParamEyeROpen" },
+    { "id": "brow_left", "name": "Brow Left", "type": "brow" },
+    { "id": "brow_right", "name": "Brow Right", "type": "brow" },
+    { "id": "mouth", "name": "Mouth", "type": "mouth", "parameter": "ParamMouthOpenY" },
+    { "id": "cheek_left", "name": "Cheek Left", "type": "face" },
+    { "id": "cheek_right", "name": "Cheek Right", "type": "face" }
+  ],
+  "parameters": [
+    "ParamAngleX",
+    "ParamAngleY",
+    "ParamAngleZ",
+    "ParamBodyAngleX",
+    "ParamEyeLOpen",
+    "ParamEyeROpen",
+    "ParamMouthOpenY"
+  ]
+}
