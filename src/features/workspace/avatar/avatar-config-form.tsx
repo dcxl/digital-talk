@@ -27,7 +27,7 @@ export function AvatarConfigForm({
   statusText,
   voiceProviders,
 }: AvatarConfigFormProps) {
-  const canSave = Boolean(form.name.trim()) && form.driver === "static" && !isBusy;
+  const canSave = Boolean(form.name.trim()) && !isBusy;
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -35,7 +35,7 @@ export function AvatarConfigForm({
         <div>
           <h3 className="text-sm font-semibold text-slate-950">配置</h3>
           <p className="mt-1 text-xs text-slate-500">
-            {statusText || "Static Avatar 可配置，Live2D / VRM 暂未启用"}
+            {statusText || "Static 可直接运行，Live2D / VRM 使用占位运行时"}
           </p>
         </div>
         <button

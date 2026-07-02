@@ -176,6 +176,12 @@ export interface AvatarFormState {
 }
 
 export interface AvatarPreviewResult {
+  runtime?: {
+    adapterName: string;
+    driver: AvatarDriver;
+    fallbackDriver?: AvatarDriver;
+    status: "placeholder" | "ready";
+  };
   state: AvatarPreviewState;
   text: string;
   updatedAt: string;

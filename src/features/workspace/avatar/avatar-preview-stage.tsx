@@ -1,4 +1,4 @@
-import { Bot, BrainCircuit, Play } from "lucide-react";
+import { Bot, Box, BrainCircuit, Layers3, Play } from "lucide-react";
 import type {
   AvatarFormState,
   AvatarPreviewResult,
@@ -6,6 +6,7 @@ import type {
 } from "../types";
 import {
   avatarBackgroundLabels,
+  avatarDriverLabels,
   avatarPreviewStateLabels,
   avatarPreviewStates,
 } from "./constants";
@@ -31,6 +32,9 @@ export function AvatarPreviewStage({
   preview,
 }: AvatarPreviewStageProps) {
   const state = preview?.state ?? "idle";
+  const isPlaceholderDriver = form.driver === "live2d" || form.driver === "vrm";
+  const PlaceholderIcon = form.driver === "vrm" ? Box : Layers3;
+  const driverLabel = avatarDriverLabels[form.driver];
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -38,7 +42,7 @@ export function AvatarPreviewStage({
         <div>
           <h3 className="text-sm font-semibold text-slate-950">预览舞台</h3>
           <p className="mt-1 text-xs text-slate-500">
-            {form.driver} · {avatarBackgroundLabels[form.background] ?? "影棚"}
+            {driverLabel} · {avatarBackgroundLabels[form.background] ?? "影棚"}
           </p>
         </div>
         <span className={`rounded-md px-2 py-1 text-xs font-medium ${getStateTone(state)}`}>
@@ -59,6 +63,11 @@ export function AvatarPreviewStage({
               className="size-44 rounded-full object-cover"
               src={form.previewImageUrl}
             />
+          ) : isPlaceholderDriver ? (
+            <div className="flex size-40 flex-col items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
+              <PlaceholderIcon size={64} />
+              <span className="mt-2 text-xs font-medium">{driverLabel}</span>
+            </div>
           ) : (
             <div className="flex size-40 items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
               {state === "thinking" ? (
@@ -85,6 +94,15 @@ export function AvatarPreviewStage({
         <p className="min-h-6 text-center text-sm text-slate-600">
           {preview?.text ?? `你好，我是 ${form.name}`}
         </p>
+
+        {preview?.runtime ? (
+          <p className="text-xs text-slate-500">
+            {preview.runtime.adapterName}
+            {preview.runtime.fallbackDriver
+              ? ` · 降级到 ${avatarDriverLabels[preview.runtime.fallbackDriver]}`
+              : ""}
+          </p>
+        ) : null}
 
         <div className="flex flex-wrap justify-center gap-2">
           {avatarPreviewStates.map((previewState) => (

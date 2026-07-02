@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 
 interface AvatarProfileSummary {
+  driver: "live2d" | "static" | "vrm";
   id: string;
   isDefault: boolean;
   name: string;

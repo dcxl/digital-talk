@@ -1,8 +1,9 @@
-import { Bot, BrainCircuit } from "lucide-react";
+import { Bot, BrainCircuit, Box, Layers3 } from "lucide-react";
 import { stateLabel, stateTone } from "../constants";
 import type { RuntimeState } from "../types";
 
 interface AvatarStageProps {
+  driver?: "live2d" | "static" | "vrm";
   avatarImageUrl?: string | null;
   avatarName?: string | null;
   mouthOpen?: number;
@@ -12,6 +13,7 @@ interface AvatarStageProps {
 }
 
 export function AvatarStage({
+  driver = "static",
   avatarImageUrl,
   avatarName,
   mouthOpen = 0,
@@ -23,6 +25,10 @@ export function AvatarStage({
   const mouthHeight = 5 + visibleMouthOpen * 20;
   const mouthWidth = 30 + visibleMouthOpen * 28;
   const volumeGlow = Math.min(0.45, volume * 1.8);
+  const isPlaceholderDriver = driver === "live2d" || driver === "vrm";
+  const driverLabel =
+    driver === "live2d" ? "Live2D" : driver === "vrm" ? "VRM" : "静态";
+  const PlaceholderIcon = driver === "vrm" ? Box : Layers3;
 
   return (
     <section className="min-h-[520px] rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -30,7 +36,9 @@ export function AvatarStage({
         <div>
           <h2 className="text-sm font-semibold text-slate-950">数字人舞台</h2>
           <p className="mt-1 text-xs text-slate-500">
-            {avatarName ? `${avatarName} · ${latestStatus}` : latestStatus}
+            {avatarName
+              ? `${avatarName} · ${driverLabel} · ${latestStatus}`
+              : `${driverLabel} · ${latestStatus}`}
           </p>
         </div>
         <span
@@ -66,6 +74,21 @@ export function AvatarStage({
                 }}
               />
             </>
+          ) : isPlaceholderDriver ? (
+            <div className="relative z-10 flex size-40 flex-col items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
+              <PlaceholderIcon size={64} />
+              <span className="mt-2 text-xs font-medium">{driverLabel}</span>
+              <span
+                aria-hidden="true"
+                className="absolute bottom-10 left-1/2 rounded-full bg-white shadow transition-[height,opacity,width] duration-75"
+                style={{
+                  height: `${mouthHeight}px`,
+                  opacity: state === "speaking" ? 0.9 : 0,
+                  transform: "translateX(-50%)",
+                  width: `${mouthWidth}px`,
+                }}
+              />
+            </div>
           ) : (
             <div className="relative z-10 flex size-40 items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
               {state === "thinking" || state === "streaming" ? (
@@ -110,7 +133,7 @@ export function AvatarStage({
           </div>
           <div className="rounded-md bg-slate-50 p-3">
             <p className="font-medium text-slate-800">数字人</p>
-            <p>静态驱动</p>
+            <p>{driverLabel}</p>
           </div>
         </div>
       </div>

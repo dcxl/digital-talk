@@ -1,0 +1,32 @@
+import { describe, expect, it } from "vitest";
+import { staticAvatarProvider } from "./static-avatar-provider";
+
+describe("static avatar runtime provider", () => {
+  it("returns a ready static runtime", async () => {
+    const runtime = await staticAvatarProvider.getRuntime({
+      driver: "static",
+      mouthOpen: 0.6,
+      state: "speaking",
+    });
+
+    expect(runtime.driver).toBe("static");
+    expect(runtime.status).toBe("ready");
+    expect(runtime.mouth.openness).toBe(0.6);
+  });
+
+  it("falls Live2D and VRM profiles back to static placeholders", async () => {
+    const live2d = await staticAvatarProvider.getRuntime({
+      driver: "live2d",
+      state: "idle",
+    });
+    const vrm = await staticAvatarProvider.getRuntime({
+      driver: "vrm",
+      state: "idle",
+    });
+
+    expect(live2d.fallbackDriver).toBe("static");
+    expect(live2d.status).toBe("placeholder");
+    expect(vrm.fallbackDriver).toBe("static");
+    expect(vrm.status).toBe("placeholder");
+  });
+});

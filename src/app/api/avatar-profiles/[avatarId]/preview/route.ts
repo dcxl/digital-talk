@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { jsonData, jsonError } from "@/core/http/responses";
+import type { AvatarRuntimeDriver } from "@/core/providers/types";
 import type { RuntimeState } from "@/core/runtime/events";
 import { getAvatarProvider } from "@/providers/avatar";
 import { isDatabaseConfigured } from "@/services/database/prisma";
@@ -56,17 +57,6 @@ export async function POST(
     );
   }
 
-  if (profile.driver !== "static") {
-    return jsonError(
-      {
-        code: "bad_request",
-        message: "Only static avatar preview is supported in MVP",
-        retryable: false,
-      },
-      { status: 400 },
-    );
-  }
-
   const body = (await request.json().catch(() => null)) as {
     state?: unknown;
     text?: unknown;
@@ -77,6 +67,11 @@ export async function POST(
     state,
     reason: "preview",
   });
+  const runtime = await provider.getRuntime({
+    driver: profile.driver as AvatarRuntimeDriver,
+    state,
+    reason: "preview",
+  });
 
   return jsonData({
     profile: serializeAvatarProfile(profile),
@@ -84,6 +79,7 @@ export async function POST(
       state: result.state,
       text: getString(body?.text) || `你好，我是 ${profile.name}`,
       updatedAt: result.updatedAt,
+      runtime,
     },
   });
 }

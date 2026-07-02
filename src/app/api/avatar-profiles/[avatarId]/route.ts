@@ -130,7 +130,7 @@ export async function PATCH(
     return jsonError(
       {
         code: "bad_request",
-        message: "Only static avatar driver is supported in MVP",
+        message: "Unsupported avatar driver",
         retryable: false,
       },
       { status: 400 },

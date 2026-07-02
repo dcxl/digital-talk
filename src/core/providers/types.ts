@@ -111,8 +111,39 @@ export interface AvatarStateResult {
   updatedAt: string;
 }
 
+export type AvatarRuntimeDriver = "live2d" | "static" | "vrm";
+
+export interface AvatarRuntimeInput {
+  driver?: AvatarRuntimeDriver;
+  mouthOpen?: number;
+  reason?: string;
+  state: RuntimeState;
+}
+
+export interface AvatarRuntimeResult {
+  adapterId: string;
+  adapterName: string;
+  capabilities: {
+    image: boolean;
+    live2d: boolean;
+    viseme: boolean;
+    vrm: boolean;
+  };
+  driver: AvatarRuntimeDriver;
+  fallbackDriver?: AvatarRuntimeDriver;
+  mouth: {
+    openness: number;
+    source: "audio-volume" | "none" | "viseme";
+  };
+  reason?: string;
+  status: "placeholder" | "ready";
+  state: RuntimeState;
+  updatedAt: string;
+}
+
 export interface AvatarProvider extends ProviderDescriptor {
   capability: "avatar";
+  getRuntime(input: AvatarRuntimeInput): Promise<AvatarRuntimeResult>;
   setState(input: AvatarStateInput): Promise<AvatarStateResult>;
 }
 

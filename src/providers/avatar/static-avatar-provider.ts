@@ -1,4 +1,5 @@
 import type { AvatarProvider } from "@/core/providers/types";
+import { resolveAvatarRuntime } from "./runtime-adapter";
 
 export const staticAvatarProvider: AvatarProvider = {
   id: "static-avatar",
@@ -6,6 +7,10 @@ export const staticAvatarProvider: AvatarProvider = {
   capability: "avatar",
   version: "0.1.0",
   health: "ready",
+
+  async getRuntime(input) {
+    return resolveAvatarRuntime(input);
+  },
 
   async setState(input) {
     return {
