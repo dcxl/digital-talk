@@ -448,6 +448,7 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
         }
       >
         <AvatarStage
+          avatarId={avatarProfile?.id}
           driver={avatarProfile?.driver}
           avatarImageUrl={avatarProfile?.previewImageUrl}
           avatarName={avatarProfile?.name}
