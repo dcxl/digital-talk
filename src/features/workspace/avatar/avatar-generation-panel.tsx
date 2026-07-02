@@ -1,4 +1,4 @@
-import { RefreshCw, Sparkles } from "lucide-react";
+import { RefreshCw, RotateCcw, Sparkles } from "lucide-react";
 import { useState } from "react";
 import type { AvatarGenerationJobItem } from "../types";
 
@@ -10,6 +10,7 @@ interface AvatarGenerationPanelProps {
     prompt: string;
     style?: string;
   }) => void;
+  onRetry: (job: AvatarGenerationJobItem) => void;
 }
 
 const styleOptions = ["portrait", "studio", "half-body", "anime", "realistic"];
@@ -25,6 +26,7 @@ export function AvatarGenerationPanel({
   isBusy,
   lastJob,
   onGenerate,
+  onRetry,
 }: AvatarGenerationPanelProps) {
   const [negativePrompt, setNegativePrompt] = useState("");
   const [prompt, setPrompt] = useState("生成一个适合作为 AI 数字人的头像");
@@ -94,25 +96,38 @@ export function AvatarGenerationPanel({
         <p className="truncate text-xs text-slate-500">
           {lastJob?.errorMessage ?? lastJob?.resultAsset?.name ?? lastJob?.id ?? ""}
         </p>
-        <button
-          className="inline-flex h-9 items-center gap-2 rounded-md bg-slate-950 px-3 text-sm text-white disabled:opacity-60"
-          disabled={!canGenerate}
-          onClick={() =>
-            onGenerate({
-              negativePrompt,
-              prompt,
-              style,
-            })
-          }
-          type="button"
-        >
-          {isBusy ? (
-            <RefreshCw className="animate-spin" size={15} />
-          ) : (
-            <Sparkles size={15} />
-          )}
-          生成并绑定
-        </button>
+        <div className="flex gap-2">
+          {lastJob?.status === "failed" ? (
+            <button
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 disabled:opacity-60"
+              disabled={isBusy}
+              onClick={() => onRetry(lastJob)}
+              type="button"
+            >
+              <RotateCcw size={15} />
+              重试
+            </button>
+          ) : null}
+          <button
+            className="inline-flex h-9 items-center gap-2 rounded-md bg-slate-950 px-3 text-sm text-white disabled:opacity-60"
+            disabled={!canGenerate}
+            onClick={() =>
+              onGenerate({
+                negativePrompt,
+                prompt,
+                style,
+              })
+            }
+            type="button"
+          >
+            {isBusy ? (
+              <RefreshCw className="animate-spin" size={15} />
+            ) : (
+              <Sparkles size={15} />
+            )}
+            生成并绑定
+          </button>
+        </div>
       </div>
     </section>
   );

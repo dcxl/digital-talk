@@ -5,6 +5,7 @@ import {
   previewAvatarProfileRequest,
   readAvatarProfiles,
   readProviders,
+  retryAvatarGenerationJobRequest,
   saveAvatarProfileRequest,
   updateAvatarAssetRequest,
   uploadAvatarAssetRequest,
@@ -266,24 +267,43 @@ export function useAvatarManagement() {
         style: input.style,
       });
 
-      setLastGenerationJob(result.job);
-
-      if (result.job.status === "failed") {
-        throw new Error(result.job.errorMessage ?? "Avatar 生成失败");
-      }
-
-      const asset = result.asset ?? result.job.resultAsset;
-      if (!asset) throw new Error("Avatar 生成任务没有返回资产");
-
-      setAssets((current) => [
-        asset,
-        ...current.filter((item) => item.id !== asset.id),
-      ]);
-      await bindAvatarAsset(asset);
+      await applyGeneratedAvatarResult(result);
     } catch (error) {
       setStatus("error");
       setStatusText(error instanceof Error ? error.message : "Avatar 生成失败");
     }
+  }
+
+  async function retryAvatarGenerationJob(job: AvatarGenerationJobItem) {
+    setStatus("loading");
+
+    try {
+      const result = await retryAvatarGenerationJobRequest(job.id);
+      await applyGeneratedAvatarResult(result);
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "Avatar 重试失败");
+    }
+  }
+
+  async function applyGeneratedAvatarResult(result: {
+    asset?: AvatarAssetItem;
+    job: AvatarGenerationJobItem;
+  }) {
+    setLastGenerationJob(result.job);
+
+    if (result.job.status === "failed") {
+      throw new Error(result.job.errorMessage ?? "Avatar 生成失败");
+    }
+
+    const asset = result.asset ?? result.job.resultAsset;
+    if (!asset) throw new Error("Avatar 生成任务没有返回资产");
+
+    setAssets((current) => [
+      asset,
+      ...current.filter((item) => item.id !== asset.id),
+    ]);
+    await bindAvatarAsset(asset);
   }
 
   return {
@@ -298,6 +318,7 @@ export function useAvatarManagement() {
     preview,
     previewProfile,
     profiles,
+    retryAvatarGenerationJob,
     saveProfile,
     selectProfile,
     selectedProfileId,

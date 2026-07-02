@@ -21,6 +21,7 @@ export function AvatarPage() {
     preview,
     previewProfile,
     profiles,
+    retryAvatarGenerationJob,
     saveProfile,
     selectProfile,
     selectedProfileId,
@@ -71,6 +72,7 @@ export function AvatarPage() {
               isBusy={isBusy}
               lastJob={lastGenerationJob}
               onGenerate={(input) => void generateAvatarAsset(input)}
+              onRetry={(job) => void retryAvatarGenerationJob(job)}
             />
           </div>
           <div className="2xl:col-span-2">

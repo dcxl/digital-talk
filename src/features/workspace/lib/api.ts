@@ -574,6 +574,30 @@ export async function createAvatarGenerationJobRequest(input: {
   };
 }
 
+export async function retryAvatarGenerationJobRequest(jobId: string) {
+  const response = await fetch(`/api/avatar-generation-jobs/${jobId}/retry`, {
+    method: "POST",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      asset?: AvatarAssetItem;
+      job?: AvatarGenerationJobItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.job) {
+    throw new Error(getApiErrorMessage(payload, "重试 Avatar 生成失败"));
+  }
+
+  return {
+    asset: payload.data.asset,
+    job: payload.data.job,
+  };
+}
+
 export async function updateAvatarAssetRequest(
   assetId: string,
   input: Partial<Pick<AvatarAssetItem, "name" | "profileId" | "publicUrl">>,

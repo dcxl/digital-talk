@@ -12,6 +12,19 @@ export interface ProcessAvatarGenerationJobInput {
   style?: string;
 }
 
+export async function markAvatarGenerationJobFailed(
+  jobId: string,
+  error: unknown,
+) {
+  return updateAvatarGenerationJob({
+    completedAt: new Date(),
+    errorMessage:
+      error instanceof Error ? error.message : "Avatar generation failed",
+    jobId,
+    status: "failed",
+  });
+}
+
 function getGeneratedFileName(mimeType: string) {
   if (mimeType === "image/jpeg") return "generated-avatar.jpg";
   if (mimeType === "image/webp") return "generated-avatar.webp";

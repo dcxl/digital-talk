@@ -1,11 +1,13 @@
 import type { AvatarGenerationJobStatus } from "@/generated/prisma/client";
 import { jsonData, jsonError } from "@/core/http/responses";
 import { presentAvatarAsset } from "@/services/avatar-assets/presenter";
-import { processAvatarGenerationJob } from "@/services/avatar-generation/processor";
+import {
+  markAvatarGenerationJobFailed,
+  processAvatarGenerationJob,
+} from "@/services/avatar-generation/processor";
 import {
   createAvatarGenerationJob,
   listAvatarGenerationJobs,
-  updateAvatarGenerationJob,
 } from "@/services/avatar-generation/repository";
 import { presentAvatarGenerationJob } from "@/services/avatar-generation/presenter";
 import { isDatabaseConfigured } from "@/services/database/prisma";
@@ -146,13 +148,7 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    const failedJob = await updateAvatarGenerationJob({
-      completedAt: new Date(),
-      errorMessage:
-        error instanceof Error ? error.message : "Avatar generation failed",
-      jobId: createdJob.id,
-      status: "failed",
-    });
+    const failedJob = await markAvatarGenerationJobFailed(createdJob.id, error);
 
     return jsonData(
       {
