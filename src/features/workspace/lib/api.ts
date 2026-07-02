@@ -417,12 +417,21 @@ export async function readAvatarAssets() {
 }
 
 function getAvatarPayload(input: AvatarFormState) {
+  const providerConfigId =
+    input.providerConfigId && !input.providerConfigId.startsWith("env-")
+      ? input.providerConfigId
+      : null;
+  const voiceProviderId =
+    input.voiceProviderId && !input.voiceProviderId.startsWith("env-")
+      ? input.voiceProviderId
+      : null;
+
   return {
     id: input.id,
     name: input.name.trim(),
     driver: input.driver,
-    providerConfigId: input.providerConfigId || null,
-    voiceProviderId: input.voiceProviderId || null,
+    providerConfigId,
+    voiceProviderId,
     voice: input.voice.trim() || null,
     language: input.language.trim() || null,
     background: input.background.trim() || null,

@@ -35,6 +35,12 @@ function toInputJson(value: unknown) {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
 
+function toDatabaseProviderConfigId(value: string | null | undefined) {
+  if (value === undefined) return undefined;
+  if (!value || value.startsWith("env-")) return null;
+  return value;
+}
+
 export async function ensureDefaultAvatarProfile(userId = DEFAULT_USER_ID) {
   const prisma = getPrismaClient();
   const user = await ensureDefaultUser();
@@ -144,10 +150,10 @@ export async function upsertAvatarProfile(input: UpsertAvatarProfileInput) {
           language: input.language,
           name: input.name,
           previewImageUrl: input.previewImageUrl,
-          providerConfigId: input.providerConfigId,
+          providerConfigId: toDatabaseProviderConfigId(input.providerConfigId),
           status: input.status,
           voice: input.voice,
-          voiceProviderId: input.voiceProviderId,
+          voiceProviderId: toDatabaseProviderConfigId(input.voiceProviderId),
         },
         include: avatarProfileInclude,
         where: {
@@ -166,11 +172,11 @@ export async function upsertAvatarProfile(input: UpsertAvatarProfileInput) {
         language: input.language,
         name: input.name,
         previewImageUrl: input.previewImageUrl,
-        providerConfigId: input.providerConfigId,
+        providerConfigId: toDatabaseProviderConfigId(input.providerConfigId),
         status: input.status ?? "active",
         userId: user.id,
         voice: input.voice,
-        voiceProviderId: input.voiceProviderId,
+        voiceProviderId: toDatabaseProviderConfigId(input.voiceProviderId),
       },
       include: avatarProfileInclude,
     });
