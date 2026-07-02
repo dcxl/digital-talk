@@ -25,7 +25,7 @@ export function PromptEditor({
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 p-4">
-        <h3 className="text-sm font-semibold text-slate-950">Prompt Editor</h3>
+        <h3 className="text-sm font-semibold text-slate-950">提示词编辑器</h3>
       </div>
       <div className="grid gap-4 p-4 lg:grid-cols-2">
         <label className="block text-xs font-medium text-slate-600">
@@ -53,7 +53,7 @@ export function PromptEditor({
           />
         </label>
         <label className="block text-xs font-medium text-slate-600 lg:col-span-2">
-          Prompt 内容
+          提示词内容
           <textarea
             className="mt-1 min-h-64 w-full resize-y rounded-md border border-slate-200 p-3 font-mono text-sm leading-6 outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ content: event.target.value })}
@@ -73,7 +73,7 @@ export function PromptEditor({
 
       <div className="border-t border-slate-200 p-4">
         <div className="flex items-center justify-between gap-3">
-          <h4 className="text-sm font-semibold text-slate-950">Variables</h4>
+          <h4 className="text-sm font-semibold text-slate-950">变量</h4>
           <button
             className="inline-flex size-8 items-center justify-center rounded-md border border-slate-200 text-slate-700"
             onClick={onAddVariable}

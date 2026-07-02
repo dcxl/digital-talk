@@ -34,7 +34,7 @@ export function PlaygroundPage() {
           onClick={() => void loadOptions()}
         />
       }
-      eyebrow="Playground"
+      eyebrow="调试"
       title="调试中心"
     >
       <div className="grid gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">

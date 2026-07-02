@@ -89,7 +89,7 @@ export function ProviderConfigForm({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold text-slate-950">
-              Provider 配置
+              服务商配置
             </h3>
             <p className="mt-1 text-xs text-slate-500">
               {form.source === "env" ? "ENV 来源，保存后生成数据库配置" : form.type}
@@ -118,13 +118,13 @@ export function ProviderConfigForm({
           <input
             className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ name: event.target.value })}
-            placeholder="DeepSeek Production"
+            placeholder="DeepSeek 生产环境"
             value={form.name}
           />
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Provider
+          服务商
           <select
             className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
             onChange={(event) =>
@@ -141,7 +141,7 @@ export function ProviderConfigForm({
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Base URL
+          基础 URL
           <input
             className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ baseUrl: event.target.value })}
@@ -157,7 +157,7 @@ export function ProviderConfigForm({
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Model
+          模型
           <input
             className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ model: event.target.value })}
@@ -175,7 +175,7 @@ export function ProviderConfigForm({
         {isTTS ? (
           <>
             <label className="block text-xs font-medium text-slate-600">
-              Voice
+              音色
               <input
                 className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
                 onChange={(event) => onChange({ voice: event.target.value })}
@@ -187,7 +187,7 @@ export function ProviderConfigForm({
             </label>
 
             <label className="block text-xs font-medium text-slate-600">
-              Format
+              格式
               <select
                 className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-500"
                 onChange={(event) =>
@@ -243,7 +243,7 @@ export function ProviderConfigForm({
             onClick={onTest}
             title={
               form.type === "llm" || form.type === "tts"
-                ? "测试 Provider"
+                ? "测试服务商"
                 : "仅 LLM / TTS 支持测试"
             }
             type="button"

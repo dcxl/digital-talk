@@ -1,5 +1,6 @@
 import { Bot, Plus } from "lucide-react";
 import type { AvatarProfileItem } from "../types";
+import { avatarBackgroundLabels, avatarStatusLabels } from "./constants";
 
 interface AvatarListProps {
   isBusy: boolean;
@@ -20,14 +21,14 @@ export function AvatarList({
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-950">Avatars</h3>
-          <p className="mt-1 text-xs text-slate-500">{profiles.length} profiles</p>
+          <h3 className="text-sm font-semibold text-slate-950">数字人</h3>
+          <p className="mt-1 text-xs text-slate-500">{profiles.length} 个配置</p>
         </div>
         <button
           className="inline-flex size-9 items-center justify-center rounded-md bg-indigo-600 text-white disabled:opacity-60"
           disabled={isBusy}
           onClick={onCreate}
-          title="新建 Avatar"
+          title="新建数字人"
           type="button"
         >
           <Plus size={16} />
@@ -62,7 +63,7 @@ export function AvatarList({
                   </span>
                   {profile.isDefault ? (
                     <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">
-                      Default
+                      默认
                     </span>
                   ) : null}
                 </span>
@@ -70,14 +71,17 @@ export function AvatarList({
                   {profile.driver} · {profile.language ?? "未配置语言"}
                 </span>
                 <span className="mt-2 block text-xs text-slate-400">
-                  {profile.background ?? "studio"} · {profile.status}
+                  {avatarBackgroundLabels[profile.background ?? "studio"] ??
+                    profile.background ??
+                    "影棚"}{" "}
+                  · {avatarStatusLabels[profile.status] ?? profile.status}
                 </span>
               </span>
             </button>
           );
         })}
         {profiles.length === 0 ? (
-          <div className="px-4 py-8 text-sm text-slate-500">暂无 Avatar</div>
+          <div className="px-4 py-8 text-sm text-slate-500">暂无数字人</div>
         ) : null}
       </div>
     </section>

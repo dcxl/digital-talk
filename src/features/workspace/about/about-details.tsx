@@ -2,19 +2,19 @@ import { GitBranch, Globe, Scale } from "lucide-react";
 
 const aboutItems = [
   {
-    label: "Version",
+    label: "版本",
     value: "v0.1.0",
   },
   {
-    label: "License",
+    label: "许可证",
     value: "MIT",
   },
   {
-    label: "Repository",
+    label: "代码仓库",
     value: "github.com/dcxl/digital-talk",
   },
   {
-    label: "Framework",
+    label: "框架",
     value: "Next.js 16",
   },
 ];
@@ -30,8 +30,7 @@ export function AboutDetails() {
           NEXT DIGITAL HUMAN
         </h3>
         <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-          Open source AI digital human framework built with Next.js, Prisma and
-          provider-driven runtime modules.
+          基于 Next.js、Prisma 和 Provider 驱动运行时模块构建的开源 AI 数字人框架。
         </p>
 
         <div className="mt-8 grid w-full max-w-3xl gap-3 sm:grid-cols-2">
@@ -57,7 +56,7 @@ export function AboutDetails() {
           </a>
           <span className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 px-3 text-sm text-slate-700">
             <Scale size={15} />
-            MIT License
+            MIT 许可证
           </span>
         </div>
       </div>

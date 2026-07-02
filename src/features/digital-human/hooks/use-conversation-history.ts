@@ -64,7 +64,7 @@ export function useConversationHistory({
       };
 
       if (!response.ok || !payload.data?.conversation) {
-        throw new Error("Conversation not found");
+        throw new Error("会话不存在");
       }
 
       setConversationId(payload.data.conversation.id);

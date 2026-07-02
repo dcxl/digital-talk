@@ -9,7 +9,7 @@ export function WorkspacePlaceholderPage({
   title: string;
 }) {
   return (
-    <PageFrame eyebrow="Planned" title={title}>
+    <PageFrame eyebrow="规划中" title={title}>
       <Panel className="p-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (

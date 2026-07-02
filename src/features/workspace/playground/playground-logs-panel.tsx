@@ -14,7 +14,7 @@ export function PlaygroundLogsPanel({ logs }: PlaygroundLogsPanelProps) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 p-4">
-        <h3 className="text-sm font-semibold text-slate-950">Logs</h3>
+        <h3 className="text-sm font-semibold text-slate-950">日志</h3>
       </div>
       <div className="max-h-64 divide-y divide-slate-100 overflow-auto">
         {logs.map((log) => (

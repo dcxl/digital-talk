@@ -22,12 +22,12 @@ export function MessageList({ messages }: MessageListProps) {
             <p className="whitespace-pre-wrap break-words">{message.content}</p>
             {message.status === "streaming" ? (
               <span className="mt-2 inline-flex text-xs text-blue-600">
-                generating...
+                生成中...
               </span>
             ) : null}
             {message.status === "interrupted" ? (
               <span className="mt-2 inline-flex text-xs text-orange-600">
-                interrupted
+                已打断
               </span>
             ) : null}
           </div>

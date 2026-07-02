@@ -2,8 +2,10 @@ import { Save, ToggleLeft, ToggleRight } from "lucide-react";
 import type { AvatarFormState, ProviderItem } from "../types";
 import {
   avatarBackgroundOptions,
+  avatarBackgroundLabels,
   avatarDriverOptions,
   avatarLanguageOptions,
+  avatarStatusLabels,
 } from "./constants";
 
 interface AvatarConfigFormProps {
@@ -31,7 +33,7 @@ export function AvatarConfigForm({
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 p-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-950">Configuration</h3>
+          <h3 className="text-sm font-semibold text-slate-950">配置</h3>
           <p className="mt-1 text-xs text-slate-500">
             {statusText || "Static Avatar 可配置，Live2D / VRM 暂未启用"}
           </p>
@@ -48,7 +50,7 @@ export function AvatarConfigForm({
           type="button"
         >
           {form.isDefault ? <ToggleRight size={15} /> : <ToggleLeft size={15} />}
-          Default
+          默认
         </button>
       </div>
 
@@ -63,7 +65,7 @@ export function AvatarConfigForm({
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Driver
+          驱动
           <select
             className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-500"
             onChange={(event) =>
@@ -78,20 +80,20 @@ export function AvatarConfigForm({
                 value={option.value}
               >
                 {option.label}
-                {option.disabled ? " (disabled)" : ""}
+                {option.disabled ? "（未启用）" : ""}
               </option>
             ))}
           </select>
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Avatar Provider
+          数字人 Provider
           <select
             className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ providerConfigId: event.target.value })}
             value={form.providerConfigId}
           >
-            <option value="">Static built-in</option>
+            <option value="">内置静态</option>
             {avatarProviders.map((provider) => (
               <option key={provider.id} value={provider.id}>
                 {provider.name}
@@ -101,13 +103,13 @@ export function AvatarConfigForm({
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Voice Provider
+          语音 Provider
           <select
             className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ voiceProviderId: event.target.value })}
             value={form.voiceProviderId}
           >
-            <option value="">Mock TTS</option>
+            <option value="">Mock 语音</option>
             {voiceProviders.map((provider) => (
               <option key={provider.id} value={provider.id}>
                 {provider.name}
@@ -117,7 +119,7 @@ export function AvatarConfigForm({
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Voice
+          音色
           <input
             className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ voice: event.target.value })}
@@ -126,7 +128,7 @@ export function AvatarConfigForm({
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Language
+          语言
           <select
             className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ language: event.target.value })}
@@ -141,7 +143,7 @@ export function AvatarConfigForm({
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Background
+          背景
           <select
             className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ background: event.target.value })}
@@ -149,14 +151,14 @@ export function AvatarConfigForm({
           >
             {avatarBackgroundOptions.map((background) => (
               <option key={background} value={background}>
-                {background}
+                {avatarBackgroundLabels[background] ?? background}
               </option>
             ))}
           </select>
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Status
+          状态
           <select
             className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-500"
             onChange={(event) =>
@@ -164,13 +166,13 @@ export function AvatarConfigForm({
             }
             value={form.status}
           >
-            <option value="active">active</option>
-            <option value="disabled">disabled</option>
+            <option value="active">{avatarStatusLabels.active}</option>
+            <option value="disabled">{avatarStatusLabels.disabled}</option>
           </select>
         </label>
 
         <label className="block text-xs font-medium text-slate-600 md:col-span-2">
-          Preview Image URL
+          预览图 URL
           <input
             className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ previewImageUrl: event.target.value })}

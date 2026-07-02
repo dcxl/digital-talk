@@ -36,30 +36,30 @@ export const providerOptionsByType: Record<
   }>
 > = {
   asr: [
-    { label: "Custom", value: "custom" },
-    { label: "OpenAI Compatible", value: "openai-compatible" },
-    { label: "Local", value: "local" },
+    { label: "自定义", value: "custom" },
+    { label: "OpenAI 兼容", value: "openai-compatible" },
+    { label: "本地", value: "local" },
   ],
-  avatar: [{ label: "Custom", value: "custom" }],
+  avatar: [{ label: "自定义", value: "custom" }],
   embedding: [
-    { label: "OpenAI Compatible", value: "openai-compatible" },
+    { label: "OpenAI 兼容", value: "openai-compatible" },
     { label: "DeepSeek", value: "deepseek" },
-    { label: "Custom", value: "custom" },
+    { label: "自定义", value: "custom" },
   ],
   llm: [
     { label: "DeepSeek", value: "deepseek" },
-    { label: "OpenAI Compatible", value: "openai-compatible" },
+    { label: "OpenAI 兼容", value: "openai-compatible" },
     { label: "OpenAI", value: "openai" },
-    { label: "Mock", value: "mock" },
-    { label: "Custom", value: "custom" },
+    { label: "模拟", value: "mock" },
+    { label: "自定义", value: "custom" },
   ],
   tts: [
     { label: "阿里云百炼 CosyVoice", value: "bailian-cosyvoice" },
-    { label: "OpenAI Compatible", value: "openai-compatible" },
+    { label: "OpenAI 兼容", value: "openai-compatible" },
     { label: "OpenAI", value: "openai" },
-    { label: "Custom HTTP", value: "custom-http" },
-    { label: "Mock", value: "mock" },
-    { label: "Local", value: "local" },
+    { label: "自定义 HTTP", value: "custom-http" },
+    { label: "模拟", value: "mock" },
+    { label: "本地", value: "local" },
   ],
 };
 
@@ -77,7 +77,7 @@ export function createBlankProviderForm(type: ProviderType): ProviderFormState {
     baseUrl: type === "tts" ? bailianCosyVoiceDefaults.baseUrl : "",
     enabled: true,
     model: defaultModelByType[type],
-    name: `New ${type.toUpperCase()} Provider`,
+    name: `新建 ${type.toUpperCase()} Provider`,
     provider: providerOptionsByType[type][0]?.value ?? "custom",
     type,
     ...(type === "tts"

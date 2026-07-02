@@ -87,10 +87,10 @@ export function Composer({
 
       <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
         <span className="inline-flex items-center gap-1">
-          <Play size={14} /> stream
+          <Play size={14} /> 流式
         </span>
         <span className="inline-flex items-center gap-1">
-          <Volume2 size={14} /> tts
+          <Volume2 size={14} /> 语音
         </span>
         <span>Enter 发送，Shift + Enter 换行</span>
       </div>

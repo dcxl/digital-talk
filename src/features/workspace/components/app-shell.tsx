@@ -36,49 +36,49 @@ interface NavigationItem {
 const primaryNavigation: NavigationItem[] = [
   {
     href: "/dashboard",
-    label: "Dashboard",
+    label: "仪表盘",
     description: "运行概览",
     icon: LayoutDashboard,
   },
   {
     href: "/conversation",
-    label: "Conversation",
+    label: "对话",
     description: "数字人对话",
     icon: MessageSquare,
   },
   {
     href: "/history",
-    label: "History",
+    label: "历史",
     description: "会话历史",
     icon: History,
   },
   {
     href: "/avatar",
-    label: "Avatar",
+    label: "数字人",
     description: "数字人配置",
     icon: UserRound,
   },
   {
     href: "/knowledge",
-    label: "Knowledge",
+    label: "知识库",
     description: "知识库",
     icon: BookOpen,
   },
   {
     href: "/prompts",
-    label: "Prompt",
+    label: "提示词",
     description: "提示词",
     icon: FileText,
   },
   {
     href: "/models",
-    label: "Models",
+    label: "模型",
     description: "模型配置",
     icon: SlidersHorizontal,
   },
   {
     href: "/playground",
-    label: "Playground",
+    label: "调试中心",
     description: "调试中心",
     icon: Play,
   },
@@ -87,13 +87,13 @@ const primaryNavigation: NavigationItem[] = [
 const secondaryNavigation: NavigationItem[] = [
   {
     href: "/settings",
-    label: "Settings",
+    label: "设置",
     description: "系统设置",
     icon: Settings,
   },
   {
     href: "/about",
-    label: "About",
+    label: "关于",
     description: "项目信息",
     icon: Info,
   },
@@ -166,7 +166,7 @@ function Sidebar({
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">NEXT DIGITAL HUMAN</p>
-          <p className="text-xs text-slate-500">Workspace</p>
+          <p className="text-xs text-slate-500">工作台</p>
         </div>
       </div>
 
@@ -199,7 +199,7 @@ function Sidebar({
           <GitBranch size={17} />
           <span className="min-w-0">
             <span className="block truncate font-medium">GitHub</span>
-            <span className="block truncate text-xs text-slate-500">Repository</span>
+            <span className="block truncate text-xs text-slate-500">代码仓库</span>
           </span>
         </a>
       </div>
@@ -258,14 +258,14 @@ export function AppShell({ children }: WorkspaceShellProps) {
               <Link
                 className="hidden size-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 sm:flex"
                 href="/about"
-                title="About"
+                title="关于"
               >
                 <Info size={16} />
               </Link>
               <Link
                 className="flex size-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700"
                 href="/settings"
-                title="Settings"
+                title="设置"
               >
                 <Settings size={16} />
               </Link>

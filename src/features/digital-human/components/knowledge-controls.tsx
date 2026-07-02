@@ -119,7 +119,7 @@ export function KnowledgeControls({
       <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
         <span>
           {selectedKnowledgeBase
-            ? `${selectedKnowledgeBase.documentCount} docs · ${selectedKnowledgeBase.chunkCount} chunks`
+            ? `${selectedKnowledgeBase.documentCount} 个文档 · ${selectedKnowledgeBase.chunkCount} 个切片`
             : "未选择"}
         </span>
         <span>{knowledgeStatusText || "知识库待同步"}</span>

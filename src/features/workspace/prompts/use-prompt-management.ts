@@ -87,10 +87,10 @@ export function usePromptManagement() {
       setSelectedPromptId(selected?.id ?? "");
       setForm(selected ? toPromptForm(selected) : createBlankPromptForm(type));
       setStatus("success");
-      setStatusText("Prompt 已加载");
+      setStatusText("提示词已加载");
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "Prompt 加载失败");
+      setStatusText(error instanceof Error ? error.message : "提示词加载失败");
     }
   }
 
@@ -174,11 +174,11 @@ export function usePromptManagement() {
         : await createPromptRequest(form);
 
       setStatus("success");
-      setStatusText(form.id ? "Prompt 新版本已保存" : "Prompt 已创建");
+      setStatusText(form.id ? "提示词新版本已保存" : "提示词已创建");
       await loadPrompts(prompt.id, prompt.type);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "Prompt 保存失败");
+      setStatusText(error instanceof Error ? error.message : "提示词保存失败");
     }
   }
 
@@ -193,7 +193,7 @@ export function usePromptManagement() {
       setStatusText(`Prompt 测试完成 ${result.latencyMs}ms`);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "Prompt 测试失败");
+      setStatusText(error instanceof Error ? error.message : "提示词测试失败");
     }
   }
 
@@ -216,12 +216,12 @@ export function usePromptManagement() {
           selected ? toPromptForm(selected) : createBlankPromptForm("system"),
         );
         setStatus("success");
-        setStatusText("Prompt 已加载");
+        setStatusText("提示词已加载");
       } catch (error) {
         if (cancelled) return;
         setStatus("error");
         setStatusText(
-          error instanceof Error ? error.message : "Prompt 加载失败",
+          error instanceof Error ? error.message : "提示词加载失败",
         );
       }
     });

@@ -28,7 +28,7 @@ export function AvatarStage({
     <section className="min-h-[520px] rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-semibold text-slate-950">Avatar Stage</h2>
+          <h2 className="text-sm font-semibold text-slate-950">数字人舞台</h2>
           <p className="mt-1 text-xs text-slate-500">
             {avatarName ? `${avatarName} · ${latestStatus}` : latestStatus}
           </p>
@@ -50,7 +50,7 @@ export function AvatarStage({
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                alt={avatarName ?? "Avatar"}
+                alt={avatarName ?? "数字人"}
                 className="relative z-10 size-44 rounded-full object-cover shadow-2xl"
                 src={avatarImageUrl}
               />
@@ -102,15 +102,15 @@ export function AvatarStage({
         <div className="grid w-full grid-cols-3 gap-2 text-center text-xs text-slate-500">
           <div className="rounded-md bg-slate-50 p-3">
             <p className="font-medium text-slate-800">LLM</p>
-            <p>server stream</p>
+            <p>服务端流式</p>
           </div>
           <div className="rounded-md bg-slate-50 p-3">
             <p className="font-medium text-slate-800">TTS</p>
-            <p>event mock</p>
+            <p>事件驱动</p>
           </div>
           <div className="rounded-md bg-slate-50 p-3">
-            <p className="font-medium text-slate-800">Avatar</p>
-            <p>static</p>
+            <p className="font-medium text-slate-800">数字人</p>
+            <p>静态驱动</p>
           </div>
         </div>
       </div>

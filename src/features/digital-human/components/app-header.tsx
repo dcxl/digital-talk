@@ -14,17 +14,17 @@ export function AppHeader({ onOpenSettings }: AppHeaderProps) {
           </div>
           <div>
             <h1 className="text-base font-semibold text-slate-950">
-              Next Digital Human
+              下一代数字人
             </h1>
             <p className="text-xs text-slate-500">
-              Open source AI avatar runtime
+              开源 AI 数字人运行时
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button className="hidden h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm sm:flex">
             <Sparkles size={16} />
-            OpenAI Compatible
+            OpenAI 兼容
           </button>
           <button
             className="flex size-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm"

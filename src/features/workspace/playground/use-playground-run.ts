@@ -128,7 +128,7 @@ export function usePlaygroundRun() {
         totalLatencyMs: Date.now() - startedAtRef.current,
       }));
       setLogs((current) => [
-        createLogLine("Runtime completed", "success"),
+        createLogLine("运行完成", "success"),
         ...current,
       ]);
       return;
@@ -155,7 +155,7 @@ export function usePlaygroundRun() {
     setAssistantText("");
     setEventLogs([]);
     setMetrics(initialMetrics);
-    setLogs([createLogLine("Runtime request started")]);
+    setLogs([createLogLine("运行请求已开始")]);
     setIsRunning(true);
 
     try {
@@ -173,14 +173,14 @@ export function usePlaygroundRun() {
         signal: controller.signal,
       });
 
-      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      if (!response.ok) throw new Error(`请求失败：${response.status}`);
 
       await consumePlaygroundStream(response, applyRuntimeEvent);
     } catch (error) {
       if (!controller.signal.aborted) {
         setLogs((current) => [
           createLogLine(
-            error instanceof Error ? error.message : "Runtime request failed",
+            error instanceof Error ? error.message : "运行请求失败",
             "error",
           ),
           ...current,
@@ -196,7 +196,7 @@ export function usePlaygroundRun() {
     abortRef.current?.abort();
     abortRef.current = null;
     setIsRunning(false);
-    setLogs((current) => [createLogLine("Runtime interrupted"), ...current]);
+    setLogs((current) => [createLogLine("运行已中断"), ...current]);
   }
 
   function clearRun() {

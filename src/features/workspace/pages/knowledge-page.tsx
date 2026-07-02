@@ -177,7 +177,7 @@ export function KnowledgePage() {
         <Panel>
           <div className="border-b border-slate-200 p-4">
             <h3 className="text-sm font-semibold text-slate-950">
-              Knowledge Bases
+              知识库
             </h3>
             <div className="mt-3 flex gap-2">
               <input
@@ -221,7 +221,7 @@ export function KnowledgePage() {
                     {item.name}
                   </span>
                   <span className="block text-xs text-slate-500">
-                    {item.documentCount} docs · {item.chunkCount} chunks
+                    {item.documentCount} 个文档 · {item.chunkCount} 个切片
                   </span>
                 </span>
               </button>
@@ -236,19 +236,19 @@ export function KnowledgePage() {
           <Panel>
             <div className="grid gap-3 border-b border-slate-200 p-4 sm:grid-cols-3">
               <div>
-                <p className="text-xs text-slate-500">Knowledge Bases</p>
+                <p className="text-xs text-slate-500">知识库</p>
                 <p className="mt-1 text-xl font-semibold text-slate-950">
                   {knowledgeBases.length}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Documents</p>
+                <p className="text-xs text-slate-500">文档</p>
                 <p className="mt-1 text-xl font-semibold text-slate-950">
                   {documentCount}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Chunks</p>
+                <p className="text-xs text-slate-500">切片</p>
                 <p className="mt-1 text-xl font-semibold text-slate-950">
                   {chunkCount}
                 </p>
@@ -288,18 +288,18 @@ export function KnowledgePage() {
 
           <Panel>
             <div className="border-b border-slate-200 px-4 py-3">
-              <h3 className="text-sm font-semibold text-slate-950">Documents</h3>
+              <h3 className="text-sm font-semibold text-slate-950">文档</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-left text-sm">
                 <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Name</th>
-                    <th className="px-4 py-3 font-medium">Type</th>
-                    <th className="px-4 py-3 font-medium">Size</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium">Chunks</th>
-                    <th className="px-4 py-3 font-medium">Updated</th>
+                    <th className="px-4 py-3 font-medium">名称</th>
+                    <th className="px-4 py-3 font-medium">类型</th>
+                    <th className="px-4 py-3 font-medium">大小</th>
+                    <th className="px-4 py-3 font-medium">状态</th>
+                    <th className="px-4 py-3 font-medium">切片</th>
+                    <th className="px-4 py-3 font-medium">更新时间</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -347,7 +347,7 @@ export function KnowledgePage() {
           <Panel>
             <div className="border-b border-slate-200 px-4 py-3">
               <h3 className="text-sm font-semibold text-slate-950">
-                Retrieval Test
+                检索测试
               </h3>
             </div>
             <div className="grid gap-4 p-4 lg:grid-cols-[minmax(260px,0.8fr)_minmax(0,1.2fr)]">
@@ -383,7 +383,7 @@ export function KnowledgePage() {
                         {result.documentName}
                       </p>
                       <span className="shrink-0 rounded-md bg-white px-2 py-1 text-xs text-slate-500">
-                        {result.tokenCount ?? 0} tokens
+                        {result.tokenCount ?? 0} token
                       </span>
                     </div>
                     <p className="line-clamp-4 text-sm leading-6 text-slate-600">

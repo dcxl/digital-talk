@@ -12,20 +12,20 @@ export function DataExportPanel({
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 p-4">
-        <h3 className="text-sm font-semibold text-slate-950">Data Export</h3>
+        <h3 className="text-sm font-semibold text-slate-950">数据导出</h3>
       </div>
       <div className="grid gap-3 p-4 sm:grid-cols-3">
         <div className="rounded-md bg-slate-50 p-3">
-          <p className="text-xs text-slate-500">Conversations</p>
+          <p className="text-xs text-slate-500">会话</p>
           <p className="mt-1 text-sm font-medium text-slate-900">JSON</p>
         </div>
         <div className="rounded-md bg-slate-50 p-3">
-          <p className="text-xs text-slate-500">Knowledge</p>
-          <p className="mt-1 text-sm font-medium text-slate-900">Metadata</p>
+          <p className="text-xs text-slate-500">知识库</p>
+          <p className="mt-1 text-sm font-medium text-slate-900">元数据</p>
         </div>
         <div className="rounded-md bg-slate-50 p-3">
-          <p className="text-xs text-slate-500">Settings</p>
-          <p className="mt-1 text-sm font-medium text-slate-900">Included</p>
+          <p className="text-xs text-slate-500">设置</p>
+          <p className="mt-1 text-sm font-medium text-slate-900">已包含</p>
         </div>
       </div>
       <div className="flex justify-end border-t border-slate-200 p-4">
@@ -36,7 +36,7 @@ export function DataExportPanel({
           type="button"
         >
           <Download size={15} />
-          Export
+          导出
         </button>
       </div>
     </section>

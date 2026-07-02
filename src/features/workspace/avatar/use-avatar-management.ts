@@ -93,10 +93,10 @@ export function useAvatarManagement() {
       setForm(selected ? toAvatarForm(selected) : createBlankAvatarForm());
       setPreview(null);
       setStatus("success");
-      setStatusText("Avatar 配置已加载");
+      setStatusText("数字人配置已加载");
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "Avatar 加载失败");
+      setStatusText(error instanceof Error ? error.message : "数字人加载失败");
     }
   }
 
@@ -127,11 +127,11 @@ export function useAvatarManagement() {
       const profile = await saveAvatarProfileRequest(form);
 
       setStatus("success");
-      setStatusText("Avatar 配置已保存");
+      setStatusText("数字人配置已保存");
       await loadAvatarWorkspace(profile.id);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "Avatar 保存失败");
+      setStatusText(error instanceof Error ? error.message : "数字人保存失败");
     }
   }
 
@@ -156,7 +156,7 @@ export function useAvatarManagement() {
       setStatusText(`预览状态：${result.state}`);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "Avatar 预览失败");
+      setStatusText(error instanceof Error ? error.message : "数字人预览失败");
     }
   }
 
@@ -182,12 +182,12 @@ export function useAvatarManagement() {
         setSelectedProfileId(selected?.id ?? "");
         setForm(selected ? toAvatarForm(selected) : createBlankAvatarForm());
         setStatus("success");
-        setStatusText("Avatar 配置已加载");
+        setStatusText("数字人配置已加载");
       } catch (error) {
         if (cancelled) return;
         setStatus("error");
         setStatusText(
-          error instanceof Error ? error.message : "Avatar 加载失败",
+          error instanceof Error ? error.message : "数字人加载失败",
         );
       }
     });
@@ -218,7 +218,7 @@ export function useAvatarManagement() {
         );
         setForm(toAvatarForm(updatedProfile));
         setSelectedProfileId(updatedProfile.id);
-        setStatusText("Avatar Asset 已绑定");
+        setStatusText("数字人资产已绑定");
       } else {
         setForm((current) => ({
           ...current,
@@ -230,7 +230,7 @@ export function useAvatarManagement() {
       setStatus("success");
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "Avatar Asset 绑定失败");
+      setStatusText(error instanceof Error ? error.message : "数字人资产绑定失败");
     }
   }
 
@@ -248,7 +248,7 @@ export function useAvatarManagement() {
       await bindAvatarAsset(asset);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "Avatar Asset 上传失败");
+      setStatusText(error instanceof Error ? error.message : "数字人资产上传失败");
     }
   }
 
@@ -270,7 +270,7 @@ export function useAvatarManagement() {
       await applyGeneratedAvatarResult(result);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "Avatar 生成失败");
+      setStatusText(error instanceof Error ? error.message : "数字人生成失败");
     }
   }
 
@@ -282,7 +282,7 @@ export function useAvatarManagement() {
       await applyGeneratedAvatarResult(result);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "Avatar 重试失败");
+      setStatusText(error instanceof Error ? error.message : "数字人重试失败");
     }
   }
 
@@ -293,11 +293,11 @@ export function useAvatarManagement() {
     setLastGenerationJob(result.job);
 
     if (result.job.status === "failed") {
-      throw new Error(result.job.errorMessage ?? "Avatar 生成失败");
+      throw new Error(result.job.errorMessage ?? "数字人生成失败");
     }
 
     const asset = result.asset ?? result.job.resultAsset;
-    if (!asset) throw new Error("Avatar 生成任务没有返回资产");
+    if (!asset) throw new Error("数字人生成任务没有返回资产");
 
     setAssets((current) => [
       asset,

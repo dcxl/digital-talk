@@ -37,7 +37,7 @@ export function ProviderSettingsDrawer({
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-950">
-              Provider Settings
+              服务商设置
             </h2>
             <p className="mt-1 text-xs text-slate-500">
               当前 LLM 配置与连通性
@@ -56,7 +56,7 @@ export function ProviderSettingsDrawer({
           <section className="rounded-lg border border-slate-200 p-4">
             <div>
               <h3 className="text-sm font-semibold text-slate-950">
-                LLM Provider
+                LLM 服务商
               </h3>
               <p className="mt-1 text-xs text-slate-500">
                 保存到数据库；API Key 只会加密存储
@@ -74,7 +74,7 @@ export function ProviderSettingsDrawer({
               </label>
 
               <label className="block text-xs font-medium text-slate-600">
-                Provider
+                服务商
                 <select
                   className="mt-1 h-9 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
                   value={providerForm.provider}
@@ -82,9 +82,9 @@ export function ProviderSettingsDrawer({
                     onFormChange({ provider: event.target.value })
                   }
                 >
-                  <option value="openai-compatible">OpenAI Compatible</option>
+                  <option value="openai-compatible">OpenAI 兼容</option>
                   <option value="deepseek">DeepSeek</option>
-                  <option value="custom">Custom</option>
+                  <option value="custom">自定义</option>
                 </select>
               </label>
 
@@ -156,7 +156,7 @@ export function ProviderSettingsDrawer({
                   </dd>
                 </div>
                 <div className="col-span-2">
-                  <dt className="text-slate-500">Base URL</dt>
+                  <dt className="text-slate-500">基础 URL</dt>
                   <dd className="mt-1 break-all font-medium text-slate-800">
                     {provider.baseUrl ?? "未配置"}
                   </dd>

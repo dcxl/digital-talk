@@ -101,11 +101,11 @@ export function useProviderConfigs() {
           selected ? toProviderForm(selected) : createBlankProviderForm(resolvedType),
         );
         setStatus("success");
-        setStatusText("Provider 配置已加载");
+        setStatusText("服务商配置已加载");
       } catch (error) {
         setStatus("error");
         setStatusText(
-          error instanceof Error ? error.message : "Provider 配置加载失败",
+          error instanceof Error ? error.message : "服务商配置加载失败",
         );
       }
     },
@@ -142,7 +142,7 @@ export function useProviderConfigs() {
     selectedProviderIdRef.current = "";
     setSelectedProviderId("");
     setForm(createBlankProviderForm(type));
-    setStatusText("创建新的 Provider 配置");
+    setStatusText("创建新的服务商配置");
   }
 
   async function saveProvider() {
@@ -152,12 +152,12 @@ export function useProviderConfigs() {
       const provider = await saveProviderConfigRequest(form);
 
       setStatus("success");
-      setStatusText("Provider 配置已保存");
+      setStatusText("服务商配置已保存");
       await loadProviders(provider.id, provider.type);
     } catch (error) {
       setStatus("error");
       setStatusText(
-        error instanceof Error ? error.message : "Provider 配置保存失败",
+        error instanceof Error ? error.message : "服务商配置保存失败",
       );
     }
   }
@@ -175,7 +175,7 @@ export function useProviderConfigs() {
       }
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "Provider 测试失败");
+      setStatusText(error instanceof Error ? error.message : "服务商测试失败");
     }
   }
 

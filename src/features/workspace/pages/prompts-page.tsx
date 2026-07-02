@@ -38,7 +38,7 @@ export function PromptsPage() {
           onClick={() => void loadPrompts()}
         />
       }
-      eyebrow="Prompts"
+      eyebrow="提示词"
       title="提示词管理"
     >
       <Panel>

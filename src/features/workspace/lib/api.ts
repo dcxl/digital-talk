@@ -216,7 +216,7 @@ export async function testProviderConfigRequest(input: ProviderFormState) {
   };
 
   if (!response.ok || !payload.data?.result) {
-    throw new Error(getApiErrorMessage(payload, "Provider 测试失败"));
+    throw new Error(getApiErrorMessage(payload, "服务商测试失败"));
   }
 
   return payload.data.result;
@@ -345,7 +345,7 @@ export async function createPromptRequest(input: PromptFormState) {
 }
 
 export async function createPromptVersionRequest(input: PromptFormState) {
-  if (!input.id) throw new Error("Prompt id is required");
+  if (!input.id) throw new Error("提示词 id 必填");
 
   const response = await fetch(`/api/prompts/${input.id}/versions`, {
     body: JSON.stringify({
@@ -395,7 +395,7 @@ export async function testPromptRequest(input: PromptFormState) {
   };
 
   if (!response.ok || !payload.data) {
-    throw new Error(getApiErrorMessage(payload, "Prompt 测试失败"));
+    throw new Error(getApiErrorMessage(payload, "提示词测试失败"));
   }
 
   return payload.data;
@@ -500,7 +500,7 @@ export async function previewAvatarProfileRequest(input: {
   };
 
   if (!response.ok || !payload.data?.preview) {
-    throw new Error(getApiErrorMessage(payload, "Avatar 预览失败"));
+    throw new Error(getApiErrorMessage(payload, "数字人预览失败"));
   }
 
   return payload.data.preview;

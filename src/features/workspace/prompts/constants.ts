@@ -4,11 +4,11 @@ export const promptTypeTabs: Array<{
   label: string;
   value: PromptType;
 }> = [
-  { label: "System", value: "system" },
-  { label: "Chat", value: "chat" },
-  { label: "Summary", value: "summary" },
-  { label: "Translate", value: "translate" },
-  { label: "Custom", value: "custom" },
+  { label: "系统", value: "system" },
+  { label: "对话", value: "chat" },
+  { label: "摘要", value: "summary" },
+  { label: "翻译", value: "translate" },
+  { label: "自定义", value: "custom" },
 ];
 
 export function createBlankPromptForm(type: PromptType): PromptFormState {
@@ -19,12 +19,12 @@ export function createBlankPromptForm(type: PromptType): PromptFormState {
         ? "你是 {{char_name}}，请用简洁自然的中文回答用户。"
         : "",
     description: "",
-    name: `New ${type} prompt`,
+    name: `新建 ${type} 提示词`,
     testMessage: "你是谁？",
     type,
     variableValues: {
       char_name: "Next Digital Human",
-      user_name: "User",
+      user_name: "用户",
     },
     variables:
       type === "system"
@@ -35,7 +35,7 @@ export function createBlankPromptForm(type: PromptType): PromptFormState {
               required: true,
             },
             {
-              defaultValue: "User",
+              defaultValue: "用户",
               name: "user_name",
               required: false,
             },

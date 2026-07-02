@@ -8,8 +8,8 @@ export function RuntimeEventsPanel({ events }: RuntimeEventsPanelProps) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 p-4">
-        <h3 className="text-sm font-semibold text-slate-950">Runtime Events</h3>
-        <p className="mt-1 text-xs text-slate-500">SSE event stream</p>
+        <h3 className="text-sm font-semibold text-slate-950">运行时事件</h3>
+        <p className="mt-1 text-xs text-slate-500">SSE 事件流</p>
       </div>
       <div className="max-h-[520px] divide-y divide-slate-100 overflow-auto">
         {events.map((entry) => (

@@ -35,14 +35,14 @@ export function ProviderList({
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-950">Providers</h3>
+          <h3 className="text-sm font-semibold text-slate-950">服务商</h3>
           <p className="mt-1 text-xs text-slate-500">{activeType}</p>
         </div>
         <button
           className="inline-flex size-9 items-center justify-center rounded-md bg-indigo-600 text-white disabled:opacity-60"
           disabled={isBusy}
           onClick={() => onCreate(activeType)}
-          title="新建 Provider"
+          title="新建服务商"
           type="button"
         >
           <Plus size={16} />
@@ -106,7 +106,7 @@ export function ProviderList({
         })}
         {providers.length === 0 ? (
           <div className="px-4 py-8 text-sm text-slate-500">
-            暂无 {activeType} Provider
+            暂无 {activeType} 服务商
           </div>
         ) : null}
       </div>

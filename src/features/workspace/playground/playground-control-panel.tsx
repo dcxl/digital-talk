@@ -61,7 +61,7 @@ export function PlaygroundControlPanel({
           </label>
 
           <label className="block text-xs font-medium text-slate-600">
-            Knowledge Base
+            知识库
             <select
               className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-500"
               onChange={(event) =>
@@ -97,7 +97,7 @@ export function PlaygroundControlPanel({
           type="button"
         >
           <Play size={15} />
-          Run
+          运行
         </button>
         <button
           className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 disabled:opacity-60"
@@ -106,7 +106,7 @@ export function PlaygroundControlPanel({
           type="button"
         >
           <Square size={15} />
-          Stop
+          停止
         </button>
         <button
           className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700"
@@ -114,7 +114,7 @@ export function PlaygroundControlPanel({
           type="button"
         >
           <Eraser size={15} />
-          Clear
+          清空
         </button>
       </div>
     </section>

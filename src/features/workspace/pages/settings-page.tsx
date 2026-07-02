@@ -25,7 +25,7 @@ export function SettingsPage() {
           onClick={() => void loadSettings()}
         />
       }
-      eyebrow="Settings"
+      eyebrow="设置"
       title="系统设置"
     >
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">

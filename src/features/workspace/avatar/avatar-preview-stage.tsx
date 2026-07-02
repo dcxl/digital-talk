@@ -4,7 +4,11 @@ import type {
   AvatarPreviewResult,
   AvatarPreviewState,
 } from "../types";
-import { avatarPreviewStates } from "./constants";
+import {
+  avatarBackgroundLabels,
+  avatarPreviewStateLabels,
+  avatarPreviewStates,
+} from "./constants";
 
 interface AvatarPreviewStageProps {
   form: AvatarFormState;
@@ -32,13 +36,13 @@ export function AvatarPreviewStage({
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-950">Preview Stage</h3>
+          <h3 className="text-sm font-semibold text-slate-950">预览舞台</h3>
           <p className="mt-1 text-xs text-slate-500">
-            {form.driver} · {form.background || "studio"}
+            {form.driver} · {avatarBackgroundLabels[form.background] ?? "影棚"}
           </p>
         </div>
         <span className={`rounded-md px-2 py-1 text-xs font-medium ${getStateTone(state)}`}>
-          {state}
+          {avatarPreviewStateLabels[state]}
         </span>
       </div>
 
@@ -92,7 +96,7 @@ export function AvatarPreviewStage({
               type="button"
             >
               <Play size={14} />
-              {previewState}
+              {avatarPreviewStateLabels[previewState]}
             </button>
           ))}
         </div>

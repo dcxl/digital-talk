@@ -68,9 +68,9 @@ export function HistoryPage() {
 
   const statusTabs = useMemo(
     () => [
-      { label: "Active", value: "active" },
-      { label: "Archived", value: "archived" },
-      { label: "Deleted", value: "deleted" },
+      { label: "活跃", value: "active" },
+      { label: "已归档", value: "archived" },
+      { label: "已删除", value: "deleted" },
     ],
     [],
   );
@@ -78,7 +78,7 @@ export function HistoryPage() {
   return (
     <PageFrame
       actions={<RefreshButton isLoading={isLoading} onClick={loadHistory} />}
-      eyebrow="Sessions"
+      eyebrow="会话"
       title="会话历史"
     >
       <Panel>
@@ -116,7 +116,7 @@ export function HistoryPage() {
               type="button"
             >
               <Star size={15} />
-              Starred
+              仅收藏
             </button>
           </div>
         </div>
@@ -124,11 +124,11 @@ export function HistoryPage() {
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
               <tr>
-                <th className="px-4 py-3 font-medium">Title</th>
-                <th className="px-4 py-3 font-medium">Messages</th>
-                <th className="px-4 py-3 font-medium">Updated</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Action</th>
+                <th className="px-4 py-3 font-medium">标题</th>
+                <th className="px-4 py-3 font-medium">消息数</th>
+                <th className="px-4 py-3 font-medium">更新时间</th>
+                <th className="px-4 py-3 font-medium">状态</th>
+                <th className="px-4 py-3 font-medium">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

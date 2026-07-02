@@ -7,23 +7,23 @@ interface PlaygroundMetricsPanelProps {
 export function PlaygroundMetricsPanel({ metrics }: PlaygroundMetricsPanelProps) {
   const items = [
     {
-      label: "Latency",
+      label: "总延迟",
       value: metrics.totalLatencyMs ? `${metrics.totalLatencyMs}ms` : "-",
     },
     {
-      label: "First Token",
+      label: "首 Token",
       value: metrics.firstTokenMs ? `${metrics.firstTokenMs}ms` : "-",
     },
     {
-      label: "Tokens",
+      label: "Token",
       value: metrics.totalTokens || "-",
     },
     {
-      label: "Events",
+      label: "事件",
       value: metrics.eventCount,
     },
     {
-      label: "RAG Hits",
+      label: "RAG 命中",
       value: metrics.ragHitCount,
     },
     {
@@ -35,7 +35,7 @@ export function PlaygroundMetricsPanel({ metrics }: PlaygroundMetricsPanelProps)
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 p-4">
-        <h3 className="text-sm font-semibold text-slate-950">Metrics</h3>
+        <h3 className="text-sm font-semibold text-slate-950">指标</h3>
       </div>
       <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((item) => (

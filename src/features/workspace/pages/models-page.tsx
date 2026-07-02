@@ -33,7 +33,7 @@ export function ModelsPage() {
           onClick={() => void loadProviders()}
         />
       }
-      eyebrow="Providers"
+      eyebrow="服务商"
       title="模型配置"
     >
       <Panel>

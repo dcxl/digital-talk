@@ -14,6 +14,13 @@ interface AvatarGenerationPanelProps {
 }
 
 const styleOptions = ["portrait", "studio", "half-body", "anime", "realistic"];
+const styleLabels: Record<string, string> = {
+  anime: "动漫",
+  "half-body": "半身像",
+  portrait: "头像",
+  realistic: "写实",
+  studio: "影棚",
+};
 
 function getJobTone(job: AvatarGenerationJobItem) {
   if (job.status === "completed") return "bg-emerald-50 text-emerald-700";
@@ -37,9 +44,9 @@ export function AvatarGenerationPanel({
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-950">Generate Avatar</h3>
+          <h3 className="text-sm font-semibold text-slate-950">生成数字人</h3>
           <p className="mt-1 text-xs text-slate-500">
-            Static Generated Avatar
+            静态数字人生成
           </p>
         </div>
         {lastJob ? (
@@ -55,7 +62,7 @@ export function AvatarGenerationPanel({
 
       <div className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_180px]">
         <label className="block text-xs font-medium text-slate-600 lg:col-span-2">
-          Prompt
+          提示词
           <textarea
             className="mt-1 min-h-24 w-full resize-y rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-500"
             disabled={isBusy}
@@ -66,7 +73,7 @@ export function AvatarGenerationPanel({
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Negative Prompt
+          负向提示词
           <input
             className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-indigo-500"
             disabled={isBusy}
@@ -76,7 +83,7 @@ export function AvatarGenerationPanel({
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          Style
+          风格
           <select
             className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-500"
             disabled={isBusy}
@@ -85,7 +92,7 @@ export function AvatarGenerationPanel({
           >
             {styleOptions.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {styleLabels[option] ?? option}
               </option>
             ))}
           </select>

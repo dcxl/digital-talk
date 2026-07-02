@@ -34,31 +34,31 @@ export function DashboardPage() {
 
   const metrics = [
     {
-      label: "Conversations",
+      label: "会话数",
       value: summary.metrics.conversationCount.toLocaleString("zh-CN"),
-      helper: "Active sessions",
+      helper: "活跃会话",
     },
     {
-      label: "Knowledge Docs",
+      label: "知识文档",
       value: summary.metrics.knowledgeDocumentCount.toLocaleString("zh-CN"),
-      helper: `${summary.metrics.knowledgeChunkCount.toLocaleString("zh-CN")} chunks`,
+      helper: `${summary.metrics.knowledgeChunkCount.toLocaleString("zh-CN")} 个切片`,
     },
     {
-      label: "Providers",
+      label: "服务商",
       value: summary.metrics.activeProviderCount.toLocaleString("zh-CN"),
-      helper: `${summary.metrics.providerCount.toLocaleString("zh-CN")} configured`,
+      helper: `已配置 ${summary.metrics.providerCount.toLocaleString("zh-CN")} 个`,
     },
     {
-      label: "Tokens Today",
+      label: "今日 Token",
       value: summary.metrics.tokensToday.toLocaleString("zh-CN"),
-      helper: `Avg latency ${summary.metrics.avgLatencyMs} ms`,
+      helper: `平均延迟 ${summary.metrics.avgLatencyMs} ms`,
     },
   ];
 
   return (
     <PageFrame
       actions={<RefreshButton isLoading={isLoading} onClick={loadSummary} />}
-      eyebrow="Overview"
+      eyebrow="概览"
       title="运行概览"
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -77,7 +77,7 @@ export function DashboardPage() {
         <Panel>
           <div className="border-b border-slate-200 px-4 py-3">
             <h3 className="text-sm font-semibold text-slate-950">
-              Runtime Status
+              运行状态
             </h3>
           </div>
           <div className="divide-y divide-slate-100">
@@ -110,7 +110,7 @@ export function DashboardPage() {
         <Panel>
           <div className="border-b border-slate-200 px-4 py-3">
             <h3 className="text-sm font-semibold text-slate-950">
-              Recent Conversations
+              最近会话
             </h3>
           </div>
           <div className="divide-y divide-slate-100">

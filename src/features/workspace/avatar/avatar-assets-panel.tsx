@@ -1,5 +1,6 @@
 import { ImagePlus, Link2, Upload } from "lucide-react";
 import type { AvatarAssetItem } from "../types";
+import { avatarAssetSourceLabels } from "./constants";
 
 interface AvatarAssetsPanelProps {
   assets: AvatarAssetItem[];
@@ -29,14 +30,14 @@ export function AvatarAssetsPanel({
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-950">Avatar Assets</h3>
+          <h3 className="text-sm font-semibold text-slate-950">数字人资产</h3>
           <p className="mt-1 text-xs text-slate-500">
             上传并绑定静态数字人形象
           </p>
         </div>
         <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md bg-slate-950 px-3 text-sm text-white">
           <Upload size={15} />
-          Upload
+          上传
           <input
             accept="image/png,image/jpeg,image/webp"
             className="sr-only"
@@ -82,7 +83,8 @@ export function AvatarAssetsPanel({
                   {asset.name}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  {asset.source} · {formatSize(asset.size)}
+                  {avatarAssetSourceLabels[asset.source] ?? asset.source} ·{" "}
+                  {formatSize(asset.size)}
                 </p>
               </div>
               <button
@@ -100,7 +102,7 @@ export function AvatarAssetsPanel({
 
         {assets.length === 0 ? (
           <div className="col-span-full rounded-lg border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-            暂无 Avatar Asset
+            暂无数字人资产
           </div>
         ) : null}
       </div>

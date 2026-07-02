@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Next Digital Human",
-  description: "Open source AI digital human framework.",
+  title: "下一代数字人",
+  description: "开源 AI 数字人框架。",
 };
 
 export default function RootLayout({
@@ -17,4 +17,3 @@ export default function RootLayout({
     </html>
   );
 }
-

@@ -119,7 +119,7 @@ export function useProviderSettings() {
     } catch (error) {
       setProviderStatus("error");
       setProviderStatusText(
-        error instanceof Error ? error.message : "Provider 测试失败",
+        error instanceof Error ? error.message : "服务商测试失败",
       );
     }
   }
@@ -166,7 +166,7 @@ export function useProviderSettings() {
     } catch (error) {
       setProviderStatus("error");
       setProviderStatusText(
-        error instanceof Error ? error.message : "Provider 保存失败",
+        error instanceof Error ? error.message : "服务商保存失败",
       );
     }
   }

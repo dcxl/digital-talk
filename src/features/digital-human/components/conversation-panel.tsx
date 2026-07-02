@@ -81,7 +81,7 @@ export function ConversationPanel({
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-slate-950">
-              Conversation
+              对话
             </h2>
             <p className="mt-1 text-xs text-slate-500">
               {conversationId ? "已保存会话" : "新会话"}

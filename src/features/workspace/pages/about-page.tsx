@@ -3,7 +3,7 @@ import { AboutDetails } from "../about/about-details";
 
 export function AboutPage() {
   return (
-    <PageFrame eyebrow="About" title="关于项目">
+    <PageFrame eyebrow="关于" title="关于项目">
       <AboutDetails />
     </PageFrame>
   );

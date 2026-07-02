@@ -11,22 +11,22 @@ import { CapabilityCard } from "./capability-card";
 
 const capabilities = [
   {
-    title: "AI Native",
+    title: "AI 原生",
     description: "LLM、RAG、语音和数字人运行时统一接入。",
     icon: Bot,
   },
   {
-    title: "Real-time Chat",
+    title: "实时对话",
     description: "流式对话、会话历史和知识库检索闭环。",
     icon: MessageSquare,
   },
   {
-    title: "Extensible",
-    description: "Provider、Prompt、Avatar 配置可替换扩展。",
+    title: "可扩展",
+    description: "服务商、提示词、数字人配置可替换扩展。",
     icon: Settings,
   },
   {
-    title: "Production Ready",
+    title: "生产就绪",
     description: "Prisma 数据模型、模块化 API 和工作台页面。",
     icon: Play,
   },
@@ -53,7 +53,7 @@ export function LandingPage() {
               target="_blank"
             >
               <BookOpen size={15} />
-              Docs
+              文档
             </a>
             <a
               className="hidden h-9 items-center gap-2 rounded-md px-3 text-sm text-slate-200 hover:bg-white/10 sm:inline-flex"
@@ -69,7 +69,7 @@ export function LandingPage() {
               href="/login"
             >
               <Play size={15} />
-              Get Started
+              开始使用
             </Link>
           </nav>
         </div>
@@ -91,7 +91,7 @@ export function LandingPage() {
         <div className="relative z-10 mx-auto flex min-h-[72vh] max-w-7xl items-center px-4 pb-16 pt-24 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <p className="text-sm font-medium uppercase tracking-[0.24em] text-emerald-300">
-              Open Source AI Digital Human
+              开源 AI 数字人
             </p>
             <h1 className="mt-5 text-4xl font-semibold leading-tight text-white sm:text-6xl">
               NEXT DIGITAL HUMAN
@@ -106,7 +106,7 @@ export function LandingPage() {
                 href="/login"
               >
                 <Play size={16} />
-                Get Started
+                开始使用
               </Link>
               <a
                 className="inline-flex h-11 items-center gap-2 rounded-md border border-white/20 px-4 text-sm font-medium text-white hover:bg-white/10"
@@ -115,20 +115,20 @@ export function LandingPage() {
                 target="_blank"
               >
                 <GitBranch size={16} />
-                Star on GitHub
+                GitHub 点星
               </a>
             </div>
             <dl className="mt-10 grid max-w-xl grid-cols-3 gap-4 border-t border-white/15 pt-6">
               <div>
-                <dt className="text-xs text-slate-400">Modules</dt>
+                <dt className="text-xs text-slate-400">模块</dt>
                 <dd className="mt-1 text-lg font-semibold text-white">12</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">Runtime</dt>
+                <dt className="text-xs text-slate-400">运行时</dt>
                 <dd className="mt-1 text-lg font-semibold text-white">LLM</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">Stack</dt>
+                <dt className="text-xs text-slate-400">技术栈</dt>
                 <dd className="mt-1 text-lg font-semibold text-white">Next.js</dd>
               </div>
             </dl>

@@ -34,12 +34,12 @@ export function LoginPage() {
               <span className="block text-sm font-semibold">
                 NEXT DIGITAL HUMAN
               </span>
-              <span className="block text-xs text-slate-500">Workspace Login</span>
+              <span className="block text-xs text-slate-500">工作台登录</span>
             </span>
           </Link>
 
           <div className="mt-8">
-            <h1 className="text-2xl font-semibold">Welcome Back</h1>
+            <h1 className="text-2xl font-semibold">欢迎回来</h1>
             <p className="mt-2 text-sm text-slate-500">
               MVP 使用默认用户进入工作台。
             </p>
@@ -52,7 +52,7 @@ export function LoginPage() {
               type="button"
             >
               <GitBranch size={16} />
-              Continue with GitHub
+              使用 GitHub 继续
             </button>
             <button
               className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white text-sm font-medium text-slate-800 hover:bg-slate-50"
@@ -60,13 +60,13 @@ export function LoginPage() {
               type="button"
             >
               <Globe size={16} />
-              Continue with Google
+              使用 Google 继续
             </button>
           </div>
 
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-slate-200" />
-            <span className="text-xs text-slate-400">or</span>
+            <span className="text-xs text-slate-400">或</span>
             <div className="h-px flex-1 bg-slate-200" />
           </div>
 
@@ -78,7 +78,7 @@ export function LoginPage() {
             }}
           >
             <label className="grid gap-1 text-xs font-medium text-slate-600">
-              Email
+              邮箱
               <input
                 className="h-10 rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-indigo-500"
                 placeholder="you@example.com"
@@ -86,10 +86,10 @@ export function LoginPage() {
               />
             </label>
             <label className="grid gap-1 text-xs font-medium text-slate-600">
-              Password
+              密码
               <input
                 className="h-10 rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-indigo-500"
-                placeholder="Enter your password"
+                placeholder="请输入密码"
                 type="password"
               />
             </label>
@@ -97,7 +97,7 @@ export function LoginPage() {
               className="mt-2 inline-flex h-11 items-center justify-center rounded-md bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-500"
               type="submit"
             >
-              Sign in
+              登录
             </button>
           </form>
         </div>
