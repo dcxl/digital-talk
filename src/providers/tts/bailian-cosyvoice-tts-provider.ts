@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import WebSocket, { type RawData } from "ws";
 import type { TTSInput, TTSProvider } from "@/core/providers/types";
+import { readTTSCache, writeTTSCache } from "@/services/tts-cache/storage";
 
 const DEFAULT_ENDPOINT = "wss://dashscope.aliyuncs.com/api-ws/v1/inference";
 const DEFAULT_SAMPLE_RATE = 22050;
@@ -291,6 +292,24 @@ export function createBailianCosyVoiceTTSProvider(
 
       if (!voice) throw new Error("voice is required");
 
+      const cacheKey = {
+        format,
+        model: options.model,
+        provider: "bailian-cosyvoice",
+        sampleRate,
+        text: input.text,
+        voice,
+      };
+      const cached = await readTTSCache(cacheKey);
+      if (cached) {
+        return {
+          audioUrl: `data:${cached.mimeType};base64,${cached.audio.toString("base64")}`,
+          durationMs: cached.durationMs,
+          mimeType: cached.mimeType,
+          marks: [],
+        };
+      }
+
       const audio = await synthesizeViaWebSocket({
         apiKey: options.apiKey,
         endpoint: options.endpoint,
@@ -302,10 +321,18 @@ export function createBailianCosyVoiceTTSProvider(
         voice,
       });
       const mimeType = getMimeType(format);
+      const durationMs = estimateDurationMs(input.text);
+
+      await writeTTSCache({
+        ...cacheKey,
+        audio,
+        durationMs,
+        mimeType,
+      }).catch(() => undefined);
 
       return {
         audioUrl: `data:${mimeType};base64,${audio.toString("base64")}`,
-        durationMs: estimateDurationMs(input.text),
+        durationMs,
         mimeType,
         marks: [],
       };
