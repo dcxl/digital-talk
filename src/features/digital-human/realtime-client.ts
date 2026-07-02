@@ -39,6 +39,15 @@ function getPayloadError<T>(payload: ApiPayload<T>, fallback: string) {
   return payload.error?.message ?? fallback;
 }
 
+function getAudioFileName(audio: Blob) {
+  if (audio.type.includes("wav")) return "recording.wav";
+  if (audio.type.includes("mpeg") || audio.type.includes("mp3")) {
+    return "recording.mp3";
+  }
+
+  return "recording.webm";
+}
+
 export async function createRealtimeSession(context: RealtimeSessionContext) {
   const response = await fetch("/api/realtime/sessions", {
     body: JSON.stringify({
@@ -89,7 +98,7 @@ export async function transcribeRealtimeAudio(input: {
   sessionId: string;
 }): Promise<VoiceTranscriptResult> {
   const formData = new FormData();
-  formData.append("audio", input.audio, "recording.webm");
+  formData.append("audio", input.audio, getAudioFileName(input.audio));
   if (input.language) formData.append("language", input.language);
 
   const response = await fetch(
@@ -117,7 +126,7 @@ export async function transcribeLegacyAudio(
   language = "zh",
 ): Promise<VoiceTranscriptResult> {
   const formData = new FormData();
-  formData.append("audio", audio, "recording.webm");
+  formData.append("audio", audio, getAudioFileName(audio));
   formData.append("language", language);
 
   const response = await fetch("/api/asr", {

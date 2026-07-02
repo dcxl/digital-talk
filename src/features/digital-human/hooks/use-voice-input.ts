@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { startWavRecorder, type WavRecorder } from "../audio/wav-recorder";
 import {
   closeRealtimeSession,
   createRealtimeSession,
@@ -36,13 +37,14 @@ export function useVoiceInput({
   state,
   stopAudio,
 }: UseVoiceInputInput) {
-  const audioChunksRef = useRef<Blob[]>([]);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const realtimeSessionIdRef = useRef<string | null>(null);
+  const wavRecorderRef = useRef<WavRecorder | null>(null);
+  const isStoppingRef = useRef(false);
 
   useEffect(() => {
     return () => {
+      void wavRecorderRef.current?.close();
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
       if (realtimeSessionIdRef.current) {
         void closeRealtimeSession(realtimeSessionIdRef.current);
@@ -104,50 +106,58 @@ export function useVoiceInput({
       }
     }
 
-    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+    if (
+      !navigator.mediaDevices?.getUserMedia ||
+      (!window.AudioContext && !window.webkitAudioContext)
+    ) {
       setState("error");
       return;
     }
 
+    let stream: MediaStream | null = null;
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      audioChunksRef.current = [];
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = await startWavRecorder(stream);
       mediaStreamRef.current = stream;
-      mediaRecorderRef.current = recorder;
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) audioChunksRef.current.push(event.data);
-      };
-      recorder.onstop = () => {
-        stream.getTracks().forEach((track) => track.stop());
-        mediaStreamRef.current = null;
-        mediaRecorderRef.current = null;
-
-        const audio = new Blob(audioChunksRef.current, {
-          type: recorder.mimeType || "audio/webm",
-        });
-        audioChunksRef.current = [];
-
-        if (audio.size > 0) {
-          void transcribeAudio(audio);
-        } else {
-          setState("idle");
-        }
-      };
-
-      recorder.start();
+      wavRecorderRef.current = recorder;
+      isStoppingRef.current = false;
       setState("listening");
     } catch {
+      stream?.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+      wavRecorderRef.current = null;
       setState("error");
     }
   }
 
   function stopListening() {
-    const recorder = mediaRecorderRef.current;
-    if (!recorder || recorder.state === "inactive") return;
+    const recorder = wavRecorderRef.current;
+    if (!recorder || isStoppingRef.current) return;
 
-    recorder.stop();
+    isStoppingRef.current = true;
+
+    void recorder
+      .stop()
+      .then((audio) => {
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+        wavRecorderRef.current = null;
+        isStoppingRef.current = false;
+
+        if (audio.size > 44) {
+          void transcribeAudio(audio);
+        } else {
+          setState("idle");
+        }
+      })
+      .catch(() => {
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+        wavRecorderRef.current = null;
+        isStoppingRef.current = false;
+        setState("error");
+      });
   }
 
   function toggleListening() {
