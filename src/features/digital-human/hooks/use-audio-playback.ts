@@ -1,29 +1,50 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type Dispatch, type SetStateAction } from "react";
+import type { MouthSyncMark } from "../mouth-sync/types";
 import type { RuntimeState } from "../types";
 
 interface UseAudioPlaybackInput {
-  setState: React.Dispatch<React.SetStateAction<RuntimeState>>;
+  onMouthSyncStart?: (input: {
+    durationMs?: number;
+    marks?: MouthSyncMark[];
+  }) => void;
+  onMouthSyncStop?: () => void;
+  setState: Dispatch<SetStateAction<RuntimeState>>;
 }
 
-export function useAudioPlayback({ setState }: UseAudioPlaybackInput) {
+interface AudioPlaybackInput {
+  audioUrl: string;
+  durationMs?: number;
+  marks?: MouthSyncMark[];
+}
+
+export function useAudioPlayback({
+  onMouthSyncStart,
+  onMouthSyncStop,
+  setState,
+}: UseAudioPlaybackInput) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const chunkQueueRef = useRef<string[]>([]);
+  const chunkQueueRef = useRef<AudioPlaybackInput[]>([]);
   const isPlayingChunkRef = useRef(false);
 
   function playNextChunk() {
     const audio = audioRef.current;
-    const nextAudioUrl = chunkQueueRef.current.shift();
+    const nextAudio = chunkQueueRef.current.shift();
 
-    if (!audio || !nextAudioUrl) {
+    if (!audio || !nextAudio) {
       isPlayingChunkRef.current = false;
+      onMouthSyncStop?.();
       setState((current) => (current === "speaking" ? "idle" : current));
       return;
     }
 
     isPlayingChunkRef.current = true;
-    audio.src = nextAudioUrl;
+    audio.src = nextAudio.audioUrl;
+    onMouthSyncStart?.({
+      durationMs: nextAudio.durationMs,
+      marks: nextAudio.marks,
+    });
     setState("speaking");
     void audio.play().catch(() => {
       playNextChunk();
@@ -34,6 +55,7 @@ export function useAudioPlayback({ setState }: UseAudioPlaybackInput) {
     const audio = audioRef.current;
     chunkQueueRef.current = [];
     isPlayingChunkRef.current = false;
+    onMouthSyncStop?.();
     if (!audio) return;
 
     audio.pause();
@@ -41,7 +63,10 @@ export function useAudioPlayback({ setState }: UseAudioPlaybackInput) {
     audio.load();
   }
 
-  async function playAudio(audioUrl: string) {
+  async function playAudio(
+    audioUrl: string,
+    options: Omit<AudioPlaybackInput, "audioUrl"> = {},
+  ) {
     const audio = audioRef.current;
     chunkQueueRef.current = [];
     isPlayingChunkRef.current = false;
@@ -52,17 +77,19 @@ export function useAudioPlayback({ setState }: UseAudioPlaybackInput) {
     }
 
     audio.src = audioUrl;
+    onMouthSyncStart?.(options);
     setState("speaking");
 
     try {
       await audio.play();
     } catch {
+      onMouthSyncStop?.();
       setState("idle");
     }
   }
 
-  function queueAudioChunk(audioUrl: string) {
-    chunkQueueRef.current.push(audioUrl);
+  function queueAudioChunk(input: AudioPlaybackInput) {
+    chunkQueueRef.current.push(input);
     if (!isPlayingChunkRef.current) playNextChunk();
   }
 
@@ -72,6 +99,7 @@ export function useAudioPlayback({ setState }: UseAudioPlaybackInput) {
       return;
     }
 
+    onMouthSyncStop?.();
     setState((current) => (current === "speaking" ? "idle" : current));
   }
 

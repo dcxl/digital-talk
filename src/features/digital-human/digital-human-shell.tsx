@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppHeader } from "./components/app-header";
 import { AvatarStage } from "./components/avatar-stage";
 import { ConversationPanel } from "./components/conversation-panel";
 import { ProviderSettingsDrawer } from "./components/provider-settings-drawer";
 import { useAvatarProfile } from "./hooks/use-avatar-profile";
-import { useAudioAnalyser } from "./hooks/use-audio-analyser";
 import { useAudioPlayback } from "./hooks/use-audio-playback";
 import { useConversationHistory } from "./hooks/use-conversation-history";
 import { useKnowledgeBases } from "./hooks/use-knowledge-bases";
 import { useProviderSettings } from "./hooks/use-provider-settings";
 import { useVoiceInput } from "./hooks/use-voice-input";
+import { createMouthSyncTimeline } from "./mouth-sync/timeline";
+import { useMouthSync } from "./mouth-sync/use-mouth-sync";
 import { parseRuntimeEvent } from "./runtime-stream";
+import type { MouthSyncMark, MouthSyncTimeline } from "./mouth-sync/types";
 import type { ChatMessage, RuntimeEvent, RuntimeState } from "./types";
 
 interface DigitalHumanShellProps {
@@ -28,6 +30,8 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
   const [state, setState] = useState<RuntimeState>("idle");
   const [input, setInput] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [mouthSyncTimeline, setMouthSyncTimeline] =
+    useState<MouthSyncTimeline | null>(null);
   const { avatarProfile, loadAvatarProfile } = useAvatarProfile();
   const {
     createKnowledgeBase,
@@ -62,6 +66,21 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
   const isBusy = ["thinking", "streaming", "synthesizing", "transcribing"].includes(
     state,
   );
+  const startMouthSync = useCallback(
+    (input: { durationMs?: number; marks?: MouthSyncMark[] }) => {
+      setMouthSyncTimeline(
+        createMouthSyncTimeline({
+          durationMs: input.durationMs,
+          marks: input.marks,
+          startedAtMs: performance.now(),
+        }),
+      );
+    },
+    [],
+  );
+  const stopMouthSync = useCallback(() => {
+    setMouthSyncTimeline(null);
+  }, []);
   const {
     audioRef,
     handleAudioEnded,
@@ -69,9 +88,15 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
     queueAudioChunk,
     stopAudio,
   } = useAudioPlayback({
+    onMouthSyncStart: startMouthSync,
+    onMouthSyncStop: stopMouthSync,
     setState,
   });
-  const audioAnalysis = useAudioAnalyser(audioRef, state === "speaking");
+  const mouthSync = useMouthSync({
+    audioRef,
+    state,
+    timeline: mouthSyncTimeline,
+  });
   const {
     conversationId,
     conversations,
@@ -191,7 +216,11 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
     if (event.type === "tts.chunk") {
       speakingAssistantRef.current = event.messageId;
       chunkedTTSMessagesRef.current.add(event.messageId);
-      queueAudioChunk(event.audioUrl);
+      queueAudioChunk({
+        audioUrl: event.audioUrl,
+        durationMs: event.durationMs,
+        marks: event.marks,
+      });
       return;
     }
 
@@ -202,7 +231,10 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
       if (hasChunks) return;
 
       if (event.audioUrl) {
-        void playAudio(event.audioUrl);
+        void playAudio(event.audioUrl, {
+          durationMs: event.durationMs,
+          marks: event.marks,
+        });
       } else {
         setState("speaking");
         window.setTimeout(() => {
@@ -213,6 +245,7 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
     }
 
     if (event.type === "tts.failed") {
+      stopMouthSync();
       setState("idle");
       return;
     }
@@ -453,9 +486,9 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
           avatarImageUrl={avatarProfile?.previewImageUrl}
           avatarName={avatarProfile?.name}
           latestStatus={latestStatus}
-          mouthOpen={audioAnalysis.mouthOpen}
+          mouthOpen={mouthSync.mouthOpen}
           state={state}
-          volume={audioAnalysis.volume}
+          volume={mouthSync.volume}
         />
         <ConversationPanel
           canSend={canSend}

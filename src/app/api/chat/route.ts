@@ -510,6 +510,7 @@ export async function POST(request: NextRequest) {
                 messageId: assistantId,
                 audioUrl,
                 durationMs: ttsResult.durationMs,
+                marks: ttsResult.marks,
                 mimeType: ttsResult.mimeType,
               });
               await avatarProvider.setState({

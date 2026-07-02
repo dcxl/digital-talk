@@ -68,6 +68,10 @@ export type RuntimeEvent =
       chunkCount?: number;
       chunked?: boolean;
       durationMs?: number;
+      marks?: Array<{
+        timeMs: number;
+        value: string;
+      }>;
       mimeType?: string;
     }
   | {
