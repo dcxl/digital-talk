@@ -1,6 +1,11 @@
 import type { RuntimeState } from "@/core/runtime/events";
 
-export type ProviderCapability = "llm" | "tts" | "avatar" | "asr";
+export type ProviderCapability =
+  | "llm"
+  | "tts"
+  | "avatar"
+  | "asr"
+  | "image-generation";
 
 export type ProviderHealth = "unknown" | "ready" | "degraded" | "down";
 
@@ -118,4 +123,26 @@ export interface ASRResult {
 export interface ASRProvider extends ProviderDescriptor {
   capability: "asr";
   transcribe(input: ASRInput): Promise<ASRResult>;
+}
+
+export interface ImageGenerationInput {
+  height?: number;
+  negativePrompt?: string;
+  prompt: string;
+  signal?: AbortSignal;
+  style?: string;
+  width?: number;
+}
+
+export interface ImageGenerationResult {
+  imageBytes?: ArrayBuffer | Buffer | Uint8Array;
+  imageUrl?: string;
+  metadata?: Record<string, unknown>;
+  mimeType: string;
+  seed?: string;
+}
+
+export interface ImageGenerationProvider extends ProviderDescriptor {
+  capability: "image-generation";
+  generate(input: ImageGenerationInput): Promise<ImageGenerationResult>;
 }
