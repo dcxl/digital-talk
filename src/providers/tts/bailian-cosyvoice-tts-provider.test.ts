@@ -1,11 +1,22 @@
 import { describe, expect, it } from "vitest";
 import {
+  createBailianCosyVoiceTTSProvider,
   createCosyVoiceContinueMessage,
   createCosyVoiceFinishMessage,
   createCosyVoiceStartMessage,
 } from "./bailian-cosyvoice-tts-provider";
 
 describe("Bailian CosyVoice task messages", () => {
+  it("exposes a streaming TTS interface", () => {
+    const provider = createBailianCosyVoiceTTSProvider({
+      apiKey: "test-key",
+      model: "cosyvoice-v3-flash",
+      voice: "longxiaochun",
+    });
+
+    expect(typeof provider.stream).toBe("function");
+  });
+
   it("builds the DashScope start task payload", () => {
     const message = createCosyVoiceStartMessage({
       format: "mp3",

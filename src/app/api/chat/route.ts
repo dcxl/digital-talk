@@ -6,7 +6,11 @@ import {
 import { getAvatarProvider } from "@/providers/avatar";
 import { getLLMProvider } from "@/providers/llm";
 import { getTTSProvider } from "@/providers/tts";
-import type { LLMMessage } from "@/core/providers/types";
+import type {
+  LLMMessage,
+  StreamingTTSProvider,
+  TTSProvider,
+} from "@/core/providers/types";
 import {
   appendMessage,
   createConversationWithUserMessage,
@@ -50,6 +54,20 @@ function enqueue(
   event: RuntimeEvent,
 ) {
   controller.enqueue(encoder.encode(encodeRuntimeEvent(event)));
+}
+
+function isStreamingTTSProvider(
+  provider: TTSProvider,
+): provider is StreamingTTSProvider {
+  return typeof (provider as Partial<StreamingTTSProvider>).stream === "function";
+}
+
+function estimateSpeechDurationMs(text: string) {
+  return Math.min(60_000, Math.max(650, text.length * 95));
+}
+
+function toAudioDataUrl(input: { audio: Uint8Array; mimeType: string }) {
+  return `data:${input.mimeType};base64,${Buffer.from(input.audio).toString("base64")}`;
 }
 
 async function buildLLMMessages(input: {
@@ -415,28 +433,95 @@ export async function POST(request: NextRequest) {
           });
 
           try {
-            const ttsResult = await ttsProvider.synthesize({
-              text: assistantText,
-              signal: request.signal,
-            });
-            audioUrl = ttsResult.audioUrl;
+            if (isStreamingTTSProvider(ttsProvider)) {
+              const audioChunks: Buffer[] = [];
+              let chunkCount = 0;
+              let mimeType = "audio/mpeg";
+              let speakingStarted = false;
 
-            enqueue(controller, {
-              type: "tts.done",
-              messageId: assistantId,
-              audioUrl,
-              durationMs: ttsResult.durationMs,
-              mimeType: ttsResult.mimeType,
-            });
-            await avatarProvider.setState({
-              state: "speaking",
-              reason: "tts_ready",
-            });
-            enqueue(controller, {
-              type: "avatar.state",
-              state: "speaking",
-              reason: "tts_ready",
-            });
+              for await (const chunk of ttsProvider.stream({
+                text: assistantText,
+                signal: request.signal,
+              })) {
+                if (request.signal.aborted) {
+                  await markTurnInterrupted();
+                  return;
+                }
+
+                const audio = Buffer.from(chunk.audio);
+                if (audio.length === 0) continue;
+
+                chunkCount = chunk.sequence;
+                mimeType = chunk.mimeType;
+                audioChunks.push(audio);
+
+                if (!speakingStarted) {
+                  speakingStarted = true;
+                  await avatarProvider.setState({
+                    state: "speaking",
+                    reason: "tts_chunk_ready",
+                  });
+                  enqueue(controller, {
+                    type: "avatar.state",
+                    state: "speaking",
+                    reason: "tts_chunk_ready",
+                  });
+                }
+
+                enqueue(controller, {
+                  type: "tts.chunk",
+                  messageId: assistantId,
+                  audioUrl: toAudioDataUrl({ audio, mimeType }),
+                  durationMs: chunk.durationMs,
+                  marks: chunk.marks,
+                  mimeType,
+                  sequence: chunk.sequence,
+                });
+              }
+
+              if (audioChunks.length === 0) {
+                throw new Error("TTS provider returned empty audio");
+              }
+
+              const durationMs = estimateSpeechDurationMs(assistantText);
+              audioUrl = toAudioDataUrl({
+                audio: Buffer.concat(audioChunks),
+                mimeType,
+              });
+
+              enqueue(controller, {
+                type: "tts.done",
+                messageId: assistantId,
+                audioUrl,
+                chunkCount,
+                chunked: true,
+                durationMs,
+                mimeType,
+              });
+            } else {
+              const ttsResult = await ttsProvider.synthesize({
+                text: assistantText,
+                signal: request.signal,
+              });
+              audioUrl = ttsResult.audioUrl;
+
+              enqueue(controller, {
+                type: "tts.done",
+                messageId: assistantId,
+                audioUrl,
+                durationMs: ttsResult.durationMs,
+                mimeType: ttsResult.mimeType,
+              });
+              await avatarProvider.setState({
+                state: "speaking",
+                reason: "tts_ready",
+              });
+              enqueue(controller, {
+                type: "avatar.state",
+                state: "speaking",
+                reason: "tts_ready",
+              });
+            }
           } catch (error) {
             if (request.signal.aborted) {
               await markTurnInterrupted();

@@ -81,9 +81,24 @@ export interface TTSResult {
   }>;
 }
 
+export interface TTSChunk {
+  audio: Uint8Array;
+  durationMs?: number;
+  marks?: Array<{
+    timeMs: number;
+    value: string;
+  }>;
+  mimeType: string;
+  sequence: number;
+}
+
 export interface TTSProvider extends ProviderDescriptor {
   capability: "tts";
   synthesize(input: TTSInput): Promise<TTSResult>;
+}
+
+export interface StreamingTTSProvider extends TTSProvider {
+  stream(input: TTSInput): AsyncIterable<TTSChunk>;
 }
 
 export interface AvatarStateInput {

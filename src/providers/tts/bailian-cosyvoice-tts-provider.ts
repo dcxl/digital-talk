@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
 import WebSocket, { type RawData } from "ws";
-import type { TTSInput, TTSProvider } from "@/core/providers/types";
+import type {
+  StreamingTTSProvider,
+  TTSChunk,
+  TTSInput,
+} from "@/core/providers/types";
 import { readTTSCache, writeTTSCache } from "@/services/tts-cache/storage";
 
 const DEFAULT_ENDPOINT = "wss://dashscope.aliyuncs.com/api-ws/v1/inference";
@@ -144,7 +148,159 @@ function getTaskErrorMessage(message: CosyVoiceTaskMessage) {
   );
 }
 
-function synthesizeViaWebSocket(input: {
+function streamAudioViaWebSocket(input: {
+  apiKey: string;
+  endpoint?: string;
+  format: "mp3" | "wav";
+  model: string;
+  sampleRate: number;
+  signal?: AbortSignal;
+  text: string;
+  voice: string;
+}): AsyncIterable<Buffer> {
+  return {
+    [Symbol.asyncIterator]() {
+      const taskId = randomUUID();
+      const queue: Buffer[] = [];
+      const waiters: Array<() => void> = [];
+      let error: Error | null = null;
+      let finished = false;
+      let textSent = false;
+
+      const notify = () => {
+        for (const waiter of waiters.splice(0)) waiter();
+      };
+
+      const finish = (nextError?: Error) => {
+        if (finished) return;
+        finished = true;
+        error = nextError ?? null;
+        input.signal?.removeEventListener("abort", onAbort);
+        socket.removeAllListeners();
+        if (
+          socket.readyState === WebSocket.CONNECTING ||
+          socket.readyState === WebSocket.OPEN
+        ) {
+          socket.close();
+        }
+        notify();
+      };
+
+      const push = (chunk: Buffer) => {
+        if (chunk.length === 0) return;
+        queue.push(chunk);
+        notify();
+      };
+
+      function onAbort() {
+        finish(new Error("TTS request aborted"));
+      }
+
+      const socket = new WebSocket(getEndpoint(input.endpoint), {
+        headers: {
+          Authorization: `Bearer ${input.apiKey}`,
+          "X-DashScope-DataInspection": "enable",
+        },
+      });
+
+      function sendTextAndFinish() {
+        if (textSent) return;
+        textSent = true;
+        const taskInput = {
+          format: input.format,
+          model: input.model,
+          sampleRate: input.sampleRate,
+          taskId,
+          text: input.text,
+          voice: input.voice,
+        };
+        sendJson(socket, createCosyVoiceContinueMessage(taskInput));
+        sendJson(socket, createCosyVoiceFinishMessage(taskId));
+      }
+
+      if (input.signal?.aborted) {
+        finish(new Error("TTS request aborted"));
+      } else {
+        input.signal?.addEventListener("abort", onAbort, { once: true });
+      }
+
+      socket.on("open", () => {
+        sendJson(
+          socket,
+          createCosyVoiceStartMessage({
+            format: input.format,
+            model: input.model,
+            sampleRate: input.sampleRate,
+            taskId,
+            voice: input.voice,
+          }),
+        );
+      });
+
+      socket.on("message", (data, isBinary) => {
+        if (isBinary) {
+          push(toBuffer(data));
+          return;
+        }
+
+        const message = parseTaskMessage(data);
+        if (!message) return;
+
+        const payloadAudio = getPayloadAudio(message);
+        if (payloadAudio) push(payloadAudio);
+
+        const event = message.header?.event;
+        if (event === "task-started") {
+          sendTextAndFinish();
+          return;
+        }
+
+        if (event === "task-finished") {
+          finish();
+          return;
+        }
+
+        if (event === "task-failed") {
+          finish(new Error(getTaskErrorMessage(message)));
+        }
+      });
+
+      socket.on("error", (nextError) => {
+        finish(
+          nextError instanceof Error
+            ? nextError
+            : new Error("CosyVoice socket error"),
+        );
+      });
+
+      socket.on("unexpected-response", (_request, response) => {
+        finish(new Error(`CosyVoice handshake failed: ${response.statusCode}`));
+      });
+
+      socket.on("close", () => {
+        if (!finished) {
+          finish(new Error("CosyVoice socket closed before task finished"));
+        }
+      });
+
+      return {
+        async next(): Promise<IteratorResult<Buffer>> {
+          while (!queue.length && !finished) {
+            await new Promise<void>((resolve) => waiters.push(resolve));
+          }
+
+          const chunk = queue.shift();
+          if (chunk) return { done: false, value: chunk };
+          if (error) throw error;
+
+          return { done: true, value: undefined };
+        },
+      };
+    },
+  };
+}
+
+async function synthesizeViaWebSocket(input: {
   apiKey: string;
   endpoint?: string;
   format: "mp3" | "wav";
@@ -154,131 +310,34 @@ function synthesizeViaWebSocket(input: {
   text: string;
   voice: string;
 }) {
-  return new Promise<Buffer>((resolve, reject) => {
-    const taskId = randomUUID();
-    const audioChunks: Buffer[] = [];
-    let settled = false;
-    let textSent = false;
+  const audioChunks: Buffer[] = [];
 
-    const socket = new WebSocket(getEndpoint(input.endpoint), {
-      headers: {
-        Authorization: `Bearer ${input.apiKey}`,
-        "X-DashScope-DataInspection": "enable",
-      },
-    });
+  for await (const chunk of streamAudioViaWebSocket(input)) {
+    audioChunks.push(chunk);
+  }
 
-    function settle(error?: Error) {
-      if (settled) return;
-      settled = true;
-      input.signal?.removeEventListener("abort", onAbort);
-      socket.removeAllListeners();
-      if (
-        socket.readyState === WebSocket.CONNECTING ||
-        socket.readyState === WebSocket.OPEN
-      ) {
-        socket.close();
-      }
+  if (audioChunks.length === 0) {
+    throw new Error("CosyVoice returned empty audio");
+  }
 
-      if (error) {
-        reject(error);
-        return;
-      }
+  return Buffer.concat(audioChunks);
+}
 
-      if (audioChunks.length === 0) {
-        reject(new Error("CosyVoice returned empty audio"));
-        return;
-      }
-
-      resolve(Buffer.concat(audioChunks));
-    }
-
-    function onAbort() {
-      settle(new Error("TTS request aborted"));
-    }
-
-    function sendTextAndFinish() {
-      if (textSent) return;
-      textSent = true;
-      const taskInput = {
-        format: input.format,
-        model: input.model,
-        sampleRate: input.sampleRate,
-        taskId,
-        text: input.text,
-        voice: input.voice,
-      };
-      sendJson(socket, createCosyVoiceContinueMessage(taskInput));
-      sendJson(socket, createCosyVoiceFinishMessage(taskId));
-    }
-
-    if (input.signal?.aborted) {
-      settle(new Error("TTS request aborted"));
-      return;
-    }
-
-    input.signal?.addEventListener("abort", onAbort, { once: true });
-
-    socket.on("open", () => {
-      sendJson(
-        socket,
-        createCosyVoiceStartMessage({
-          format: input.format,
-          model: input.model,
-          sampleRate: input.sampleRate,
-          taskId,
-          voice: input.voice,
-        }),
-      );
-    });
-
-    socket.on("message", (data, isBinary) => {
-      if (isBinary) {
-        audioChunks.push(toBuffer(data));
-        return;
-      }
-
-      const message = parseTaskMessage(data);
-      if (!message) return;
-
-      const payloadAudio = getPayloadAudio(message);
-      if (payloadAudio) audioChunks.push(payloadAudio);
-
-      const event = message.header?.event;
-      if (event === "task-started") {
-        sendTextAndFinish();
-        return;
-      }
-
-      if (event === "task-finished") {
-        settle();
-        return;
-      }
-
-      if (event === "task-failed") {
-        settle(new Error(getTaskErrorMessage(message)));
-      }
-    });
-
-    socket.on("error", (error) => {
-      settle(
-        error instanceof Error ? error : new Error("CosyVoice socket error"),
-      );
-    });
-
-    socket.on("unexpected-response", (_request, response) => {
-      settle(new Error(`CosyVoice handshake failed: ${response.statusCode}`));
-    });
-
-    socket.on("close", () => {
-      if (!settled)
-        settle(new Error("CosyVoice socket closed before task finished"));
-    });
-  });
+function createChunk(input: {
+  audio: Buffer;
+  mimeType: string;
+  sequence: number;
+}): TTSChunk {
+  return {
+    audio: input.audio,
+    mimeType: input.mimeType,
+    sequence: input.sequence,
+  };
 }
 
 export function createBailianCosyVoiceTTSProvider(
   options: BailianCosyVoiceTTSProviderOptions,
-): TTSProvider {
+): StreamingTTSProvider {
   return {
     id: "bailian-cosyvoice-tts",
     name: options.name ?? "Bailian CosyVoice TTS Provider",
@@ -336,6 +395,66 @@ export function createBailianCosyVoiceTTSProvider(
         mimeType,
         marks: [],
       };
+    },
+
+    async *stream(input: TTSInput) {
+      const format = input.format ?? options.defaultFormat ?? "mp3";
+      const voice = input.voice ?? options.voice;
+      const sampleRate = options.sampleRate ?? DEFAULT_SAMPLE_RATE;
+
+      if (!voice) throw new Error("voice is required");
+
+      const cacheKey = {
+        format,
+        model: options.model,
+        provider: "bailian-cosyvoice",
+        sampleRate,
+        text: input.text,
+        voice,
+      };
+      const mimeType = getMimeType(format);
+      const cached = await readTTSCache(cacheKey);
+      if (cached) {
+        yield createChunk({
+          audio: cached.audio,
+          mimeType: cached.mimeType,
+          sequence: 1,
+        });
+        return;
+      }
+
+      const audioChunks: Buffer[] = [];
+      let sequence = 0;
+
+      for await (const audio of streamAudioViaWebSocket({
+        apiKey: options.apiKey,
+        endpoint: options.endpoint,
+        format,
+        model: options.model,
+        sampleRate,
+        signal: input.signal,
+        text: input.text,
+        voice,
+      })) {
+        sequence += 1;
+        audioChunks.push(audio);
+        yield createChunk({
+          audio,
+          mimeType,
+          sequence,
+        });
+      }
+
+      if (audioChunks.length === 0) {
+        throw new Error("CosyVoice returned empty audio");
+      }
+
+      await writeTTSCache({
+        ...cacheKey,
+        audio: Buffer.concat(audioChunks),
+        durationMs: estimateDurationMs(input.text),
+        mimeType,
+      }).catch(() => undefined);
     },
   };
 }

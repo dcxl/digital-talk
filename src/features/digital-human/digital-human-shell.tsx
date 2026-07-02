@@ -62,7 +62,13 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
   const isBusy = ["thinking", "streaming", "synthesizing", "transcribing"].includes(
     state,
   );
-  const { audioRef, handleAudioEnded, playAudio, stopAudio } = useAudioPlayback({
+  const {
+    audioRef,
+    handleAudioEnded,
+    playAudio,
+    queueAudioChunk,
+    stopAudio,
+  } = useAudioPlayback({
     setState,
   });
   const audioAnalysis = useAudioAnalyser(audioRef, state === "speaking");
@@ -104,6 +110,7 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
   const activeAssistantRef = useRef<string | null>(null);
   const persistedAssistantRef = useRef<string | null>(null);
   const speakingAssistantRef = useRef<string | null>(null);
+  const chunkedTTSMessagesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     return () => {
@@ -181,8 +188,19 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
       return;
     }
 
+    if (event.type === "tts.chunk") {
+      speakingAssistantRef.current = event.messageId;
+      chunkedTTSMessagesRef.current.add(event.messageId);
+      queueAudioChunk(event.audioUrl);
+      return;
+    }
+
     if (event.type === "tts.done") {
       speakingAssistantRef.current = event.messageId;
+      const hasChunks = chunkedTTSMessagesRef.current.has(event.messageId);
+      chunkedTTSMessagesRef.current.delete(event.messageId);
+      if (hasChunks) return;
+
       if (event.audioUrl) {
         void playAudio(event.audioUrl);
       } else {

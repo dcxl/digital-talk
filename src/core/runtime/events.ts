@@ -65,8 +65,22 @@ export type RuntimeEvent =
       type: "tts.done";
       messageId: string;
       audioUrl?: string;
+      chunkCount?: number;
+      chunked?: boolean;
       durationMs?: number;
       mimeType?: string;
+    }
+  | {
+      type: "tts.chunk";
+      messageId: string;
+      audioUrl: string;
+      durationMs?: number;
+      marks?: Array<{
+        timeMs: number;
+        value: string;
+      }>;
+      mimeType: string;
+      sequence: number;
     }
   | {
       type: "tts.failed";

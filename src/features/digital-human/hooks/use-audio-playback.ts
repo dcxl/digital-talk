@@ -9,9 +9,31 @@ interface UseAudioPlaybackInput {
 
 export function useAudioPlayback({ setState }: UseAudioPlaybackInput) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const chunkQueueRef = useRef<string[]>([]);
+  const isPlayingChunkRef = useRef(false);
+
+  function playNextChunk() {
+    const audio = audioRef.current;
+    const nextAudioUrl = chunkQueueRef.current.shift();
+
+    if (!audio || !nextAudioUrl) {
+      isPlayingChunkRef.current = false;
+      setState((current) => (current === "speaking" ? "idle" : current));
+      return;
+    }
+
+    isPlayingChunkRef.current = true;
+    audio.src = nextAudioUrl;
+    setState("speaking");
+    void audio.play().catch(() => {
+      playNextChunk();
+    });
+  }
 
   function stopAudio() {
     const audio = audioRef.current;
+    chunkQueueRef.current = [];
+    isPlayingChunkRef.current = false;
     if (!audio) return;
 
     audio.pause();
@@ -21,6 +43,8 @@ export function useAudioPlayback({ setState }: UseAudioPlaybackInput) {
 
   async function playAudio(audioUrl: string) {
     const audio = audioRef.current;
+    chunkQueueRef.current = [];
+    isPlayingChunkRef.current = false;
     if (!audio) {
       setState("speaking");
       window.setTimeout(() => setState("idle"), 1200);
@@ -37,7 +61,17 @@ export function useAudioPlayback({ setState }: UseAudioPlaybackInput) {
     }
   }
 
+  function queueAudioChunk(audioUrl: string) {
+    chunkQueueRef.current.push(audioUrl);
+    if (!isPlayingChunkRef.current) playNextChunk();
+  }
+
   function handleAudioEnded() {
+    if (isPlayingChunkRef.current) {
+      playNextChunk();
+      return;
+    }
+
     setState((current) => (current === "speaking" ? "idle" : current));
   }
 
@@ -45,6 +79,7 @@ export function useAudioPlayback({ setState }: UseAudioPlaybackInput) {
     audioRef,
     handleAudioEnded,
     playAudio,
+    queueAudioChunk,
     stopAudio,
   };
 }
