@@ -13,6 +13,7 @@
     "lint": "prisma generate && eslint .",
     "format": "prettier --write .",
     "smoke:v0.2": "node scripts/v0.2-smoke.mjs",
+    "smoke:v0.3": "node scripts/v0.3-smoke.mjs",
     "test": "vitest run"
   },
   "dependencies": {
