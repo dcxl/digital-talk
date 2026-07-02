@@ -1,6 +1,7 @@
 import type {
   AvatarFormState,
   AvatarAssetItem,
+  AvatarGenerationJobItem,
   AvatarPreviewResult,
   AvatarProfileItem,
   ConversationItem,
@@ -533,6 +534,44 @@ export async function uploadAvatarAssetRequest(input: {
   }
 
   return payload.data.asset;
+}
+
+export async function createAvatarGenerationJobRequest(input: {
+  negativePrompt?: string;
+  profileId?: string;
+  prompt: string;
+  style?: string;
+}) {
+  const response = await fetch("/api/avatar-generation-jobs", {
+    body: JSON.stringify({
+      negativePrompt: input.negativePrompt?.trim() || undefined,
+      profileId: input.profileId,
+      prompt: input.prompt.trim(),
+      style: input.style?.trim() || undefined,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      asset?: AvatarAssetItem;
+      job?: AvatarGenerationJobItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.job) {
+    throw new Error(getApiErrorMessage(payload, "生成 Avatar 失败"));
+  }
+
+  return {
+    asset: payload.data.asset,
+    job: payload.data.job,
+  };
 }
 
 export async function updateAvatarAssetRequest(

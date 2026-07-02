@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  createAvatarGenerationJobRequest,
   readAvatarAssets,
   previewAvatarProfileRequest,
   readAvatarProfiles,
@@ -12,6 +13,7 @@ import type {
   AsyncStatus,
   AvatarAssetItem,
   AvatarFormState,
+  AvatarGenerationJobItem,
   AvatarPreviewResult,
   AvatarPreviewState,
   AvatarProfileItem,
@@ -56,6 +58,8 @@ export function useAvatarManagement() {
   const [assets, setAssets] = useState<AvatarAssetItem[]>([]);
   const [profiles, setProfiles] = useState<AvatarProfileItem[]>([]);
   const [providers, setProviders] = useState<ProviderItem[]>([]);
+  const [lastGenerationJob, setLastGenerationJob] =
+    useState<AvatarGenerationJobItem | null>(null);
   const [preview, setPreview] = useState<AvatarPreviewResult | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState("");
   const [status, setStatus] = useState<AsyncStatus>("idle");
@@ -247,12 +251,49 @@ export function useAvatarManagement() {
     }
   }
 
+  async function generateAvatarAsset(input: {
+    negativePrompt?: string;
+    prompt: string;
+    style?: string;
+  }) {
+    setStatus("loading");
+
+    try {
+      const result = await createAvatarGenerationJobRequest({
+        negativePrompt: input.negativePrompt,
+        profileId: form.id,
+        prompt: input.prompt,
+        style: input.style,
+      });
+
+      setLastGenerationJob(result.job);
+
+      if (result.job.status === "failed") {
+        throw new Error(result.job.errorMessage ?? "Avatar 生成失败");
+      }
+
+      const asset = result.asset ?? result.job.resultAsset;
+      if (!asset) throw new Error("Avatar 生成任务没有返回资产");
+
+      setAssets((current) => [
+        asset,
+        ...current.filter((item) => item.id !== asset.id),
+      ]);
+      await bindAvatarAsset(asset);
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "Avatar 生成失败");
+    }
+  }
+
   return {
     assets,
     avatarProviders,
     bindAvatarAsset,
     form,
+    generateAvatarAsset,
     isBusy: status === "loading",
+    lastGenerationJob,
     loadAvatarWorkspace,
     preview,
     previewProfile,

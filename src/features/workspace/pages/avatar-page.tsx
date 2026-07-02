@@ -3,6 +3,7 @@
 import { PageFrame, RefreshButton } from "../components/page-frame";
 import { AvatarAssetsPanel } from "../avatar/avatar-assets-panel";
 import { AvatarConfigForm } from "../avatar/avatar-config-form";
+import { AvatarGenerationPanel } from "../avatar/avatar-generation-panel";
 import { AvatarList } from "../avatar/avatar-list";
 import { AvatarPreviewStage } from "../avatar/avatar-preview-stage";
 import { useAvatarManagement } from "../avatar/use-avatar-management";
@@ -13,7 +14,9 @@ export function AvatarPage() {
     avatarProviders,
     bindAvatarAsset,
     form,
+    generateAvatarAsset,
     isBusy,
+    lastGenerationJob,
     loadAvatarWorkspace,
     preview,
     previewProfile,
@@ -63,6 +66,13 @@ export function AvatarPage() {
             statusText={statusText}
             voiceProviders={voiceProviders}
           />
+          <div className="2xl:col-span-2">
+            <AvatarGenerationPanel
+              isBusy={isBusy}
+              lastJob={lastGenerationJob}
+              onGenerate={(input) => void generateAvatarAsset(input)}
+            />
+          </div>
           <div className="2xl:col-span-2">
             <AvatarAssetsPanel
               assets={assets}

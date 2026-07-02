@@ -199,6 +199,29 @@ export interface AvatarAssetItem {
   width?: number | null;
 }
 
+export type AvatarGenerationJobStatus =
+  | "completed"
+  | "failed"
+  | "pending"
+  | "running";
+
+export interface AvatarGenerationJobItem {
+  completedAt?: string | null;
+  createdAt: string;
+  errorMessage?: string | null;
+  id: string;
+  negativePrompt?: string | null;
+  profileId?: string | null;
+  prompt: string;
+  providerConfigId?: string | null;
+  resultAsset?: AvatarAssetItem | null;
+  resultAssetId?: string | null;
+  startedAt?: string | null;
+  status: AvatarGenerationJobStatus;
+  style?: string | null;
+  updatedAt: string;
+}
+
 export interface GeneralSettingsState {
   autoSave: boolean;
   language: string;
