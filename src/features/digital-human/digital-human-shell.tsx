@@ -6,6 +6,7 @@ import { AvatarStage } from "./components/avatar-stage";
 import { ConversationPanel } from "./components/conversation-panel";
 import { ProviderSettingsDrawer } from "./components/provider-settings-drawer";
 import { useAvatarProfile } from "./hooks/use-avatar-profile";
+import { useAudioAnalyser } from "./hooks/use-audio-analyser";
 import { useAudioPlayback } from "./hooks/use-audio-playback";
 import { useConversationHistory } from "./hooks/use-conversation-history";
 import { useKnowledgeBases } from "./hooks/use-knowledge-bases";
@@ -59,6 +60,7 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
   const { audioRef, handleAudioEnded, playAudio, stopAudio } = useAudioPlayback({
     setState,
   });
+  const audioAnalysis = useAudioAnalyser(audioRef, state === "speaking");
   const { stopListening, toggleListening } = useVoiceInput({
     canSend,
     setInput,
@@ -393,7 +395,9 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
           avatarImageUrl={avatarProfile?.previewImageUrl}
           avatarName={avatarProfile?.name}
           latestStatus={latestStatus}
+          mouthOpen={audioAnalysis.mouthOpen}
           state={state}
+          volume={audioAnalysis.volume}
         />
         <ConversationPanel
           canSend={canSend}
