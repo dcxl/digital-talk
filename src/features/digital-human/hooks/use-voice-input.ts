@@ -1,10 +1,21 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import {
+  closeRealtimeSession,
+  createRealtimeSession,
+  interruptRealtimeSession as interruptSession,
+  transcribeLegacyAudio,
+  transcribeRealtimeAudio,
+} from "../realtime-client";
 import type { RuntimeState } from "../types";
 
 interface UseVoiceInputInput {
+  avatarProfileId?: string | null;
   canSend: boolean;
+  conversationId?: string | null;
+  knowledgeBaseId?: string | null;
+  onTranscriptFinal?: (text: string) => void;
   setInput: (input: string) => void;
   setState: React.Dispatch<React.SetStateAction<RuntimeState>>;
   state: RuntimeState;
@@ -12,7 +23,11 @@ interface UseVoiceInputInput {
 }
 
 export function useVoiceInput({
+  avatarProfileId,
   canSend,
+  conversationId,
+  knowledgeBaseId,
+  onTranscriptFinal,
   setInput,
   setState,
   state,
@@ -21,41 +36,59 @@ export function useVoiceInput({
   const audioChunksRef = useRef<Blob[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const realtimeSessionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     return () => {
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      if (realtimeSessionIdRef.current) {
+        void closeRealtimeSession(realtimeSessionIdRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    const currentSessionId = realtimeSessionIdRef.current;
+    realtimeSessionIdRef.current = null;
+    if (currentSessionId) void closeRealtimeSession(currentSessionId);
+  }, [avatarProfileId, conversationId, knowledgeBaseId]);
+
+  async function getRealtimeSessionId() {
+    if (realtimeSessionIdRef.current) return realtimeSessionIdRef.current;
+
+    const sessionId = await createRealtimeSession({
+      avatarProfileId,
+      conversationId,
+      knowledgeBaseId,
+    });
+    realtimeSessionIdRef.current = sessionId;
+    return sessionId;
+  }
 
   async function transcribeAudio(audio: Blob) {
     setState("transcribing");
 
     try {
-      const formData = new FormData();
-      formData.append("audio", audio, "recording.webm");
-      formData.append("language", "zh");
-
-      const response = await fetch("/api/asr", {
-        body: formData,
-        method: "POST",
+      const sessionId = await getRealtimeSessionId();
+      const text = await transcribeRealtimeAudio({
+        audio,
+        language: "zh",
+        sessionId,
       });
-      const payload = (await response.json()) as {
-        data?: {
-          text?: string;
-        };
-        error?: {
-          message?: string;
-        };
-      };
 
-      if (!response.ok) throw new Error(payload.error?.message);
-
-      setInput(payload.data?.text ?? "");
+      setInput(text);
       setState("idle");
+      if (text) onTranscriptFinal?.(text);
     } catch (error) {
-      setState("error");
-      setInput(error instanceof Error ? error.message : "ASR 转写失败");
+      try {
+        const text = await transcribeLegacyAudio(audio);
+        setInput(text);
+        setState("idle");
+        if (text) onTranscriptFinal?.(text);
+      } catch {
+        setState("error");
+        setInput(error instanceof Error ? error.message : "ASR 转写失败");
+      }
     }
   }
 
@@ -117,7 +150,13 @@ export function useVoiceInput({
     if (canSend) void startListening();
   }
 
+  function interruptRealtimeSession(reason = "user_interrupt") {
+    const sessionId = realtimeSessionIdRef.current;
+    if (sessionId) void interruptSession(sessionId, reason);
+  }
+
   return {
+    interruptRealtimeSession,
     stopListening,
     toggleListening,
   };

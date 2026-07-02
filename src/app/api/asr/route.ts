@@ -21,7 +21,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await getASRProvider().transcribe({
+    const provider = await getASRProvider();
+    const result = await provider.transcribe({
       audio,
       language: typeof language === "string" ? language : undefined,
       signal: AbortSignal.timeout(15000),

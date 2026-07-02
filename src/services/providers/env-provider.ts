@@ -39,3 +39,22 @@ export function getEnvTTSProvider() {
     source: "env",
   };
 }
+
+export function getEnvASRProvider() {
+  const provider = process.env.ASR_PROVIDER?.trim() || "mock";
+
+  return {
+    id: "env-default-asr",
+    type: "asr",
+    provider,
+    name: provider === "mock" ? "Mock ASR" : "Environment ASR",
+    enabled: true,
+    baseUrl: process.env.DEFAULT_ASR_BASE_URL || null,
+    model: process.env.DEFAULT_ASR_MODEL || null,
+    options: {
+      language: process.env.DEFAULT_ASR_LANGUAGE || "zh",
+    },
+    hasApiKey: Boolean(process.env.DEFAULT_ASR_API_KEY),
+    source: "env",
+  };
+}

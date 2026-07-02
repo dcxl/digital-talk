@@ -6,6 +6,7 @@ import {
 } from "@/services/conversations/repository";
 import { isDatabaseConfigured } from "@/services/database/prisma";
 import {
+  getEnvASRProvider,
   getEnvLLMProvider,
   getEnvTTSProvider,
 } from "@/services/providers/env-provider";
@@ -27,7 +28,7 @@ export async function GET() {
   if (!isDatabaseConfigured()) {
     return jsonData({
       persistenceEnabled: false,
-      providers: [getEnvLLMProvider(), getEnvTTSProvider()],
+      providers: [getEnvLLMProvider(), getEnvTTSProvider(), getEnvASRProvider()],
     });
   }
 
@@ -39,6 +40,7 @@ export async function GET() {
       providers: [
         getEnvLLMProvider(),
         getEnvTTSProvider(),
+        getEnvASRProvider(),
         ...providers.map(sanitizeProviderConfig),
       ],
     });

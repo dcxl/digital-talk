@@ -61,13 +61,6 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
     setState,
   });
   const audioAnalysis = useAudioAnalyser(audioRef, state === "speaking");
-  const { stopListening, toggleListening } = useVoiceInput({
-    canSend,
-    setInput,
-    setState,
-    state,
-    stopAudio,
-  });
   const {
     conversationId,
     conversations,
@@ -85,6 +78,18 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
     setState,
     stopAudio,
   });
+  const { interruptRealtimeSession, stopListening, toggleListening } =
+    useVoiceInput({
+      avatarProfileId: avatarProfile?.id,
+      canSend,
+      conversationId,
+      knowledgeBaseId: selectedKnowledgeBaseId,
+      onTranscriptFinal: (text) => void sendMessage(text),
+      setInput,
+      setState,
+      state,
+      stopAudio,
+    });
   const abortRef = useRef<AbortController | null>(null);
   const activeAssistantRef = useRef<string | null>(null);
   const persistedAssistantRef = useRef<string | null>(null);
@@ -346,6 +351,7 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
 
   function interrupt() {
     stopAudio();
+    interruptRealtimeSession("user_interrupt");
     if (state === "listening") {
       stopListening();
       return;

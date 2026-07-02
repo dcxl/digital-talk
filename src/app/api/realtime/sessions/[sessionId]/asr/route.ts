@@ -142,7 +142,9 @@ export async function POST(
     let sequence = 0;
 
     try {
-      for await (const chunk of getStreamingASRProvider().stream({
+      const provider = await getStreamingASRProvider();
+
+      for await (const chunk of provider.stream({
         chunks: singleAudioChunk(audio),
         language: typeof language === "string" ? language : undefined,
         signal: AbortSignal.timeout(15000),
