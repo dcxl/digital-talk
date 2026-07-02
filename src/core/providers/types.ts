@@ -114,6 +114,7 @@ export interface AvatarStateResult {
 export type AvatarRuntimeDriver = "live2d" | "static" | "vrm";
 
 export interface AvatarRuntimeInput {
+  assetPackageId?: string;
   driver?: AvatarRuntimeDriver;
   mouthOpen?: number;
   reason?: string;
@@ -126,8 +127,25 @@ export interface AvatarRuntimeResult {
   capabilities: {
     image: boolean;
     live2d: boolean;
+    motions: boolean;
+    expressions: boolean;
     viseme: boolean;
     vrm: boolean;
+  };
+  asset?: {
+    entrypoint: string;
+    files?: Array<{
+      mimeType: string;
+      path: string;
+      url: string;
+    }>;
+    id: string;
+    manifestUrl?: string;
+    type: "image" | "live2d" | "vrm";
+  };
+  diagnostics?: {
+    errors: string[];
+    warnings: string[];
   };
   driver: AvatarRuntimeDriver;
   fallbackDriver?: AvatarRuntimeDriver;
@@ -136,7 +154,7 @@ export interface AvatarRuntimeResult {
     source: "audio-volume" | "none" | "viseme";
   };
   reason?: string;
-  status: "placeholder" | "ready";
+  status: "degraded" | "error" | "placeholder" | "ready";
   state: RuntimeState;
   updatedAt: string;
 }

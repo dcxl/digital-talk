@@ -1,46 +1,27 @@
 import { NextRequest } from "next/server";
 import { jsonData, jsonError } from "@/core/http/responses";
 import type { AvatarRuntimeDriver } from "@/core/providers/types";
-import type { RuntimeState } from "@/core/runtime/events";
 import { getAvatarProvider } from "@/providers/avatar";
-import { isDatabaseConfigured } from "@/services/database/prisma";
-import { getAvatarProfile } from "@/services/avatar-profiles/repository";
 import { serializeAvatarProfile } from "@/services/avatar-profiles/presenter";
+import { getAvatarProfile } from "@/services/avatar-profiles/repository";
+import { isDatabaseConfigured } from "@/services/database/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const previewStates = new Set<RuntimeState>([
-  "idle",
-  "thinking",
-  "speaking",
-  "error",
-]);
-
-function getString(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function getPreviewState(value: unknown) {
-  const state = getString(value);
-  return previewStates.has(state as RuntimeState)
-    ? (state as RuntimeState)
-    : "speaking";
-}
 
 function getRuntimePackageId(config: unknown) {
   if (!config || typeof config !== "object") return undefined;
 
   const record = config as Record<string, unknown>;
-  const runtime = record.runtime;
-  const live2d = record.live2d;
+  const runtimeConfig = record.runtime;
+  const live2dConfig = record.live2d;
   const runtimePackageId =
-    runtime && typeof runtime === "object"
-      ? (runtime as Record<string, unknown>).packageId
+    runtimeConfig && typeof runtimeConfig === "object"
+      ? (runtimeConfig as Record<string, unknown>).packageId
       : undefined;
   const live2dPackageId =
-    live2d && typeof live2d === "object"
-      ? (live2d as Record<string, unknown>).packageId
+    live2dConfig && typeof live2dConfig === "object"
+      ? (live2dConfig as Record<string, unknown>).packageId
       : undefined;
 
   return typeof runtimePackageId === "string" && runtimePackageId.trim()
@@ -50,8 +31,8 @@ function getRuntimePackageId(config: unknown) {
       : undefined;
 }
 
-export async function POST(
-  request: NextRequest,
+export async function GET(
+  _request: NextRequest,
   context: { params: Promise<{ avatarId: string }> },
 ) {
   const { avatarId } = await context.params;
@@ -79,30 +60,16 @@ export async function POST(
     );
   }
 
-  const body = (await request.json().catch(() => null)) as {
-    state?: unknown;
-    text?: unknown;
-  } | null;
-  const state = getPreviewState(body?.state);
   const provider = getAvatarProvider();
-  const result = await provider.setState({
-    state,
-    reason: "preview",
-  });
   const runtime = await provider.getRuntime({
     assetPackageId: getRuntimePackageId(profile.config),
     driver: profile.driver as AvatarRuntimeDriver,
-    state,
-    reason: "preview",
+    reason: "runtime",
+    state: "idle",
   });
 
   return jsonData({
     profile: serializeAvatarProfile(profile),
-    preview: {
-      state: result.state,
-      text: getString(body?.text) || `你好，我是 ${profile.name}`,
-      updatedAt: result.updatedAt,
-      runtime,
-    },
+    runtime,
   });
 }

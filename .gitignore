@@ -7,6 +7,11 @@ dist
 .env.*.local
 *.log
 storage
+.DS_Store
+
+public/live2d/*
+!public/live2d/starter-avatar/
+!public/live2d/starter-avatar/**
 
 
 /src/generated/prisma

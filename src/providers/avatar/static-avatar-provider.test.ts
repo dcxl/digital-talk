@@ -14,8 +14,9 @@ describe("static avatar runtime provider", () => {
     expect(runtime.mouth.openness).toBe(0.6);
   });
 
-  it("falls Live2D and VRM profiles back to static placeholders", async () => {
+  it("falls missing Live2D packages and VRM profiles back to static", async () => {
     const live2d = await staticAvatarProvider.getRuntime({
+      assetPackageId: "missing-package",
       driver: "live2d",
       state: "idle",
     });
@@ -25,7 +26,7 @@ describe("static avatar runtime provider", () => {
     });
 
     expect(live2d.fallbackDriver).toBe("static");
-    expect(live2d.status).toBe("placeholder");
+    expect(live2d.status).toBe("degraded");
     expect(vrm.fallbackDriver).toBe("static");
     expect(vrm.status).toBe("placeholder");
   });
