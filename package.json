@@ -14,6 +14,7 @@
     "format": "prettier --write .",
     "smoke:v0.2": "node scripts/v0.2-smoke.mjs",
     "smoke:v0.3": "node scripts/v0.3-smoke.mjs",
+    "smoke:v0.4": "node scripts/v0.4-smoke.mjs",
     "test": "vitest run"
   },
   "dependencies": {
