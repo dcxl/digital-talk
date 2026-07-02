@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
 import { jsonData, jsonError } from "@/core/http/responses";
 import type { Prisma } from "@/generated/prisma/client";
@@ -8,6 +7,10 @@ import {
   createConversationWithUserMessage,
 } from "@/services/conversations/repository";
 import { isDatabaseConfigured } from "@/services/database/prisma";
+import {
+  createRealtimeSessionEvent,
+  getNextRealtimeEventSequence,
+} from "@/services/realtime/event-buffer";
 import {
   presentRealtimeSession,
   presentRealtimeSessionEvent,
@@ -64,9 +67,7 @@ function createAsrEvent(
         type: "final";
       },
 ): RealtimeSessionEvent {
-  return {
-    createdAt: new Date().toISOString(),
-    id: randomUUID(),
+  return createRealtimeSessionEvent({
     payload:
       chunk.type === "partial"
         ? {
@@ -83,7 +84,7 @@ function createAsrEvent(
     sequence,
     sessionId,
     type: chunk.type === "partial" ? "asr.partial" : "asr.final",
-  };
+  });
 }
 
 function updateSessionStatus(session: RealtimeSession, status: RealtimeSession["status"]) {
@@ -253,7 +254,8 @@ export async function POST(
       ReturnType<typeof persistFinalTranscript>
     > = null;
     let persistenceError: string | undefined;
-    let sequence = 0;
+    const existingEvents = await store.listEvents(sessionId);
+    let sequence = getNextRealtimeEventSequence(existingEvents) - 1;
 
     try {
       const provider = await getStreamingASRProvider();

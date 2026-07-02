@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import { jsonData, jsonError } from "@/core/http/responses";
-import { presentRealtimeSession } from "@/services/realtime/presenter";
+import { appendRealtimeSessionEvent } from "@/services/realtime/event-buffer";
+import {
+  presentRealtimeSession,
+  presentRealtimeSessionEvent,
+} from "@/services/realtime/presenter";
 import {
   getRealtimeSessionStore,
   getRealtimeSessionTtlSeconds,
@@ -67,9 +71,20 @@ export async function POST(
       status: "interrupted",
     });
 
-    await store.set(interrupted, getRealtimeSessionTtlSeconds());
+    const ttlSeconds = getRealtimeSessionTtlSeconds();
+    await store.set(interrupted, ttlSeconds);
+    const event = await appendRealtimeSessionEvent(store, {
+      payload: {
+        reason: interrupted.interruptReason,
+        status: interrupted.status,
+      },
+      sessionId,
+      ttlSeconds,
+      type: "session.interrupted",
+    });
 
     return jsonData({
+      event: presentRealtimeSessionEvent(event),
       session: presentRealtimeSession(interrupted),
     });
   } catch (error) {
