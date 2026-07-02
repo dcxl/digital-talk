@@ -4,6 +4,10 @@ import type {
   AvatarRuntimeResult,
 } from "@/core/providers/types";
 import {
+  normalizeAvatarRuntimeMotionMap,
+  resolveAvatarMotionDirective,
+} from "@/core/avatar-runtime/motion-map";
+import {
   getDefaultLive2DPackage,
   validateLive2DPackage,
 } from "@/services/avatar-runtime/live2d-manifest";
@@ -116,6 +120,7 @@ export function resolveAvatarRuntime(
   const driver = normalizeDriver(input.driver);
   const adapter = driver === "live2d" ? getLive2DRuntime(input) : null;
   const resolvedAdapter = adapter ?? adapters[driver];
+  const motionMap = normalizeAvatarRuntimeMotionMap(input.motionMap);
 
   return {
     ...resolvedAdapter,
@@ -124,6 +129,11 @@ export function resolveAvatarRuntime(
       openness: getMouthOpen(input),
       source: input.state === "speaking" ? "audio-volume" : "none",
     },
+    motion: resolveAvatarMotionDirective({
+      motionMap,
+      state: input.state,
+    }),
+    motionMap: Object.keys(motionMap).length > 0 ? motionMap : undefined,
     reason: input.reason,
     state: input.state,
     updatedAt: new Date().toISOString(),

@@ -35,7 +35,7 @@ export function AvatarConfigForm({
         <div>
           <h3 className="text-sm font-semibold text-slate-950">配置</h3>
           <p className="mt-1 text-xs text-slate-500">
-            {statusText || "Static 可直接运行，Live2D / VRM 使用占位运行时"}
+            {statusText || "Static / Live2D 可预览，VRM 暂使用占位运行时"}
           </p>
         </div>
         <button

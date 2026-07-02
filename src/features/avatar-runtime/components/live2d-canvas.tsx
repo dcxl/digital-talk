@@ -2,10 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { RuntimeState } from "@/core/runtime/events";
+import {
+  resolveAvatarMotionDirective,
+  type AvatarRuntimeMotionMap,
+} from "@/core/avatar-runtime/motion-map";
 import { ensureCubismCore } from "../lib/cubism-core";
 
 interface Live2DCanvasProps {
   entrypoint: string;
+  motionMap?: AvatarRuntimeMotionMap;
   mouthOpen: number;
   onError: (message: string) => void;
   onReady: () => void;
@@ -79,8 +84,54 @@ function applyMouthOpen(model: Live2DModelInstance, value: number) {
   }
 }
 
+async function applyFirstExpression(
+  model: Live2DModelInstance,
+  candidates: string[],
+) {
+  if (candidates.length === 0) {
+    await model.expression().catch(() => undefined);
+    return;
+  }
+
+  for (const candidate of candidates) {
+    try {
+      await model.expression(candidate);
+      return;
+    } catch {
+      // try next configured fallback
+    }
+  }
+}
+
+async function applyFirstMotion(
+  model: Live2DModelInstance,
+  candidates: string[],
+) {
+  for (const candidate of candidates) {
+    try {
+      await model.motion(candidate);
+      return;
+    } catch {
+      // try next configured fallback
+    }
+  }
+}
+
+function getDirectiveKey(input: {
+  expressionCandidates: string[];
+  motionCandidates: string[];
+  state: RuntimeState;
+}) {
+  return [
+    input.state,
+    input.motionCandidates.join("|"),
+    input.expressionCandidates.join("|"),
+  ].join(":");
+}
+
 export function Live2DCanvas({
   entrypoint,
+  motionMap,
   mouthOpen,
   onError,
   onReady,
@@ -91,6 +142,7 @@ export function Live2DCanvas({
   const modelRef = useRef<Live2DModelInstance | null>(null);
   const mouthOpenRef = useRef(mouthOpen);
   const stateRef = useRef(state);
+  const appliedDirectiveKeyRef = useRef("");
   const [status, setStatus] = useState("Live2D 加载中");
 
   useEffect(() => {
@@ -194,20 +246,17 @@ export function Live2DCanvas({
     const model = modelRef.current;
     if (!model) return;
 
-    if (state === "speaking") {
-      void model.motion("Speaking").catch(() => undefined);
-      return;
-    }
-    if (state === "thinking") {
-      void model.expression("angry").catch(() => undefined);
-      return;
-    }
-    if (state === "interrupted" || state === "error") {
-      void model.expression("cry").catch(() => undefined);
-      return;
-    }
-    void model.expression().catch(() => undefined);
-  }, [state]);
+    const directive = resolveAvatarMotionDirective({
+      motionMap,
+      state,
+    });
+    const directiveKey = getDirectiveKey(directive);
+    if (appliedDirectiveKeyRef.current === directiveKey) return;
+
+    appliedDirectiveKeyRef.current = directiveKey;
+    void applyFirstExpression(model, directive.expressionCandidates);
+    void applyFirstMotion(model, directive.motionCandidates);
+  }, [motionMap, state]);
 
   return (
     <div

@@ -1,4 +1,6 @@
 import { Bot, Box, BrainCircuit, Layers3, Play } from "lucide-react";
+import { AvatarRuntimeStage } from "@/features/avatar-runtime/components/avatar-runtime-stage";
+import type { RuntimeState } from "@/core/runtime/events";
 import type {
   AvatarFormState,
   AvatarPreviewResult,
@@ -21,6 +23,7 @@ interface AvatarPreviewStageProps {
 function getStateTone(state: AvatarPreviewState) {
   if (state === "speaking") return "bg-emerald-50 text-emerald-700";
   if (state === "thinking") return "bg-amber-50 text-amber-700";
+  if (state === "interrupted") return "bg-violet-50 text-violet-700";
   if (state === "error") return "bg-red-50 text-red-700";
   return "bg-slate-100 text-slate-700";
 }
@@ -35,6 +38,9 @@ export function AvatarPreviewStage({
   const isPlaceholderDriver = form.driver === "live2d" || form.driver === "vrm";
   const PlaceholderIcon = form.driver === "vrm" ? Box : Layers3;
   const driverLabel = avatarDriverLabels[form.driver];
+  const runtimeState = state as RuntimeState;
+  const previewMouthOpen = state === "speaking" ? 0.7 : 0;
+  const previewVolume = state === "speaking" ? 0.7 : 0;
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -51,45 +57,61 @@ export function AvatarPreviewStage({
       </div>
 
       <div className="flex min-h-[420px] flex-col items-center justify-center gap-6 p-4">
-        <div
-          className={`relative flex size-56 items-center justify-center rounded-full border border-slate-200 bg-slate-50 ${
-            state === "thinking" || state === "speaking" ? "avatar-ring" : ""
-          }`}
-        >
-          {form.previewImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              alt={form.name}
-              className="size-44 rounded-full object-cover"
-              src={form.previewImageUrl}
+        {form.id ? (
+          <div className="w-full max-w-[520px]">
+            <AvatarRuntimeStage
+              avatarId={form.id}
+              avatarImageUrl={form.previewImageUrl}
+              avatarName={form.name}
+              driver={form.driver}
+              mouthOpen={previewMouthOpen}
+              state={runtimeState}
+              volume={previewVolume}
             />
-          ) : isPlaceholderDriver ? (
-            <div className="flex size-40 flex-col items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
-              <PlaceholderIcon size={64} />
-              <span className="mt-2 text-xs font-medium">{driverLabel}</span>
-            </div>
-          ) : (
-            <div className="flex size-40 items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
-              {state === "thinking" ? (
-                <BrainCircuit size={64} />
+          </div>
+        ) : (
+          <>
+            <div
+              className={`relative flex size-56 items-center justify-center rounded-full border border-slate-200 bg-slate-50 ${
+                state === "thinking" || state === "speaking" ? "avatar-ring" : ""
+              }`}
+            >
+              {form.previewImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  alt={form.name}
+                  className="size-44 rounded-full object-cover"
+                  src={form.previewImageUrl}
+                />
+              ) : isPlaceholderDriver ? (
+                <div className="flex size-40 flex-col items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
+                  <PlaceholderIcon size={64} />
+                  <span className="mt-2 text-xs font-medium">{driverLabel}</span>
+                </div>
               ) : (
-                <Bot size={72} />
+                <div className="flex size-40 items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
+                  {state === "thinking" ? (
+                    <BrainCircuit size={64} />
+                  ) : (
+                    <Bot size={72} />
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
 
-        <div className="flex h-12 items-end gap-2">
-          {[0, 1, 2, 3, 4].map((item) => (
-            <span
-              className={`w-2 rounded-full bg-slate-900 ${
-                state === "speaking" ? "speak-bar" : "h-3 opacity-25"
-              }`}
-              key={item}
-              style={{ animationDelay: `${item * 90}ms` }}
-            />
-          ))}
-        </div>
+            <div className="flex h-12 items-end gap-2">
+              {[0, 1, 2, 3, 4].map((item) => (
+                <span
+                  className={`w-2 rounded-full bg-slate-900 ${
+                    state === "speaking" ? "speak-bar" : "h-3 opacity-25"
+                  }`}
+                  key={item}
+                  style={{ animationDelay: `${item * 90}ms` }}
+                />
+              ))}
+            </div>
+          </>
+        )}
 
         <p className="min-h-6 text-center text-sm text-slate-600">
           {preview?.text ?? `你好，我是 ${form.name}`}

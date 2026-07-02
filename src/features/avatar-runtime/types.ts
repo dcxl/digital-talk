@@ -1,4 +1,8 @@
 import type { RuntimeState } from "@/core/runtime/events";
+import type {
+  AvatarRuntimeMotionDirective,
+  AvatarRuntimeMotionMap,
+} from "@/core/avatar-runtime/motion-map";
 
 export type AvatarRuntimeDriver = "live2d" | "static" | "vrm";
 
@@ -36,6 +40,8 @@ export interface AvatarRuntimeSnapshot {
     openness: number;
     source: "audio-volume" | "none" | "speech-mark" | "viseme";
   };
+  motion: AvatarRuntimeMotionDirective;
+  motionMap?: AvatarRuntimeMotionMap;
   reason?: string;
   status: "degraded" | "error" | "placeholder" | "ready";
   state: RuntimeState;

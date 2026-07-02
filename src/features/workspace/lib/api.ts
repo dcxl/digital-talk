@@ -426,6 +426,10 @@ function getAvatarPayload(input: AvatarFormState) {
     input.voiceProviderId && !input.voiceProviderId.startsWith("env-")
       ? input.voiceProviderId
       : null;
+  const currentConfig =
+    input.config && typeof input.config === "object" && !Array.isArray(input.config)
+      ? (input.config as Record<string, unknown>)
+      : {};
 
   return {
     id: input.id,
@@ -440,6 +444,7 @@ function getAvatarPayload(input: AvatarFormState) {
     isDefault: input.isDefault,
     status: input.status,
     config: {
+      ...currentConfig,
       scene: input.background.trim() || "studio",
     },
   };

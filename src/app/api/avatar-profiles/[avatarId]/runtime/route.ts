@@ -2,34 +2,13 @@ import { NextRequest } from "next/server";
 import { jsonData, jsonError } from "@/core/http/responses";
 import type { AvatarRuntimeDriver } from "@/core/providers/types";
 import { getAvatarProvider } from "@/providers/avatar";
+import { getAvatarRuntimeProfileConfig } from "@/services/avatar-runtime/profile-config";
 import { serializeAvatarProfile } from "@/services/avatar-profiles/presenter";
 import { getAvatarProfile } from "@/services/avatar-profiles/repository";
 import { isDatabaseConfigured } from "@/services/database/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function getRuntimePackageId(config: unknown) {
-  if (!config || typeof config !== "object") return undefined;
-
-  const record = config as Record<string, unknown>;
-  const runtimeConfig = record.runtime;
-  const live2dConfig = record.live2d;
-  const runtimePackageId =
-    runtimeConfig && typeof runtimeConfig === "object"
-      ? (runtimeConfig as Record<string, unknown>).packageId
-      : undefined;
-  const live2dPackageId =
-    live2dConfig && typeof live2dConfig === "object"
-      ? (live2dConfig as Record<string, unknown>).packageId
-      : undefined;
-
-  return typeof runtimePackageId === "string" && runtimePackageId.trim()
-    ? runtimePackageId.trim()
-    : typeof live2dPackageId === "string" && live2dPackageId.trim()
-      ? live2dPackageId.trim()
-      : undefined;
-}
 
 export async function GET(
   _request: NextRequest,
@@ -61,9 +40,11 @@ export async function GET(
   }
 
   const provider = getAvatarProvider();
+  const runtimeConfig = getAvatarRuntimeProfileConfig(profile.config);
   const runtime = await provider.getRuntime({
-    assetPackageId: getRuntimePackageId(profile.config),
+    assetPackageId: runtimeConfig.assetPackageId,
     driver: profile.driver as AvatarRuntimeDriver,
+    motionMap: runtimeConfig.motionMap,
     reason: "runtime",
     state: "idle",
   });

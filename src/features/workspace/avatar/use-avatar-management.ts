@@ -29,6 +29,7 @@ function getAssetUrl(asset: AvatarAssetItem) {
 function toAvatarForm(profile: AvatarProfileItem): AvatarFormState {
   return {
     background: profile.background ?? "studio",
+    config: profile.config,
     driver: profile.driver,
     id: profile.id,
     isDefault: profile.isDefault,

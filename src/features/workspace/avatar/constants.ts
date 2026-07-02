@@ -25,7 +25,13 @@ export const avatarBackgroundOptions = [
 
 export const avatarLanguageOptions = ["zh-CN", "en-US", "ja-JP"];
 
-export const avatarPreviewStates = ["idle", "thinking", "speaking", "error"] as const;
+export const avatarPreviewStates = [
+  "idle",
+  "thinking",
+  "speaking",
+  "interrupted",
+  "error",
+] as const;
 
 export const avatarBackgroundLabels: Record<string, string> = {
   "living-room": "客厅",
@@ -40,6 +46,7 @@ export const avatarPreviewStateLabels: Record<
 > = {
   error: "异常",
   idle: "待机",
+  interrupted: "中断",
   speaking: "说话",
   thinking: "思考",
 };

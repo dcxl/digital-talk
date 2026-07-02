@@ -140,7 +140,12 @@ export interface PromptTestResult {
 
 export type AvatarDriver = "static" | "live2d" | "vrm";
 export type AvatarProfileStatus = "active" | "disabled" | "deleted";
-export type AvatarPreviewState = "idle" | "thinking" | "speaking" | "error";
+export type AvatarPreviewState =
+  | "error"
+  | "idle"
+  | "interrupted"
+  | "speaking"
+  | "thinking";
 
 export interface AvatarProfileItem {
   background?: string | null;
@@ -163,6 +168,7 @@ export interface AvatarProfileItem {
 
 export interface AvatarFormState {
   background: string;
+  config?: unknown;
   driver: AvatarDriver;
   id?: string;
   isDefault: boolean;
@@ -180,7 +186,7 @@ export interface AvatarPreviewResult {
     adapterName: string;
     driver: AvatarDriver;
     fallbackDriver?: AvatarDriver;
-    status: "placeholder" | "ready";
+    status: "degraded" | "error" | "placeholder" | "ready";
   };
   state: AvatarPreviewState;
   text: string;

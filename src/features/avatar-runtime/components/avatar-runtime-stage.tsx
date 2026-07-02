@@ -59,6 +59,7 @@ export function AvatarRuntimeStage({
       {canRenderLive2D ? (
         <Live2DCanvas
           entrypoint={live2dEntrypoint}
+          motionMap={runtime.motionMap}
           mouthOpen={mouthOpen}
           onError={handleError}
           onReady={handleReady}

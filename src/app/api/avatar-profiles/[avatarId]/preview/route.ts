@@ -3,6 +3,7 @@ import { jsonData, jsonError } from "@/core/http/responses";
 import type { AvatarRuntimeDriver } from "@/core/providers/types";
 import type { RuntimeState } from "@/core/runtime/events";
 import { getAvatarProvider } from "@/providers/avatar";
+import { getAvatarRuntimeProfileConfig } from "@/services/avatar-runtime/profile-config";
 import { isDatabaseConfigured } from "@/services/database/prisma";
 import { getAvatarProfile } from "@/services/avatar-profiles/repository";
 import { serializeAvatarProfile } from "@/services/avatar-profiles/presenter";
@@ -11,10 +12,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const previewStates = new Set<RuntimeState>([
+  "error",
   "idle",
+  "interrupted",
   "thinking",
   "speaking",
-  "error",
 ]);
 
 function getString(value: unknown) {
@@ -26,28 +28,6 @@ function getPreviewState(value: unknown) {
   return previewStates.has(state as RuntimeState)
     ? (state as RuntimeState)
     : "speaking";
-}
-
-function getRuntimePackageId(config: unknown) {
-  if (!config || typeof config !== "object") return undefined;
-
-  const record = config as Record<string, unknown>;
-  const runtime = record.runtime;
-  const live2d = record.live2d;
-  const runtimePackageId =
-    runtime && typeof runtime === "object"
-      ? (runtime as Record<string, unknown>).packageId
-      : undefined;
-  const live2dPackageId =
-    live2d && typeof live2d === "object"
-      ? (live2d as Record<string, unknown>).packageId
-      : undefined;
-
-  return typeof runtimePackageId === "string" && runtimePackageId.trim()
-    ? runtimePackageId.trim()
-    : typeof live2dPackageId === "string" && live2dPackageId.trim()
-      ? live2dPackageId.trim()
-      : undefined;
 }
 
 export async function POST(
@@ -89,9 +69,11 @@ export async function POST(
     state,
     reason: "preview",
   });
+  const runtimeConfig = getAvatarRuntimeProfileConfig(profile.config);
   const runtime = await provider.getRuntime({
-    assetPackageId: getRuntimePackageId(profile.config),
+    assetPackageId: runtimeConfig.assetPackageId,
     driver: profile.driver as AvatarRuntimeDriver,
+    motionMap: runtimeConfig.motionMap,
     state,
     reason: "preview",
   });

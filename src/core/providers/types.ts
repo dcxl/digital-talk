@@ -1,4 +1,8 @@
 import type { RuntimeState } from "@/core/runtime/events";
+import type {
+  AvatarRuntimeMotionDirective,
+  AvatarRuntimeMotionMap,
+} from "@/core/avatar-runtime/motion-map";
 
 export type ProviderCapability =
   | "llm"
@@ -117,6 +121,7 @@ export interface AvatarRuntimeInput {
   assetPackageId?: string;
   driver?: AvatarRuntimeDriver;
   mouthOpen?: number;
+  motionMap?: AvatarRuntimeMotionMap;
   reason?: string;
   state: RuntimeState;
 }
@@ -151,8 +156,10 @@ export interface AvatarRuntimeResult {
   fallbackDriver?: AvatarRuntimeDriver;
   mouth: {
     openness: number;
-    source: "audio-volume" | "none" | "viseme";
+    source: "audio-volume" | "none" | "speech-mark" | "viseme";
   };
+  motion: AvatarRuntimeMotionDirective;
+  motionMap?: AvatarRuntimeMotionMap;
   reason?: string;
   status: "degraded" | "error" | "placeholder" | "ready";
   state: RuntimeState;
