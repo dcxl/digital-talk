@@ -23,6 +23,7 @@ AI Character Platform 是一个面向个人开发者的开源 AI 角色平台。
 - [15 v0.5 Realtime Transport 路线](./15-v0.5-realtime-transport-roadmap.md)
 - [16 AI Character Platform 产品重构](./16-ai-character-platform-redesign.md)
 - [17 AI Character Platform 产品理念与北极星](./17-product-philosophy-and-north-star.md)
+- [18 v0.5 Character Platform Core](./18-v0.5-character-platform-core.md)
 
 ## 当前设计原则
 
@@ -43,3 +44,10 @@ AI Character Platform 是一个面向个人开发者的开源 AI 角色平台。
 | v0.5 Character Platform Core | AI 角色库、角色工坊、场景绑定、角色记忆、工作流基础 |
 | Beta | VRM、WebRTC、RAG 增强、Tool Calling |
 | v1.0 | 插件化工具、文档站、示例应用、生产部署基线 |
+
+## 文档状态
+
+- 当前产品北极星：`17-product-philosophy-and-north-star.md`
+- 当前开发主线：`18-v0.5-character-platform-core.md`
+- `02` 到 `11` 为历史基线架构文档，可能保留 Avatar / 数字人术语；后续实现时以 Character 作为产品对象进行解释和迁移。
+- `12` 到 `15` 为历史运行时路线，保留用于追溯 TTS、ASR、Live2D、Realtime 设计，不再作为下一阶段开发主线。

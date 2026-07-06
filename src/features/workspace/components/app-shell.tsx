@@ -27,6 +27,7 @@ interface WorkspaceShellProps {
 }
 
 interface NavigationItem {
+  aliases?: string[];
   href: string;
   label: string;
   description: string;
@@ -53,7 +54,8 @@ const primaryNavigation: NavigationItem[] = [
     icon: History,
   },
   {
-    href: "/avatar",
+    aliases: ["/avatar"],
+    href: "/characters",
     label: "角色库",
     description: "角色管理",
     icon: UserRound,
@@ -105,9 +107,15 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function isActiveNavigationItem(pathname: string, item: NavigationItem) {
+  return [item.href, ...(item.aliases ?? [])].some((href) =>
+    isActivePath(pathname, href),
+  );
+}
+
 function resolveCurrentPage(pathname: string) {
   return (
-    allNavigation.find((item) => isActivePath(pathname, item.href)) ??
+    allNavigation.find((item) => isActiveNavigationItem(pathname, item)) ??
     primaryNavigation[1]
   );
 }
@@ -122,7 +130,7 @@ function NavigationLink({
   onNavigate?: () => void;
 }) {
   const Icon = item.icon;
-  const active = isActivePath(pathname, item.href);
+  const active = isActiveNavigationItem(pathname, item);
 
   return (
     <Link
