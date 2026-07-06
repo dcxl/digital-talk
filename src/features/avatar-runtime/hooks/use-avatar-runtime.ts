@@ -44,7 +44,7 @@ export function useAvatarRuntime(avatarId?: null | string) {
       setRuntime(payload?.data?.runtime ?? null);
     } catch (nextError) {
       setRuntime(null);
-      setError(nextError instanceof Error ? nextError.message : "数字人运行时加载失败");
+      setError(nextError instanceof Error ? nextError.message : "角色运行时加载失败");
     } finally {
       setIsLoading(false);
     }

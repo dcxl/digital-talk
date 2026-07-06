@@ -27,10 +27,10 @@ export function AboutDetails() {
           <Globe size={28} />
         </div>
         <h3 className="mt-5 text-xl font-semibold text-slate-950">
-          NEXT DIGITAL HUMAN
+          AI Character Platform
         </h3>
         <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-          基于 Next.js、Prisma 和 Provider 驱动运行时模块构建的开源 AI 数字人框架。
+          基于 Next.js、Prisma 和 Provider Runtime 构建的开源 AI 角色平台。
         </p>
 
         <div className="mt-8 grid w-full max-w-3xl gap-3 sm:grid-cols-2">

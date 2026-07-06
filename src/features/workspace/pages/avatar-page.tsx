@@ -40,8 +40,8 @@ export function AvatarPage() {
           onClick={() => void loadAvatarWorkspace()}
         />
       }
-      eyebrow="数字人"
-      title="数字人配置"
+      eyebrow="角色库"
+      title="AI 角色管理"
     >
       <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
         <AvatarList

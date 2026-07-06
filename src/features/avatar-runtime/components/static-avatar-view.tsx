@@ -35,7 +35,7 @@ export function StaticAvatarView({
       <>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          alt={avatarName ?? "数字人"}
+          alt={avatarName ?? "AI 角色"}
           className="relative z-10 size-44 rounded-full object-cover shadow-2xl"
           src={avatarImageUrl}
         />

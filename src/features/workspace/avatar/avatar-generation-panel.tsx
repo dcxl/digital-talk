@@ -36,7 +36,7 @@ export function AvatarGenerationPanel({
   onRetry,
 }: AvatarGenerationPanelProps) {
   const [negativePrompt, setNegativePrompt] = useState("");
-  const [prompt, setPrompt] = useState("生成一个适合作为 AI 数字人的头像");
+  const [prompt, setPrompt] = useState("生成一个适合作为知识助手的 AI 角色头像");
   const [style, setStyle] = useState(styleOptions[0]);
   const canGenerate = Boolean(prompt.trim()) && !isBusy;
 
@@ -44,9 +44,9 @@ export function AvatarGenerationPanel({
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-950">生成数字人</h3>
+          <h3 className="text-sm font-semibold text-slate-950">生成 AI 角色</h3>
           <p className="mt-1 text-xs text-slate-500">
-            静态数字人生成
+            文生图生成角色形象并绑定到角色库
           </p>
         </div>
         {lastJob ? (

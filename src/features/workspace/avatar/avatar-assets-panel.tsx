@@ -30,9 +30,9 @@ export function AvatarAssetsPanel({
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-950">数字人资产</h3>
+          <h3 className="text-sm font-semibold text-slate-950">角色资产</h3>
           <p className="mt-1 text-xs text-slate-500">
-            上传并绑定静态数字人形象
+            上传并绑定角色形象、参考图或表现层资产
           </p>
         </div>
         <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md bg-slate-950 px-3 text-sm text-white">
@@ -102,7 +102,7 @@ export function AvatarAssetsPanel({
 
         {assets.length === 0 ? (
           <div className="col-span-full rounded-lg border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-            暂无数字人资产
+            暂无角色资产
           </div>
         ) : null}
       </div>

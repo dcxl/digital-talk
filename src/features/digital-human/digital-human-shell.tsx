@@ -162,7 +162,7 @@ export function DigitalHumanShell({ embedded = false }: DigitalHumanShellProps) 
   }, [loadKnowledgeDocuments, selectedKnowledgeBaseId, setKnowledgeDocuments]);
 
   const latestStatus = useMemo(() => {
-    if (state === "speaking") return "数字人正在播报回复";
+    if (state === "speaking") return "角色正在播报回复";
     if (state === "listening") return "正在接收麦克风输入";
     if (state === "transcribing") return "ASR 正在转写语音";
     if (state === "streaming") return "LLM 正在流式生成";

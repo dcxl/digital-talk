@@ -14,10 +14,10 @@ export function AppHeader({ onOpenSettings }: AppHeaderProps) {
           </div>
           <div>
             <h1 className="text-base font-semibold text-slate-950">
-              下一代数字人
+              AI Character Platform
             </h1>
             <p className="text-xs text-slate-500">
-              开源 AI 数字人运行时
+              AI 角色运行时
             </p>
           </div>
         </div>

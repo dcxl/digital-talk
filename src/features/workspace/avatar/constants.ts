@@ -69,7 +69,7 @@ export function createBlankAvatarForm(): AvatarFormState {
     driver: "static",
     isDefault: false,
     language: "zh-CN",
-    name: "新数字人",
+    name: "新 AI 角色",
     previewImageUrl: "",
     providerConfigId: "",
     status: "active",

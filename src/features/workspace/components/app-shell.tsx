@@ -37,13 +37,13 @@ const primaryNavigation: NavigationItem[] = [
   {
     href: "/dashboard",
     label: "仪表盘",
-    description: "运行概览",
+    description: "平台概览",
     icon: LayoutDashboard,
   },
   {
     href: "/conversation",
     label: "对话",
-    description: "数字人对话",
+    description: "角色运行",
     icon: MessageSquare,
   },
   {
@@ -54,20 +54,20 @@ const primaryNavigation: NavigationItem[] = [
   },
   {
     href: "/avatar",
-    label: "数字人",
-    description: "数字人配置",
+    label: "角色库",
+    description: "角色管理",
     icon: UserRound,
   },
   {
     href: "/knowledge",
     label: "知识库",
-    description: "知识库",
+    description: "角色知识",
     icon: BookOpen,
   },
   {
     href: "/prompts",
     label: "提示词",
-    description: "提示词",
+    description: "角色人格",
     icon: FileText,
   },
   {
@@ -79,7 +79,7 @@ const primaryNavigation: NavigationItem[] = [
   {
     href: "/playground",
     label: "调试中心",
-    description: "调试中心",
+    description: "运行调试",
     icon: Play,
   },
 ];
@@ -165,8 +165,8 @@ function Sidebar({
           <Bot size={19} />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">NEXT DIGITAL HUMAN</p>
-          <p className="text-xs text-slate-500">工作台</p>
+          <p className="truncate text-sm font-semibold">AI CHARACTER PLATFORM</p>
+          <p className="text-xs text-slate-500">角色运行工作台</p>
         </div>
       </div>
 

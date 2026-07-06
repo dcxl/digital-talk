@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "下一代数字人",
-  description: "开源 AI 数字人框架。",
+  title: "AI Character Platform",
+  description: "创建、管理和运行 AI 角色的平台。",
 };
 
 export default function RootLayout({

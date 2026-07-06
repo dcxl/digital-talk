@@ -21,14 +21,14 @@ export function AvatarList({
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-950">数字人</h3>
-          <p className="mt-1 text-xs text-slate-500">{profiles.length} 个配置</p>
+          <h3 className="text-sm font-semibold text-slate-950">AI 角色</h3>
+          <p className="mt-1 text-xs text-slate-500">{profiles.length} 个角色</p>
         </div>
         <button
           className="inline-flex size-9 items-center justify-center rounded-md bg-indigo-600 text-white disabled:opacity-60"
           disabled={isBusy}
           onClick={onCreate}
-          title="新建数字人"
+          title="新建 AI 角色"
           type="button"
         >
           <Plus size={16} />
@@ -81,7 +81,7 @@ export function AvatarList({
           );
         })}
         {profiles.length === 0 ? (
-          <div className="px-4 py-8 text-sm text-slate-500">暂无数字人</div>
+          <div className="px-4 py-8 text-sm text-slate-500">暂无 AI 角色</div>
         ) : null}
       </div>
     </section>

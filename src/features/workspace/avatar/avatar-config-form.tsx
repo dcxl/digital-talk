@@ -33,9 +33,9 @@ export function AvatarConfigForm({
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 p-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-950">配置</h3>
+          <h3 className="text-sm font-semibold text-slate-950">角色配置</h3>
           <p className="mt-1 text-xs text-slate-500">
-            {statusText || "Static / Live2D 可预览，VRM 暂使用占位运行时"}
+            {statusText || "角色可绑定外观、声音、知识库、场景和运行时"}
           </p>
         </div>
         <button
@@ -87,7 +87,7 @@ export function AvatarConfigForm({
         </label>
 
         <label className="block text-xs font-medium text-slate-600">
-          数字人 Provider
+          外观 Provider
           <select
             className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ providerConfigId: event.target.value })}
@@ -172,7 +172,7 @@ export function AvatarConfigForm({
         </label>
 
         <label className="block text-xs font-medium text-slate-600 md:col-span-2">
-          预览图 URL
+          角色预览图 URL
           <input
             className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-indigo-500"
             onChange={(event) => onChange({ previewImageUrl: event.target.value })}

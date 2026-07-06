@@ -16,7 +16,7 @@ export const initialMetrics: PlaygroundMetrics = {
 export const initialForm: PlaygroundFormState = {
   enableTTS: false,
   knowledgeBaseId: "",
-  message: "请用一句话介绍 Next Digital Human。",
+  message: "请用一句话介绍 AI Character Platform。",
   modelProviderId: "",
 };
 

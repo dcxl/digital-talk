@@ -30,7 +30,7 @@ export function AvatarStage({
     <section className="min-h-[520px] rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-semibold text-slate-950">数字人舞台</h2>
+          <h2 className="text-sm font-semibold text-slate-950">角色舞台</h2>
           <p className="mt-1 text-xs text-slate-500">
             {avatarName
               ? `${avatarName} · ${driverLabel} · ${latestStatus}`

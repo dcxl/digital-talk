@@ -32,16 +32,16 @@ export function LoginPage() {
             </span>
             <span>
               <span className="block text-sm font-semibold">
-                NEXT DIGITAL HUMAN
+                AI Character Platform
               </span>
-              <span className="block text-xs text-slate-500">工作台登录</span>
+              <span className="block text-xs text-slate-500">角色平台登录</span>
             </span>
           </Link>
 
           <div className="mt-8">
             <h1 className="text-2xl font-semibold">欢迎回来</h1>
             <p className="mt-2 text-sm text-slate-500">
-              MVP 使用默认用户进入工作台。
+              MVP 使用默认用户进入角色运行工作台。
             </p>
           </div>
 

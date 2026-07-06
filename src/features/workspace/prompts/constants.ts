@@ -23,14 +23,14 @@ export function createBlankPromptForm(type: PromptType): PromptFormState {
     testMessage: "你是谁？",
     type,
     variableValues: {
-      char_name: "Next Digital Human",
+      char_name: "AI 角色助手",
       user_name: "用户",
     },
     variables:
       type === "system"
         ? [
             {
-              defaultValue: "Next Digital Human",
+              defaultValue: "AI 角色助手",
               name: "char_name",
               required: true,
             },

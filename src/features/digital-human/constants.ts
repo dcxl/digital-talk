@@ -1,16 +1,16 @@
 import type { ChatMessage, RuntimeState } from "./types";
 
 export const suggestions = [
-  "介绍一下 Next Digital Human",
+  "介绍一下 AI Character Platform",
   "如何接入一个新的 LLM Provider？",
-  "MVP 第一阶段应该先做什么？",
+  "如何创建一个知识库助手角色？",
 ];
 
 export const welcomeMessage: ChatMessage = {
   id: "welcome",
   role: "assistant",
   content:
-    "你好，我是 Next Digital Human 的原型助手。现在可以先体验文本对话、流式输出和 Avatar 状态变化。",
+    "你好，我是 AI Character Platform 的默认角色。现在可以体验文本对话、语音输出和角色状态变化。",
   status: "completed",
 };
 

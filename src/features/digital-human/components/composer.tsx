@@ -53,7 +53,7 @@ export function Composer({
         </button>
         <textarea
           className="min-h-11 flex-1 resize-none rounded-md border border-slate-200 px-3 py-3 text-sm outline-none focus:border-slate-400 disabled:bg-slate-50"
-          placeholder="输入一个问题，体验数字人对话闭环"
+          placeholder="输入一个问题，体验角色对话闭环"
           rows={1}
           value={input}
           disabled={!canSend}

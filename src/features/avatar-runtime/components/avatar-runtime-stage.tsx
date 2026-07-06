@@ -107,7 +107,7 @@ export function AvatarRuntimeStage({
           <p>事件驱动</p>
         </div>
         <div className="rounded-md bg-slate-50 p-3">
-          <p className="font-medium text-slate-800">数字人</p>
+          <p className="font-medium text-slate-800">角色</p>
           <p className="truncate">{statusText}</p>
         </div>
       </div>

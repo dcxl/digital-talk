@@ -11,23 +11,23 @@ import { CapabilityCard } from "./capability-card";
 
 const capabilities = [
   {
-    title: "AI 原生",
-    description: "LLM、RAG、语音和数字人运行时统一接入。",
+    title: "角色生成",
+    description: "通过文生图、图生图生成 AI Character 形象。",
     icon: Bot,
   },
   {
-    title: "实时对话",
-    description: "流式对话、会话历史和知识库检索闭环。",
+    title: "统一角色库",
+    description: "集中管理角色档案、形象、声音、人格和表现。",
     icon: MessageSquare,
   },
   {
-    title: "可扩展",
-    description: "服务商、提示词、数字人配置可替换扩展。",
+    title: "场景运行",
+    description: "支持知识库助手、主播、闲聊陪伴等角色场景。",
     icon: Settings,
   },
   {
-    title: "生产就绪",
-    description: "Prisma 数据模型、模块化 API 和工作台页面。",
+    title: "记忆与工作流",
+    description: "为每个角色绑定独立记忆体系和任务工作流。",
     icon: Play,
   },
 ];
@@ -42,7 +42,7 @@ export function LandingPage() {
               <Bot size={18} />
             </span>
             <span className="text-sm font-semibold tracking-wide">
-              NEXT DIGITAL HUMAN
+              AI CHARACTER PLATFORM
             </span>
           </Link>
           <nav className="flex items-center gap-2">
@@ -91,14 +91,15 @@ export function LandingPage() {
         <div className="relative z-10 mx-auto flex min-h-[72vh] max-w-7xl items-center px-4 pb-16 pt-24 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <p className="text-sm font-medium uppercase tracking-[0.24em] text-emerald-300">
-              开源 AI 数字人
+              AI Character Platform
             </p>
             <h1 className="mt-5 text-4xl font-semibold leading-tight text-white sm:text-6xl">
-              NEXT DIGITAL HUMAN
+              创建、管理和运行 AI 角色
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-slate-200 sm:text-lg">
-              基于 Next.js、Prisma 和 Provider Runtime 的生产级数字人框架，
-              覆盖对话、知识库、提示词、模型配置与调试工作台。
+              通过文生图、图生图创建角色，为角色绑定记忆、知识库、
+              工作流和运行场景，让每个 AI Character 在主播、知识助手、
+              闲聊陪伴等场景中持续运行。
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -120,16 +121,16 @@ export function LandingPage() {
             </div>
             <dl className="mt-10 grid max-w-xl grid-cols-3 gap-4 border-t border-white/15 pt-6">
               <div>
-                <dt className="text-xs text-slate-400">模块</dt>
-                <dd className="mt-1 text-lg font-semibold text-white">12</dd>
+                <dt className="text-xs text-slate-400">角色库</dt>
+                <dd className="mt-1 text-lg font-semibold text-white">统一管理</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">运行时</dt>
-                <dd className="mt-1 text-lg font-semibold text-white">LLM</dd>
+                <dt className="text-xs text-slate-400">场景</dt>
+                <dd className="mt-1 text-lg font-semibold text-white">多用途</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">技术栈</dt>
-                <dd className="mt-1 text-lg font-semibold text-white">Next.js</dd>
+                <dt className="text-xs text-slate-400">能力</dt>
+                <dd className="mt-1 text-lg font-semibold text-white">工作流</dd>
               </div>
             </dl>
           </div>

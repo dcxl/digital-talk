@@ -34,22 +34,22 @@ export function DashboardPage() {
 
   const metrics = [
     {
-      label: "会话数",
+      label: "角色会话",
       value: summary.metrics.conversationCount.toLocaleString("zh-CN"),
       helper: "活跃会话",
     },
     {
-      label: "知识文档",
+      label: "角色知识",
       value: summary.metrics.knowledgeDocumentCount.toLocaleString("zh-CN"),
       helper: `${summary.metrics.knowledgeChunkCount.toLocaleString("zh-CN")} 个切片`,
     },
     {
-      label: "服务商",
+      label: "Runtime Provider",
       value: summary.metrics.activeProviderCount.toLocaleString("zh-CN"),
       helper: `已配置 ${summary.metrics.providerCount.toLocaleString("zh-CN")} 个`,
     },
     {
-      label: "今日 Token",
+      label: "今日推理",
       value: summary.metrics.tokensToday.toLocaleString("zh-CN"),
       helper: `平均延迟 ${summary.metrics.avgLatencyMs} ms`,
     },
@@ -58,8 +58,8 @@ export function DashboardPage() {
   return (
     <PageFrame
       actions={<RefreshButton isLoading={isLoading} onClick={loadSummary} />}
-      eyebrow="概览"
-      title="运行概览"
+      eyebrow="平台概览"
+      title="角色运行概览"
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric) => (
@@ -77,7 +77,7 @@ export function DashboardPage() {
         <Panel>
           <div className="border-b border-slate-200 px-4 py-3">
             <h3 className="text-sm font-semibold text-slate-950">
-              运行状态
+              Runtime 状态
             </h3>
           </div>
           <div className="divide-y divide-slate-100">
@@ -110,7 +110,7 @@ export function DashboardPage() {
         <Panel>
           <div className="border-b border-slate-200 px-4 py-3">
             <h3 className="text-sm font-semibold text-slate-950">
-              最近会话
+              最近角色会话
             </h3>
           </div>
           <div className="divide-y divide-slate-100">

@@ -173,7 +173,7 @@ export async function testProviderConfigRequest(input: ProviderFormState) {
 
   const isEnvFallback = input.source === "env" && !input.apiKey.trim();
   const testText =
-    input.type === "tts" ? "你好，我是数字人语音测试。" : "回复 provider ok";
+    input.type === "tts" ? "你好，我是 AI 角色语音测试。" : "回复 provider ok";
   const endpoint =
     input.id && input.source !== "env"
       ? `/api/providers/${input.id}/test`
@@ -471,7 +471,7 @@ export async function saveAvatarProfileRequest(input: AvatarFormState) {
   };
 
   if (!response.ok || !payload.data?.profile) {
-    throw new Error(getApiErrorMessage(payload, "保存 Avatar 失败"));
+    throw new Error(getApiErrorMessage(payload, "保存角色失败"));
   }
 
   return payload.data.profile;
@@ -505,7 +505,7 @@ export async function previewAvatarProfileRequest(input: {
   };
 
   if (!response.ok || !payload.data?.preview) {
-    throw new Error(getApiErrorMessage(payload, "数字人预览失败"));
+    throw new Error(getApiErrorMessage(payload, "角色预览失败"));
   }
 
   return payload.data.preview;
@@ -535,7 +535,7 @@ export async function uploadAvatarAssetRequest(input: {
   };
 
   if (!response.ok || !payload.data?.asset) {
-    throw new Error(getApiErrorMessage(payload, "上传 Avatar 资产失败"));
+    throw new Error(getApiErrorMessage(payload, "上传角色资产失败"));
   }
 
   return payload.data.asset;
@@ -570,7 +570,7 @@ export async function createAvatarGenerationJobRequest(input: {
   };
 
   if (!response.ok || !payload.data?.job) {
-    throw new Error(getApiErrorMessage(payload, "生成 Avatar 失败"));
+    throw new Error(getApiErrorMessage(payload, "生成角色失败"));
   }
 
   return {
@@ -594,7 +594,7 @@ export async function retryAvatarGenerationJobRequest(jobId: string) {
   };
 
   if (!response.ok || !payload.data?.job) {
-    throw new Error(getApiErrorMessage(payload, "重试 Avatar 生成失败"));
+    throw new Error(getApiErrorMessage(payload, "重试角色生成失败"));
   }
 
   return {
@@ -624,7 +624,7 @@ export async function updateAvatarAssetRequest(
   };
 
   if (!response.ok || !payload.data?.asset) {
-    throw new Error(getApiErrorMessage(payload, "更新 Avatar 资产失败"));
+    throw new Error(getApiErrorMessage(payload, "更新角色资产失败"));
   }
 
   return payload.data.asset;
@@ -635,7 +635,7 @@ export const defaultGeneralSettings: GeneralSettingsState = {
   language: "zh-CN",
   theme: "system",
   timeZone: "Asia/Shanghai",
-  workspaceName: "Next Digital Human",
+  workspaceName: "AI Character Platform",
 };
 
 export async function readSettings() {

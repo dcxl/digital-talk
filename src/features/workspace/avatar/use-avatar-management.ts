@@ -94,10 +94,10 @@ export function useAvatarManagement() {
       setForm(selected ? toAvatarForm(selected) : createBlankAvatarForm());
       setPreview(null);
       setStatus("success");
-      setStatusText("数字人配置已加载");
+      setStatusText("角色配置已加载");
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "数字人加载失败");
+      setStatusText(error instanceof Error ? error.message : "角色加载失败");
     }
   }
 
@@ -118,7 +118,7 @@ export function useAvatarManagement() {
     setSelectedProfileId("");
     setForm(createBlankAvatarForm());
     setPreview(null);
-    setStatusText("创建新的 Avatar");
+    setStatusText("创建新的 AI 角色");
   }
 
   async function saveProfile() {
@@ -128,18 +128,18 @@ export function useAvatarManagement() {
       const profile = await saveAvatarProfileRequest(form);
 
       setStatus("success");
-      setStatusText("数字人配置已保存");
+      setStatusText("角色配置已保存");
       await loadAvatarWorkspace(profile.id);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "数字人保存失败");
+      setStatusText(error instanceof Error ? error.message : "角色保存失败");
     }
   }
 
   async function previewProfile(state: AvatarPreviewState) {
     if (!form.id) {
       setStatus("error");
-      setStatusText("请先保存 Avatar");
+      setStatusText("请先保存角色");
       return;
     }
 
@@ -157,7 +157,7 @@ export function useAvatarManagement() {
       setStatusText(`预览状态：${result.state}`);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "数字人预览失败");
+      setStatusText(error instanceof Error ? error.message : "角色预览失败");
     }
   }
 
@@ -183,12 +183,12 @@ export function useAvatarManagement() {
         setSelectedProfileId(selected?.id ?? "");
         setForm(selected ? toAvatarForm(selected) : createBlankAvatarForm());
         setStatus("success");
-        setStatusText("数字人配置已加载");
+        setStatusText("角色配置已加载");
       } catch (error) {
         if (cancelled) return;
         setStatus("error");
         setStatusText(
-          error instanceof Error ? error.message : "数字人加载失败",
+          error instanceof Error ? error.message : "角色加载失败",
         );
       }
     });
@@ -219,19 +219,19 @@ export function useAvatarManagement() {
         );
         setForm(toAvatarForm(updatedProfile));
         setSelectedProfileId(updatedProfile.id);
-        setStatusText("数字人资产已绑定");
+        setStatusText("角色资产已绑定");
       } else {
         setForm((current) => ({
           ...current,
           previewImageUrl: assetUrl,
         }));
-        setStatusText("Asset 已选择，保存 Avatar 后生效");
+        setStatusText("资产已选择，保存角色后生效");
       }
 
       setStatus("success");
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "数字人资产绑定失败");
+      setStatusText(error instanceof Error ? error.message : "角色资产绑定失败");
     }
   }
 
@@ -249,7 +249,7 @@ export function useAvatarManagement() {
       await bindAvatarAsset(asset);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "数字人资产上传失败");
+      setStatusText(error instanceof Error ? error.message : "角色资产上传失败");
     }
   }
 
@@ -271,7 +271,7 @@ export function useAvatarManagement() {
       await applyGeneratedAvatarResult(result);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "数字人生成失败");
+      setStatusText(error instanceof Error ? error.message : "角色生成失败");
     }
   }
 
@@ -283,7 +283,7 @@ export function useAvatarManagement() {
       await applyGeneratedAvatarResult(result);
     } catch (error) {
       setStatus("error");
-      setStatusText(error instanceof Error ? error.message : "数字人重试失败");
+      setStatusText(error instanceof Error ? error.message : "角色生成重试失败");
     }
   }
 
@@ -294,11 +294,11 @@ export function useAvatarManagement() {
     setLastGenerationJob(result.job);
 
     if (result.job.status === "failed") {
-      throw new Error(result.job.errorMessage ?? "数字人生成失败");
+      throw new Error(result.job.errorMessage ?? "角色生成失败");
     }
 
     const asset = result.asset ?? result.job.resultAsset;
-    if (!asset) throw new Error("数字人生成任务没有返回资产");
+    if (!asset) throw new Error("角色生成任务没有返回资产");
 
     setAssets((current) => [
       asset,
