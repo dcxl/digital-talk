@@ -10,7 +10,7 @@ AI Character Platform
 ```
 
 平台的核心对象是 `Character`。
-图像生成、声音合成、Live2D、知识库、记忆、工作流、模型 Provider 都只是让 Character 更完整、更可运行的能力。
+ComfyUI 角色外观生成、声音合成、知识库、记忆、工作流、模型 Provider 都只是让 Character 更完整、更可运行的能力。
 
 最终产品应该让用户完成三件事：
 
@@ -33,12 +33,14 @@ Create once, run anywhere as an AI Character.
 “数字人”容易把产品焦点带到形象、口型、动画、Live2D、WebRTC。
 这些能力重要，但它们不是产品本体。
 
+后续主线不再继续投入 Live2D。Live2D 只作为历史兼容能力保留；角色外观生成和资产生产改为围绕 ComfyUI 工作流设计。
+
 真正的产品本体是角色：
 
 | 能力 | 在平台中的定位 |
 | --- | --- |
-| 文生图 / 图生图 | 角色外观生成方式 |
-| Live2D / VRM / 静态图 | 角色表现层 |
+| ComfyUI 文生图 / 图生图 | 角色外观生成方式 |
+| 静态图 / 序列帧 / 后续视频资产 | 角色表现层 |
 | TTS / ASR | 角色语音输入输出 |
 | LLM | 角色大脑 |
 | Prompt | 角色人格和行为边界 |
@@ -60,7 +62,7 @@ Create once, run anywhere as an AI Character.
 | 模块 | 说明 |
 | --- | --- |
 | Identity | 名称、角色类型、简介、标签、用途 |
-| Appearance | 头像、静态图、Live2D、VRM、背景、视觉风格 |
+| Appearance | 头像、静态图、ComfyUI 生成资产、背景、视觉风格 |
 | Voice | TTS Provider、音色、语言、语速、情绪策略 |
 | Persona | 系统提示词、说话风格、边界、禁忌、角色目标 |
 | Knowledge | 绑定的知识库、文档、检索策略 |
@@ -171,7 +173,7 @@ Character + Workflow + Provider + Permission
 
 角色能力要可插拔：
 
-- 外观可以从静态图切换到 Live2D。
+- 外观优先通过 ComfyUI 生成或上传静态资产，Live2D 不再作为后续主线。
 - TTS Provider 可以替换。
 - LLM Provider 可以替换。
 - 场景可以切换。
@@ -200,7 +202,7 @@ Character + Workflow + Provider + Permission
 
 ### 原则 6：运行时服务于体验
 
-ASR、TTS、Live2D、Realtime、WebRTC 都是体验层能力。
+ASR、TTS、ComfyUI 外观生成、Realtime 都是体验层能力。
 它们要服务角色运行，而不是主导产品路线。
 
 ## 8. 当前不做什么
@@ -208,6 +210,7 @@ ASR、TTS、Live2D、Realtime、WebRTC 都是体验层能力。
 MVP 阶段不做：
 
 - 不做完整图像生成平台。
+- 不继续建设 Live2D 编辑、上传、驱动主线。
 - 不做 Dify / Coze 工作流复刻。
 - 不做复杂多租户和商业计费。
 - 不做本地大模型管理平台。
@@ -250,7 +253,7 @@ AI Character Platform
     ├── Conversation
     ├── LLM
     ├── TTS / ASR
-    ├── Avatar Runtime
+    ├── Static Appearance Runtime
     └── Realtime Events
 ```
 
@@ -311,7 +314,7 @@ AI Character Platform
 交付：
 
 - 更稳定的 realtime transport。
-- 更完整的 Live2D / VRM 表现。
+- 更完整的 ComfyUI 角色资产生成和静态表现。
 - 更细的 provider 插件化。
 - 示例角色和示例场景。
 
@@ -330,8 +333,8 @@ AI Character Platform
 
 ## 12. 当前执行约束
 
-暂时不调用 `image_gen` 或其他图片生成工具。
-图像生成能力在产品文档中保留为 Provider 能力，但当前开发和文档阶段不依赖真实图片生成。
+暂时不调用 `image_gen`。
+图像生成能力后续以 ComfyUI Provider / Workflow 方式接入；当前开发先支持上传图片和手动角色设定。
 
 当前优先级：
 

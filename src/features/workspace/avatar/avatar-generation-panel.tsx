@@ -46,7 +46,7 @@ export function AvatarGenerationPanel({
         <div>
           <h3 className="text-sm font-semibold text-slate-950">生成 AI 角色</h3>
           <p className="mt-1 text-xs text-slate-500">
-            文生图生成角色形象并绑定到角色库
+            后续接入 ComfyUI workflow 生成角色形象并绑定到角色库
           </p>
         </div>
         {lastJob ? (

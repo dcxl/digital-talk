@@ -161,13 +161,14 @@ AI Character Platform 是一个开源 AI 角色平台，帮助用户创建、管
 - AI 角色列表
 - 角色档案
 - 角色资产
-- 外观 Driver：Static、Live2D、VRM
+- 外观：Static 角色图、ComfyUI 生成资产、历史兼容 Avatar Runtime
 - Voice、Language、Persona、Background 配置
 
 ### 5.7 Character Studio 角色工坊
 
 - 文本创建角色
 - 参考图创建角色
+- ComfyUI workflow 生成角色图
 - 角色设定生成
 - 形象资产绑定
 - 声音与表现层配置

@@ -12,7 +12,7 @@ import { CapabilityCard } from "./capability-card";
 const capabilities = [
   {
     title: "角色生成",
-    description: "通过文生图、图生图生成 AI Character 形象。",
+    description: "通过 ComfyUI 文生图、图生图生成 AI Character 形象。",
     icon: Bot,
   },
   {
@@ -97,9 +97,9 @@ export function LandingPage() {
               创建、管理和运行 AI 角色
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-slate-200 sm:text-lg">
-              通过文生图、图生图创建角色，为角色绑定记忆、知识库、
-              工作流和运行场景，让每个 AI Character 在主播、知识助手、
-              闲聊陪伴等场景中持续运行。
+              通过 ComfyUI 文生图、图生图创建角色，为角色绑定记忆、
+              知识库、工作流和运行场景，让每个 AI Character 在主播、
+              知识助手、闲聊陪伴等场景中持续运行。
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
