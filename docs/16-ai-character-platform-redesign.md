@@ -144,24 +144,10 @@ AI Character Platform
 - 第一版支持 query knowledge、summarize session、generate post、webhook notify。
 - Workflow 执行结果要进入角色上下文或会话事件。
 
-## 8. imagegen Design Prompt
+## 8. Visual Generation Status
 
-当前环境未暴露内置 `image_gen` 工具，因此先保留可执行视觉提示词。后续工具可用后，建议生成 Landing hero 和角色工坊示意图：
-
-```text
-Use case: ui-mockup
-Asset type: landing page hero image for AI Character Platform
-Primary request: create a polished product visual showing an AI character creation platform where multiple generated AI characters are managed in a unified character library
-Scene/backdrop: dark professional SaaS workspace with a central character studio canvas, side panels for memory, workflow, scene binding, and provider settings
-Subject: three distinct AI characters as generated profile cards, one realistic host, one knowledge assistant, one casual chat companion
-Style/medium: high-fidelity product UI mockup with subtle 3D character previews
-Composition/framing: wide 16:9 composition, character library on the left, selected character preview in the center, memory/workflow/scene modules on the right
-Lighting/mood: clean, focused, production-ready, not fantasy
-Color palette: dark neutral workspace, restrained indigo and emerald accents
-Text (verbatim): "AI Character Platform"
-Constraints: readable UI, no fake brand logos, no watermark, no random unreadable paragraphs
-Avoid: overly sci-fi, one-off chatbot demo, decorative gradient-only hero, crowded text
-```
+暂时不调用 `image_gen` 或其他图片生成工具。
+图像生成能力仍然是 AI Character Platform 的长期能力，但当前阶段只把它作为未来 Provider 接口和角色工坊能力设计，不依赖真实图片生成结果推进开发。
 
 ## 9. Acceptance
 

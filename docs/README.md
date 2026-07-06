@@ -22,6 +22,7 @@ AI Character Platform 是一个面向个人开发者的开源 AI 角色平台。
 - [14 v0.4 Avatar Runtime 路线](./14-v0.4-avatar-runtime-roadmap.md)
 - [15 v0.5 Realtime Transport 路线](./15-v0.5-realtime-transport-roadmap.md)
 - [16 AI Character Platform 产品重构](./16-ai-character-platform-redesign.md)
+- [17 AI Character Platform 产品理念与北极星](./17-product-philosophy-and-north-star.md)
 
 ## 当前设计原则
 
