@@ -260,6 +260,14 @@ export type CharacterMemoryType =
   | "session_summary"
   | "user_preference";
 export type CharacterMemoryStatus = "active" | "deleted" | "disabled";
+export type CharacterWorkflowStatus = "active" | "deleted" | "disabled";
+export type CharacterWorkflowExecutionStatus =
+  | "cancelled"
+  | "failed"
+  | "pending"
+  | "running"
+  | "success"
+  | "waiting_confirmation";
 
 export interface CharacterSceneSummary {
   id: string;
@@ -329,6 +337,42 @@ export interface CharacterMemoryFormState {
   confidence: number;
   content: string;
   type: CharacterMemoryType;
+}
+
+export interface CharacterWorkflowExecutionItem {
+  characterId: string;
+  completedAt?: string | null;
+  conversationId?: string | null;
+  createdAt: string;
+  errorMessage?: string | null;
+  id: string;
+  input?: unknown;
+  output?: unknown;
+  requiresConfirmation: boolean;
+  startedAt?: string | null;
+  status: CharacterWorkflowExecutionStatus;
+  updatedAt: string;
+  workflowId: string;
+}
+
+export interface CharacterWorkflowItem {
+  characterId: string;
+  createdAt: string;
+  description?: string | null;
+  executions: CharacterWorkflowExecutionItem[];
+  id: string;
+  name: string;
+  permission?: unknown;
+  status: CharacterWorkflowStatus;
+  steps?: unknown;
+  trigger?: unknown;
+  updatedAt: string;
+}
+
+export interface CharacterWorkflowFormState {
+  description: string;
+  name: string;
+  requiresConfirmation: boolean;
 }
 
 export interface CharacterSceneBindingItem {

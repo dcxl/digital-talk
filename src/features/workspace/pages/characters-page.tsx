@@ -19,11 +19,13 @@ export function CharactersPage() {
     createScene,
     deleteCharacter,
     createMemory,
+    createWorkflow,
     deleteMemory,
     form,
     isBusy,
     loadCharacterWorkspace,
     memories,
+    runWorkflow,
     saveCharacter,
     scenes,
     selectCharacter,
@@ -33,8 +35,10 @@ export function CharactersPage() {
     statusText,
     unbindScene,
     updateMemoryStatus,
+    updateWorkflowStatus,
     updateForm,
     voiceProviders,
+    workflows,
   } = useCharacterManagement();
 
   return (
@@ -100,7 +104,18 @@ export function CharactersPage() {
             }
           />
           <div className="2xl:col-span-2">
-            <CharacterWorkflowPanel character={selectedCharacter} />
+            <CharacterWorkflowPanel
+              character={selectedCharacter}
+              isBusy={isBusy}
+              onCreateWorkflow={(input) => void createWorkflow(input)}
+              onRunWorkflow={(workflowId, confirm) =>
+                void runWorkflow(workflowId, confirm)
+              }
+              onUpdateWorkflowStatus={(workflowId, status) =>
+                void updateWorkflowStatus(workflowId, status)
+              }
+              workflows={workflows}
+            />
           </div>
         </div>
       </div>

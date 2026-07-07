@@ -2,16 +2,20 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   bindCharacterSceneRequest,
   createCharacterMemoryRequest,
+  createCharacterWorkflowRequest,
   createSceneRequest,
   deleteCharacterMemoryRequest,
   deleteCharacterRequest,
   readAvatarProfiles,
   readCharacterMemories,
+  readCharacterWorkflows,
   readCharacters,
   readProviders,
   readScenes,
   saveCharacterRequest,
+  runCharacterWorkflowRequest,
   updateCharacterMemoryRequest,
+  updateCharacterWorkflowRequest,
   unbindCharacterSceneRequest,
 } from "../lib/api";
 import type {
@@ -24,6 +28,9 @@ import type {
   CharacterMemoryStatus,
   CharacterSceneFormState,
   CharacterSceneItem,
+  CharacterWorkflowFormState,
+  CharacterWorkflowItem,
+  CharacterWorkflowStatus,
   ProviderItem,
 } from "../types";
 import { createBlankCharacterForm } from "./constants";
@@ -68,6 +75,7 @@ export function useCharacterManagement() {
   const [memories, setMemories] = useState<CharacterMemoryItem[]>([]);
   const [providers, setProviders] = useState<ProviderItem[]>([]);
   const [scenes, setScenes] = useState<CharacterSceneItem[]>([]);
+  const [workflows, setWorkflows] = useState<CharacterWorkflowItem[]>([]);
   const [selectedCharacterId, setSelectedCharacterId] = useState("");
   const [status, setStatus] = useState<AsyncStatus>("idle");
   const [statusText, setStatusText] = useState("");
@@ -98,13 +106,17 @@ export function useCharacterManagement() {
           readScenes(),
         ]);
       const selected = selectCharacter(nextCharacters, preferredId);
-      const nextMemories = selected
-        ? await readCharacterMemories(selected.id)
-        : [];
+      const [nextMemories, nextWorkflows] = selected
+        ? await Promise.all([
+            readCharacterMemories(selected.id),
+            readCharacterWorkflows(selected.id),
+          ])
+        : [[], []];
 
       setCharacters(nextCharacters);
       setAppearanceProfiles(nextAppearances);
       setMemories(nextMemories);
+      setWorkflows(nextWorkflows);
       setProviders(nextProviders);
       setScenes(nextScenes);
       setSelectedCharacterId(selected?.id ?? "");
@@ -128,8 +140,12 @@ export function useCharacterManagement() {
     setSelectedCharacterId(character.id);
     setForm(toCharacterForm(character));
     setMemories([]);
+    setWorkflows([]);
     void readCharacterMemories(character.id).then(setMemories).catch(() => {
       setMemories([]);
+    });
+    void readCharacterWorkflows(character.id).then(setWorkflows).catch(() => {
+      setWorkflows([]);
     });
     setStatusText("角色已选择");
   }
@@ -138,6 +154,7 @@ export function useCharacterManagement() {
     setSelectedCharacterId("");
     setForm(createBlankCharacterForm());
     setMemories([]);
+    setWorkflows([]);
     setStatusText("创建新的 AI 角色");
   }
 
@@ -288,6 +305,68 @@ export function useCharacterManagement() {
     }
   }
 
+  async function createWorkflow(input: CharacterWorkflowFormState) {
+    const characterId = selectedCharacterId || form.id;
+    if (!characterId) return;
+
+    setStatus("loading");
+
+    try {
+      await createCharacterWorkflowRequest(characterId, input);
+      setStatus("success");
+      setStatusText("工作流已创建");
+      await loadCharacterWorkspace(characterId);
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "创建工作流失败");
+    }
+  }
+
+  async function updateWorkflowStatus(
+    workflowId: string,
+    status: CharacterWorkflowStatus,
+  ) {
+    const characterId = selectedCharacterId || form.id;
+    if (!characterId) return;
+
+    setStatus("loading");
+
+    try {
+      await updateCharacterWorkflowRequest({
+        characterId,
+        status,
+        workflowId,
+      });
+      setStatus("success");
+      setStatusText(status === "active" ? "工作流已启用" : "工作流已禁用");
+      await loadCharacterWorkspace(characterId);
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "更新工作流失败");
+    }
+  }
+
+  async function runWorkflow(workflowId: string, confirm = false) {
+    const characterId = selectedCharacterId || form.id;
+    if (!characterId) return;
+
+    setStatus("loading");
+
+    try {
+      await runCharacterWorkflowRequest({
+        characterId,
+        confirm,
+        workflowId,
+      });
+      setStatus("success");
+      setStatusText(confirm ? "工作流已运行" : "工作流执行已记录");
+      await loadCharacterWorkspace(characterId);
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "运行工作流失败");
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -306,6 +385,7 @@ export function useCharacterManagement() {
     characters,
     createScene,
     createMemory,
+    createWorkflow,
     deleteMemory,
     deleteCharacter,
     form,
@@ -321,7 +401,10 @@ export function useCharacterManagement() {
     statusText,
     unbindScene,
     updateMemoryStatus,
+    updateWorkflowStatus,
     updateForm,
     voiceProviders,
+    workflows,
+    runWorkflow,
   };
 }

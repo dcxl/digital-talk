@@ -5,6 +5,7 @@ import type {
   CharacterRoleType,
   CharacterSceneFormState,
   CharacterSceneType,
+  CharacterWorkflowFormState,
 } from "../types";
 
 export const characterRoleOptions: Array<{
@@ -65,6 +66,21 @@ export const characterMemoryStatusLabels = {
   disabled: "已禁用",
 } as const;
 
+export const characterWorkflowStatusLabels = {
+  active: "已启用",
+  deleted: "已删除",
+  disabled: "已禁用",
+} as const;
+
+export const characterWorkflowExecutionStatusLabels = {
+  cancelled: "已取消",
+  failed: "失败",
+  pending: "等待中",
+  running: "运行中",
+  success: "成功",
+  waiting_confirmation: "待确认",
+} as const;
+
 export function createBlankCharacterForm(): CharacterFormState {
   return {
     appearanceProfileId: "",
@@ -94,5 +110,13 @@ export function createBlankCharacterMemoryForm(): CharacterMemoryFormState {
     confidence: 0.9,
     content: "",
     type: "long_term",
+  };
+}
+
+export function createBlankCharacterWorkflowForm(): CharacterWorkflowFormState {
+  return {
+    description: "",
+    name: "手动工作流",
+    requiresConfirmation: true,
   };
 }

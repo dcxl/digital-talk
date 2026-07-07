@@ -11,6 +11,9 @@ import type {
   CharacterMemoryStatus,
   CharacterSceneFormState,
   CharacterSceneItem,
+  CharacterWorkflowFormState,
+  CharacterWorkflowItem,
+  CharacterWorkflowStatus,
   ConversationItem,
   DashboardSummary,
   GeneralSettingsState,
@@ -874,6 +877,130 @@ export async function deleteCharacterMemoryRequest(input: {
   }
 
   return payload.data.memory;
+}
+
+function getWorkflowPayload(input: CharacterWorkflowFormState) {
+  return {
+    description: input.description.trim() || null,
+    name: input.name.trim(),
+    permission: {
+      requiresConfirmation: input.requiresConfirmation,
+    },
+    status: "active",
+    steps: [
+      {
+        id: "manual",
+        input: {},
+        type: "manual",
+      },
+    ],
+    trigger: {
+      type: "manual",
+    },
+  };
+}
+
+export async function readCharacterWorkflows(characterId: string) {
+  const payload = await fetchJson<{ data?: { items?: CharacterWorkflowItem[] } }>(
+    `/api/characters/${characterId}/workflows`,
+  );
+  return payload?.data?.items ?? [];
+}
+
+export async function createCharacterWorkflowRequest(
+  characterId: string,
+  input: CharacterWorkflowFormState,
+) {
+  const response = await fetch(`/api/characters/${characterId}/workflows`, {
+    body: JSON.stringify(getWorkflowPayload(input)),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      workflow?: CharacterWorkflowItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.workflow) {
+    throw new Error(getApiErrorMessage(payload, "创建工作流失败"));
+  }
+
+  return payload.data.workflow;
+}
+
+export async function updateCharacterWorkflowRequest(input: {
+  characterId: string;
+  status?: CharacterWorkflowStatus;
+  workflowId: string;
+}) {
+  const response = await fetch(
+    `/api/characters/${input.characterId}/workflows/${input.workflowId}`,
+    {
+      body: JSON.stringify({
+        status: input.status,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "PATCH",
+    },
+  );
+  const payload = (await response.json()) as {
+    data?: {
+      workflow?: CharacterWorkflowItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.workflow) {
+    throw new Error(getApiErrorMessage(payload, "更新工作流失败"));
+  }
+
+  return payload.data.workflow;
+}
+
+export async function runCharacterWorkflowRequest(input: {
+  characterId: string;
+  confirm?: boolean;
+  workflowId: string;
+}) {
+  const response = await fetch(
+    `/api/characters/${input.characterId}/workflows/${input.workflowId}/run`,
+    {
+      body: JSON.stringify({
+        confirm: input.confirm ?? false,
+        input: {
+          source: "workspace",
+        },
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    },
+  );
+  const payload = (await response.json()) as {
+    data?: {
+      execution?: CharacterWorkflowItem["executions"][number];
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.execution) {
+    throw new Error(getApiErrorMessage(payload, "运行工作流失败"));
+  }
+
+  return payload.data.execution;
 }
 
 export async function updateAvatarAssetRequest(
