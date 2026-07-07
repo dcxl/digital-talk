@@ -18,9 +18,12 @@ export function CharactersPage() {
     characters,
     createScene,
     deleteCharacter,
+    createMemory,
+    deleteMemory,
     form,
     isBusy,
     loadCharacterWorkspace,
+    memories,
     saveCharacter,
     scenes,
     selectCharacter,
@@ -29,6 +32,7 @@ export function CharactersPage() {
     startCreateCharacter,
     statusText,
     unbindScene,
+    updateMemoryStatus,
     updateForm,
     voiceProviders,
   } = useCharacterManagement();
@@ -85,7 +89,16 @@ export function CharactersPage() {
             onUnbindScene={(sceneId) => void unbindScene(sceneId)}
             scenes={scenes}
           />
-          <CharacterMemoryPanel character={selectedCharacter} />
+          <CharacterMemoryPanel
+            character={selectedCharacter}
+            isBusy={isBusy}
+            memories={memories}
+            onCreateMemory={(input) => void createMemory(input)}
+            onDeleteMemory={(memoryId) => void deleteMemory(memoryId)}
+            onUpdateMemoryStatus={(memoryId, status) =>
+              void updateMemoryStatus(memoryId, status)
+            }
+          />
           <div className="2xl:col-span-2">
             <CharacterWorkflowPanel character={selectedCharacter} />
           </div>

@@ -6,6 +6,9 @@ import type {
   AvatarProfileItem,
   CharacterFormState,
   CharacterItem,
+  CharacterMemoryFormState,
+  CharacterMemoryItem,
+  CharacterMemoryStatus,
   CharacterSceneFormState,
   CharacterSceneItem,
   ConversationItem,
@@ -769,6 +772,108 @@ export async function unbindCharacterSceneRequest(input: {
   if (!response.ok) {
     throw new Error(getApiErrorMessage(payload, "解除场景绑定失败"));
   }
+}
+
+function getMemoryPayload(input: CharacterMemoryFormState) {
+  return {
+    confidence: input.confidence,
+    content: input.content.trim(),
+    source: "manual",
+    type: input.type,
+  };
+}
+
+export async function readCharacterMemories(characterId: string) {
+  const payload = await fetchJson<{ data?: { items?: CharacterMemoryItem[] } }>(
+    `/api/characters/${characterId}/memories`,
+  );
+  return payload?.data?.items ?? [];
+}
+
+export async function createCharacterMemoryRequest(
+  characterId: string,
+  input: CharacterMemoryFormState,
+) {
+  const response = await fetch(`/api/characters/${characterId}/memories`, {
+    body: JSON.stringify(getMemoryPayload(input)),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      memory?: CharacterMemoryItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.memory) {
+    throw new Error(getApiErrorMessage(payload, "创建记忆失败"));
+  }
+
+  return payload.data.memory;
+}
+
+export async function updateCharacterMemoryRequest(input: {
+  characterId: string;
+  memoryId: string;
+  status?: CharacterMemoryStatus;
+}) {
+  const response = await fetch(
+    `/api/characters/${input.characterId}/memories/${input.memoryId}`,
+    {
+      body: JSON.stringify({
+        status: input.status,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "PATCH",
+    },
+  );
+  const payload = (await response.json()) as {
+    data?: {
+      memory?: CharacterMemoryItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.memory) {
+    throw new Error(getApiErrorMessage(payload, "更新记忆失败"));
+  }
+
+  return payload.data.memory;
+}
+
+export async function deleteCharacterMemoryRequest(input: {
+  characterId: string;
+  memoryId: string;
+}) {
+  const response = await fetch(
+    `/api/characters/${input.characterId}/memories/${input.memoryId}`,
+    {
+      method: "DELETE",
+    },
+  );
+  const payload = (await response.json()) as {
+    data?: {
+      memory?: CharacterMemoryItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.memory) {
+    throw new Error(getApiErrorMessage(payload, "删除记忆失败"));
+  }
+
+  return payload.data.memory;
 }
 
 export async function updateAvatarAssetRequest(

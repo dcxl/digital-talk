@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   bindCharacterSceneRequest,
+  createCharacterMemoryRequest,
   createSceneRequest,
+  deleteCharacterMemoryRequest,
   deleteCharacterRequest,
   readAvatarProfiles,
+  readCharacterMemories,
   readCharacters,
   readProviders,
   readScenes,
   saveCharacterRequest,
+  updateCharacterMemoryRequest,
   unbindCharacterSceneRequest,
 } from "../lib/api";
 import type {
@@ -15,6 +19,9 @@ import type {
   AvatarProfileItem,
   CharacterFormState,
   CharacterItem,
+  CharacterMemoryFormState,
+  CharacterMemoryItem,
+  CharacterMemoryStatus,
   CharacterSceneFormState,
   CharacterSceneItem,
   ProviderItem,
@@ -58,6 +65,7 @@ export function useCharacterManagement() {
   const [form, setForm] = useState<CharacterFormState>(
     createBlankCharacterForm(),
   );
+  const [memories, setMemories] = useState<CharacterMemoryItem[]>([]);
   const [providers, setProviders] = useState<ProviderItem[]>([]);
   const [scenes, setScenes] = useState<CharacterSceneItem[]>([]);
   const [selectedCharacterId, setSelectedCharacterId] = useState("");
@@ -90,9 +98,13 @@ export function useCharacterManagement() {
           readScenes(),
         ]);
       const selected = selectCharacter(nextCharacters, preferredId);
+      const nextMemories = selected
+        ? await readCharacterMemories(selected.id)
+        : [];
 
       setCharacters(nextCharacters);
       setAppearanceProfiles(nextAppearances);
+      setMemories(nextMemories);
       setProviders(nextProviders);
       setScenes(nextScenes);
       setSelectedCharacterId(selected?.id ?? "");
@@ -115,12 +127,17 @@ export function useCharacterManagement() {
   function selectCharacterProfile(character: CharacterItem) {
     setSelectedCharacterId(character.id);
     setForm(toCharacterForm(character));
+    setMemories([]);
+    void readCharacterMemories(character.id).then(setMemories).catch(() => {
+      setMemories([]);
+    });
     setStatusText("角色已选择");
   }
 
   function startCreateCharacter() {
     setSelectedCharacterId("");
     setForm(createBlankCharacterForm());
+    setMemories([]);
     setStatusText("创建新的 AI 角色");
   }
 
@@ -210,6 +227,67 @@ export function useCharacterManagement() {
     }
   }
 
+  async function createMemory(input: CharacterMemoryFormState) {
+    const characterId = selectedCharacterId || form.id;
+    if (!characterId) return;
+
+    setStatus("loading");
+
+    try {
+      await createCharacterMemoryRequest(characterId, input);
+      setStatus("success");
+      setStatusText("记忆已新增");
+      await loadCharacterWorkspace(characterId);
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "新增记忆失败");
+    }
+  }
+
+  async function updateMemoryStatus(
+    memoryId: string,
+    status: CharacterMemoryStatus,
+  ) {
+    const characterId = selectedCharacterId || form.id;
+    if (!characterId) return;
+
+    setStatus("loading");
+
+    try {
+      await updateCharacterMemoryRequest({
+        characterId,
+        memoryId,
+        status,
+      });
+      setStatus("success");
+      setStatusText(status === "active" ? "记忆已启用" : "记忆已禁用");
+      await loadCharacterWorkspace(characterId);
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "更新记忆失败");
+    }
+  }
+
+  async function deleteMemory(memoryId: string) {
+    const characterId = selectedCharacterId || form.id;
+    if (!characterId) return;
+
+    setStatus("loading");
+
+    try {
+      await deleteCharacterMemoryRequest({
+        characterId,
+        memoryId,
+      });
+      setStatus("success");
+      setStatusText("记忆已删除");
+      await loadCharacterWorkspace(characterId);
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "删除记忆失败");
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -227,10 +305,13 @@ export function useCharacterManagement() {
     bindScene,
     characters,
     createScene,
+    createMemory,
+    deleteMemory,
     deleteCharacter,
     form,
     isBusy,
     loadCharacterWorkspace,
+    memories,
     saveCharacter,
     scenes,
     selectCharacter: selectCharacterProfile,
@@ -239,6 +320,7 @@ export function useCharacterManagement() {
     startCreateCharacter,
     statusText,
     unbindScene,
+    updateMemoryStatus,
     updateForm,
     voiceProviders,
   };

@@ -1,5 +1,7 @@
 import type {
   CharacterFormState,
+  CharacterMemoryFormState,
+  CharacterMemoryType,
   CharacterRoleType,
   CharacterSceneFormState,
   CharacterSceneType,
@@ -42,6 +44,27 @@ export const characterSceneTypeLabels = Object.fromEntries(
   characterSceneTypeOptions.map((option) => [option.value, option.label]),
 ) as Record<CharacterSceneType, string>;
 
+export const characterMemoryTypeOptions: Array<{
+  label: string;
+  value: CharacterMemoryType;
+}> = [
+  { label: "长期记忆", value: "long_term" },
+  { label: "会话摘要", value: "session_summary" },
+  { label: "用户偏好", value: "user_preference" },
+  { label: "关系事实", value: "relationship_fact" },
+  { label: "角色事实", value: "character_fact" },
+];
+
+export const characterMemoryTypeLabels = Object.fromEntries(
+  characterMemoryTypeOptions.map((option) => [option.value, option.label]),
+) as Record<CharacterMemoryType, string>;
+
+export const characterMemoryStatusLabels = {
+  active: "已启用",
+  deleted: "已删除",
+  disabled: "已禁用",
+} as const;
+
 export function createBlankCharacterForm(): CharacterFormState {
   return {
     appearanceProfileId: "",
@@ -63,5 +86,13 @@ export function createBlankCharacterSceneForm(): CharacterSceneFormState {
     name: "新场景",
     outputMode: "text",
     type: "custom",
+  };
+}
+
+export function createBlankCharacterMemoryForm(): CharacterMemoryFormState {
+  return {
+    confidence: 0.9,
+    content: "",
+    type: "long_term",
   };
 }

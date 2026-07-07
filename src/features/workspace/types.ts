@@ -253,6 +253,13 @@ export type CharacterRoleType =
 export type CharacterStatus = "active" | "deleted" | "disabled" | "draft";
 export type CharacterSceneType = CharacterRoleType;
 export type CharacterSceneStatus = "active" | "deleted" | "disabled";
+export type CharacterMemoryType =
+  | "character_fact"
+  | "long_term"
+  | "relationship_fact"
+  | "session_summary"
+  | "user_preference";
+export type CharacterMemoryStatus = "active" | "deleted" | "disabled";
 
 export interface CharacterSceneSummary {
   id: string;
@@ -296,6 +303,32 @@ export interface CharacterSceneFormState {
   name: string;
   outputMode: string;
   type: CharacterSceneType;
+}
+
+export interface CharacterMemoryItem {
+  characterId: string;
+  confidence?: number | null;
+  content: string;
+  createdAt: string;
+  expiresAt?: string | null;
+  id: string;
+  metadata?: unknown;
+  source: string;
+  sourceConversation?: {
+    id: string;
+    status: string;
+    title: string;
+  } | null;
+  sourceConversationId?: string | null;
+  status: CharacterMemoryStatus;
+  type: CharacterMemoryType;
+  updatedAt: string;
+}
+
+export interface CharacterMemoryFormState {
+  confidence: number;
+  content: string;
+  type: CharacterMemoryType;
 }
 
 export interface CharacterSceneBindingItem {

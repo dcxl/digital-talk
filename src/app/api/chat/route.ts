@@ -24,6 +24,7 @@ import {
   toRAGSourcePreview,
   type RAGSource,
 } from "@/services/knowledge/rag";
+import { getCharacterMemoryPromptContext } from "@/services/memories/runtime";
 import { getRuntimeSystemPrompt } from "@/services/prompts/runtime";
 
 export const runtime = "nodejs";
@@ -343,7 +344,13 @@ export async function POST(request: NextRequest) {
         let assistantText = "";
         let audioUrl: string | undefined;
         let usage: TokenUsageMetadata | undefined;
-        const systemPrompt = await getRuntimeSystemPrompt();
+        const [baseSystemPrompt, memoryContext] = await Promise.all([
+          getRuntimeSystemPrompt(),
+          getCharacterMemoryPromptContext(characterId),
+        ]);
+        const systemPrompt = [baseSystemPrompt, memoryContext]
+          .filter(Boolean)
+          .join("\n\n");
         const markTurnInterrupted = async () => {
           if (turn.persisted) {
             await updateMessageStatus(assistantId, "interrupted").catch(
