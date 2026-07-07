@@ -1,10 +1,10 @@
-import type {
-  ConversationStatus,
-  MessageRole,
-  MessageStatus,
+import {
   Prisma,
-  ProviderType,
-  TestStatus,
+  type ConversationStatus,
+  type MessageRole,
+  type MessageStatus,
+  type ProviderType,
+  type TestStatus,
 } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/services/database/prisma";
 
@@ -83,16 +83,36 @@ export interface UpdateProviderConfigInput {
 export async function ensureDefaultUser() {
   const prisma = getPrismaClient();
 
-  return prisma.user.upsert({
-    create: {
-      id: DEFAULT_USER_ID,
-      name: "Default User",
-    },
-    update: {},
+  const existing = await prisma.user.findUnique({
     where: {
       id: DEFAULT_USER_ID,
     },
   });
+
+  if (existing) return existing;
+
+  try {
+    return await prisma.user.create({
+      data: {
+        id: DEFAULT_USER_ID,
+        name: "Default User",
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const user = await prisma.user.findUnique({
+        where: {
+          id: DEFAULT_USER_ID,
+        },
+      });
+      if (user) return user;
+    }
+
+    throw error;
+  }
 }
 
 export function createConversationTitle(message: string) {
