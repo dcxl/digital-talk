@@ -1,5 +1,5 @@
-import { AvatarPage } from "@/features/workspace/pages/avatar-page";
+import { CharactersPage } from "@/features/workspace/pages/characters-page";
 
 export default function CharactersRoute() {
-  return <AvatarPage />;
+  return <CharactersPage />;
 }

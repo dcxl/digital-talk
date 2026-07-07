@@ -4,6 +4,8 @@ import type {
   AvatarGenerationJobItem,
   AvatarPreviewResult,
   AvatarProfileItem,
+  CharacterFormState,
+  CharacterItem,
   ConversationItem,
   DashboardSummary,
   GeneralSettingsState,
@@ -601,6 +603,79 @@ export async function retryAvatarGenerationJobRequest(jobId: string) {
     asset: payload.data.asset,
     job: payload.data.job,
   };
+}
+
+export async function readCharacters() {
+  const payload =
+    await fetchJson<{ data?: { items?: CharacterItem[] } }>("/api/characters");
+  return payload?.data?.items ?? [];
+}
+
+function getCharacterPayload(input: CharacterFormState) {
+  return {
+    appearanceProfileId: input.appearanceProfileId || null,
+    description: input.description.trim() || null,
+    language: input.language.trim() || null,
+    name: input.name.trim(),
+    roleType: input.roleType,
+    status: input.status,
+    tags: input.tagsText
+      .split(/[,，\n]/)
+      .map((tag) => tag.trim())
+      .filter(Boolean),
+    voice: input.voice.trim() || null,
+    voiceProviderId:
+      input.voiceProviderId && !input.voiceProviderId.startsWith("env-")
+        ? input.voiceProviderId
+        : null,
+  };
+}
+
+export async function saveCharacterRequest(input: CharacterFormState) {
+  const response = await fetch(
+    input.id ? `/api/characters/${input.id}` : "/api/characters",
+    {
+      body: JSON.stringify(getCharacterPayload(input)),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: input.id ? "PATCH" : "POST",
+    },
+  );
+  const payload = (await response.json()) as {
+    data?: {
+      character?: CharacterItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.character) {
+    throw new Error(getApiErrorMessage(payload, "保存角色失败"));
+  }
+
+  return payload.data.character;
+}
+
+export async function deleteCharacterRequest(characterId: string) {
+  const response = await fetch(`/api/characters/${characterId}`, {
+    method: "DELETE",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      character?: CharacterItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.character) {
+    throw new Error(getApiErrorMessage(payload, "删除角色失败"));
+  }
+
+  return payload.data.character;
 }
 
 export async function updateAvatarAssetRequest(

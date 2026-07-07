@@ -243,6 +243,94 @@ export interface AvatarGenerationJobItem {
   updatedAt: string;
 }
 
+export type CharacterRoleType =
+  | "business_assistant"
+  | "chat_companion"
+  | "custom"
+  | "host"
+  | "knowledge_assistant";
+
+export type CharacterStatus = "active" | "deleted" | "disabled" | "draft";
+
+export interface CharacterSceneSummary {
+  id: string;
+  name: string;
+  type: string;
+}
+
+export interface CharacterSceneBindingItem {
+  characterId: string;
+  config?: unknown;
+  createdAt: string;
+  enabled: boolean;
+  id: string;
+  isDefault: boolean;
+  scene: CharacterSceneSummary & {
+    description?: string | null;
+    inputMode: string;
+    outputMode: string;
+    status: string;
+  };
+  sceneId: string;
+  updatedAt: string;
+}
+
+export interface CharacterItem {
+  appearance?: {
+    driver: AvatarDriver;
+    name: string;
+    previewImageUrl?: string | null;
+    profileId: string;
+    status: string;
+  } | null;
+  comfyWorkflowConfig?: unknown;
+  counts: {
+    conversations: number;
+    memories: number;
+    workflows: number;
+  };
+  createdAt: string;
+  defaultScene?: CharacterSceneSummary | null;
+  description?: string | null;
+  id: string;
+  language?: string | null;
+  memoryPolicy?: unknown;
+  name: string;
+  personaPrompt?: {
+    id: string;
+    name: string;
+    status: string;
+    type: string;
+  } | null;
+  personaPromptId?: string | null;
+  roleType: CharacterRoleType;
+  runtimeConfig?: unknown;
+  sceneBindings: CharacterSceneBindingItem[];
+  status: CharacterStatus;
+  tags?: string[] | unknown;
+  updatedAt: string;
+  voice: {
+    language?: string | null;
+    voice?: string | null;
+    voiceProvider?: ProviderItem | null;
+    voiceProviderId?: string | null;
+  };
+  workflowPolicy?: unknown;
+}
+
+export interface CharacterFormState {
+  appearanceProfileId: string;
+  description: string;
+  id?: string;
+  language: string;
+  name: string;
+  roleType: CharacterRoleType;
+  status: Exclude<CharacterStatus, "deleted">;
+  tagsText: string;
+  voice: string;
+  voiceProviderId: string;
+}
+
 export interface GeneralSettingsState {
   autoSave: boolean;
   language: string;
