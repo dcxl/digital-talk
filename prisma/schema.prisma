@@ -107,44 +107,115 @@ enum AvatarGenerationJobStatus {
   failed
 }
 
+enum CharacterRoleType {
+  knowledge_assistant
+  host
+  chat_companion
+  business_assistant
+  custom
+}
+
+enum CharacterStatus {
+  draft
+  active
+  disabled
+  deleted
+}
+
+enum CharacterSceneType {
+  knowledge_assistant
+  host
+  chat_companion
+  business_assistant
+  custom
+}
+
+enum CharacterSceneStatus {
+  active
+  disabled
+  deleted
+}
+
+enum CharacterMemoryType {
+  long_term
+  session_summary
+  user_preference
+  relationship_fact
+  character_fact
+}
+
+enum CharacterMemoryStatus {
+  active
+  disabled
+  deleted
+}
+
+enum CharacterWorkflowStatus {
+  active
+  disabled
+  deleted
+}
+
+enum CharacterWorkflowExecutionStatus {
+  pending
+  running
+  waiting_confirmation
+  success
+  failed
+  cancelled
+}
+
 model User {
-  id                    String                @id @default(cuid())
-  name                  String?
-  email                 String?               @unique
-  avatarUrl             String?
-  conversations         Conversation[]
-  knowledgeBases        KnowledgeBase[]
-  providerConfigs       ProviderConfig[]
-  avatarProfiles        AvatarProfile[]
-  avatarAssets          AvatarAsset[]
-  avatarGenerationJobs  AvatarGenerationJob[]
-  promptTemplates       PromptTemplate[]
-  createdPromptVersions PromptVersion[]       @relation("PromptVersionsCreatedBy")
-  appSettings           AppSetting[]
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
+  id                          String                       @id @default(cuid())
+  name                        String?
+  email                       String?                      @unique
+  avatarUrl                   String?
+  conversations               Conversation[]
+  knowledgeBases              KnowledgeBase[]
+  providerConfigs             ProviderConfig[]
+  avatarProfiles              AvatarProfile[]
+  avatarAssets                AvatarAsset[]
+  avatarGenerationJobs        AvatarGenerationJob[]
+  promptTemplates             PromptTemplate[]
+  createdPromptVersions       PromptVersion[]              @relation("PromptVersionsCreatedBy")
+  characterProfiles           CharacterProfile[]
+  characterScenes             CharacterScene[]
+  characterMemories           CharacterMemory[]
+  characterWorkflows          CharacterWorkflow[]
+  characterWorkflowExecutions CharacterWorkflowExecution[]
+  appSettings                 AppSetting[]
+  createdAt                   DateTime                     @default(now())
+  updatedAt                   DateTime                     @updatedAt
 }
 
 model Conversation {
-  id              String             @id @default(cuid())
-  userId          String
-  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title           String
-  summary         String?
-  status          ConversationStatus @default(active)
-  modelProviderId String?
-  knowledgeBaseId String?
-  knowledgeBase   KnowledgeBase?     @relation(fields: [knowledgeBaseId], references: [id], onDelete: SetNull)
-  lastMessageAt   DateTime?
-  isStarred       Boolean            @default(false)
-  archivedAt      DateTime?
-  deletedAt       DateTime?
-  messages        Message[]
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  id                          String                       @id @default(cuid())
+  userId                      String
+  user                        User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title                       String
+  summary                     String?
+  status                      ConversationStatus           @default(active)
+  modelProviderId             String?
+  knowledgeBaseId             String?
+  knowledgeBase               KnowledgeBase?               @relation(fields: [knowledgeBaseId], references: [id], onDelete: SetNull)
+  characterId                 String?
+  character                   CharacterProfile?            @relation(fields: [characterId], references: [id], onDelete: SetNull)
+  sceneId                     String?
+  scene                       CharacterScene?              @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  lastMessageAt               DateTime?
+  isStarred                   Boolean                      @default(false)
+  archivedAt                  DateTime?
+  deletedAt                   DateTime?
+  messages                    Message[]
+  characterMemories           CharacterMemory[]
+  characterWorkflowExecutions CharacterWorkflowExecution[]
+  createdAt                   DateTime                     @default(now())
+  updatedAt                   DateTime                     @updatedAt
 
   @@index([userId])
   @@index([knowledgeBaseId])
+  @@index([characterId])
+  @@index([sceneId])
   @@index([lastMessageAt])
   @@index([isStarred])
   @@index([archivedAt])
@@ -172,19 +243,20 @@ model Message {
 }
 
 model KnowledgeBase {
-  id            String              @id @default(cuid())
-  userId        String
-  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name          String
-  description   String?
-  status        KnowledgeBaseStatus @default(active)
-  documentCount Int                 @default(0)
-  chunkCount    Int                 @default(0)
-  conversations Conversation[]
-  documents     Document[]
-  chunks        DocumentChunk[]
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  id              String              @id @default(cuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  status          KnowledgeBaseStatus @default(active)
+  documentCount   Int                 @default(0)
+  chunkCount      Int                 @default(0)
+  conversations   Conversation[]
+  characterScenes CharacterScene[]
+  documents       Document[]
+  chunks          DocumentChunk[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 
   @@index([userId])
   @@index([status])
@@ -230,24 +302,25 @@ model DocumentChunk {
 }
 
 model ProviderConfig {
-  id                   String                @id @default(cuid())
-  userId               String
-  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type                 ProviderType
-  provider             String
-  name                 String
-  enabled              Boolean               @default(true)
-  baseUrl              String?
-  apiKeyEncrypted      String?
-  model                String?
-  options              Json?
-  lastTestStatus       TestStatus?
-  lastTestAt           DateTime?
-  avatarProfiles       AvatarProfile[]       @relation("AvatarProviderConfig")
-  voiceProfiles        AvatarProfile[]       @relation("AvatarVoiceProviderConfig")
-  avatarGenerationJobs AvatarGenerationJob[]
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  id                     String                @id @default(cuid())
+  userId                 String
+  user                   User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type                   ProviderType
+  provider               String
+  name                   String
+  enabled                Boolean               @default(true)
+  baseUrl                String?
+  apiKeyEncrypted        String?
+  model                  String?
+  options                Json?
+  lastTestStatus         TestStatus?
+  lastTestAt             DateTime?
+  avatarProfiles         AvatarProfile[]       @relation("AvatarProviderConfig")
+  voiceProfiles          AvatarProfile[]       @relation("AvatarVoiceProviderConfig")
+  characterVoiceProfiles CharacterProfile[]    @relation("CharacterVoiceProviderConfig")
+  avatarGenerationJobs   AvatarGenerationJob[]
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
 
   @@index([userId])
   @@index([type])
@@ -255,26 +328,27 @@ model ProviderConfig {
 }
 
 model AvatarProfile {
-  id               String                @id @default(cuid())
-  userId           String
-  user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name             String
-  driver           AvatarDriver          @default(static)
-  providerConfigId String?
-  providerConfig   ProviderConfig?       @relation("AvatarProviderConfig", fields: [providerConfigId], references: [id], onDelete: SetNull)
-  voiceProviderId  String?
-  voiceProvider    ProviderConfig?       @relation("AvatarVoiceProviderConfig", fields: [voiceProviderId], references: [id], onDelete: SetNull)
-  assets           AvatarAsset[]
-  generationJobs   AvatarGenerationJob[]
-  voice            String?
-  language         String?
-  background       String?
-  previewImageUrl  String?
-  config           Json?
-  isDefault        Boolean               @default(false)
-  status           AvatarProfileStatus   @default(active)
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
+  id                   String                @id @default(cuid())
+  userId               String
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                 String
+  driver               AvatarDriver          @default(static)
+  providerConfigId     String?
+  providerConfig       ProviderConfig?       @relation("AvatarProviderConfig", fields: [providerConfigId], references: [id], onDelete: SetNull)
+  voiceProviderId      String?
+  voiceProvider        ProviderConfig?       @relation("AvatarVoiceProviderConfig", fields: [voiceProviderId], references: [id], onDelete: SetNull)
+  appearanceCharacters CharacterProfile[]    @relation("CharacterAppearanceProfile")
+  assets               AvatarAsset[]
+  generationJobs       AvatarGenerationJob[]
+  voice                String?
+  language             String?
+  background           String?
+  previewImageUrl      String?
+  config               Json?
+  isDefault            Boolean               @default(false)
+  status               AvatarProfileStatus   @default(active)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 
   @@index([userId])
   @@index([driver])
@@ -338,19 +412,21 @@ model AvatarGenerationJob {
 }
 
 model PromptTemplate {
-  id               String          @id @default(cuid())
-  userId           String
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type             PromptType
-  name             String
-  description      String?
-  currentVersionId String?         @unique
-  currentVersion   PromptVersion?  @relation("CurrentPromptVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
-  versions         PromptVersion[] @relation("PromptTemplateVersions")
-  variables        Json?
-  status           PromptStatus    @default(active)
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              PromptType
+  name              String
+  description       String?
+  currentVersionId  String?            @unique
+  currentVersion    PromptVersion?     @relation("CurrentPromptVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+  versions          PromptVersion[]    @relation("PromptTemplateVersions")
+  characterProfiles CharacterProfile[] @relation("CharacterPersonaPrompt")
+  characterScenes   CharacterScene[]   @relation("CharacterScenePrompt")
+  variables         Json?
+  status            PromptStatus       @default(active)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@unique([userId, type, name])
   @@index([userId])
@@ -386,4 +462,161 @@ model AppSetting {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, key])
+}
+
+model CharacterProfile {
+  id                  String                       @id @default(cuid())
+  userId              String
+  user                User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                String
+  roleType            CharacterRoleType            @default(custom)
+  description         String?
+  tags                Json?
+  personaPromptId     String?
+  personaPrompt       PromptTemplate?              @relation("CharacterPersonaPrompt", fields: [personaPromptId], references: [id], onDelete: SetNull)
+  appearanceProfileId String?
+  appearanceProfile   AvatarProfile?               @relation("CharacterAppearanceProfile", fields: [appearanceProfileId], references: [id], onDelete: SetNull)
+  voiceProviderId     String?
+  voiceProvider       ProviderConfig?              @relation("CharacterVoiceProviderConfig", fields: [voiceProviderId], references: [id], onDelete: SetNull)
+  voice               String?
+  language            String?
+  memoryPolicy        Json?
+  workflowPolicy      Json?
+  runtimeConfig       Json?
+  comfyWorkflowConfig Json?
+  status              CharacterStatus              @default(draft)
+  sceneBindings       CharacterSceneBinding[]
+  memories            CharacterMemory[]
+  workflows           CharacterWorkflow[]
+  workflowExecutions  CharacterWorkflowExecution[]
+  conversations       Conversation[]
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
+
+  @@index([userId])
+  @@index([roleType])
+  @@index([status])
+  @@index([appearanceProfileId])
+  @@index([personaPromptId])
+  @@index([voiceProviderId])
+}
+
+model CharacterScene {
+  id               String                  @id @default(cuid())
+  userId           String
+  user             User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  type             CharacterSceneType      @default(custom)
+  description      String?
+  promptTemplateId String?
+  promptTemplate   PromptTemplate?         @relation("CharacterScenePrompt", fields: [promptTemplateId], references: [id], onDelete: SetNull)
+  knowledgeBaseId  String?
+  knowledgeBase    KnowledgeBase?          @relation(fields: [knowledgeBaseId], references: [id], onDelete: SetNull)
+  inputMode        String                  @default("text")
+  outputMode       String                  @default("text")
+  workflowPolicy   Json?
+  status           CharacterSceneStatus    @default(active)
+  bindings         CharacterSceneBinding[]
+  conversations    Conversation[]
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([promptTemplateId])
+  @@index([knowledgeBaseId])
+}
+
+model CharacterSceneBinding {
+  id          String           @id @default(cuid())
+  characterId String
+  character   CharacterProfile @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  sceneId     String
+  scene       CharacterScene   @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  isDefault   Boolean          @default(false)
+  enabled     Boolean          @default(true)
+  config      Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([characterId, sceneId])
+  @@index([characterId])
+  @@index([sceneId])
+  @@index([isDefault])
+  @@index([enabled])
+}
+
+model CharacterMemory {
+  id                   String                @id @default(cuid())
+  userId               String
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  characterId          String
+  character            CharacterProfile      @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  type                 CharacterMemoryType
+  content              String
+  source               String
+  sourceConversationId String?
+  sourceConversation   Conversation?         @relation(fields: [sourceConversationId], references: [id], onDelete: SetNull)
+  confidence           Float?
+  status               CharacterMemoryStatus @default(active)
+  metadata             Json?
+  expiresAt            DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  @@index([userId])
+  @@index([characterId])
+  @@index([type])
+  @@index([status])
+  @@index([sourceConversationId])
+  @@index([expiresAt])
+}
+
+model CharacterWorkflow {
+  id          String                       @id @default(cuid())
+  userId      String
+  user        User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  characterId String
+  character   CharacterProfile             @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  trigger     Json?
+  steps       Json
+  permission  Json?
+  status      CharacterWorkflowStatus      @default(active)
+  executions  CharacterWorkflowExecution[]
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+
+  @@index([userId])
+  @@index([characterId])
+  @@index([status])
+}
+
+model CharacterWorkflowExecution {
+  id                   String                           @id @default(cuid())
+  userId               String
+  user                 User                             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workflowId           String
+  workflow             CharacterWorkflow                @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  characterId          String
+  character            CharacterProfile                 @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  conversationId       String?
+  conversation         Conversation?                    @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  status               CharacterWorkflowExecutionStatus @default(pending)
+  input                Json?
+  output               Json?
+  errorMessage         String?
+  requiresConfirmation Boolean                          @default(false)
+  startedAt            DateTime?
+  completedAt          DateTime?
+  createdAt            DateTime                         @default(now())
+  updatedAt            DateTime                         @updatedAt
+
+  @@index([userId])
+  @@index([workflowId])
+  @@index([characterId])
+  @@index([conversationId])
+  @@index([status])
 }
