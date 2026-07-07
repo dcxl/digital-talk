@@ -11,10 +11,12 @@ import { getPrismaClient } from "@/services/database/prisma";
 export const DEFAULT_USER_ID = "default-user";
 
 export interface CreateConversationInput {
+  characterId?: string;
   knowledgeBaseId?: string;
   message: string;
   messageMetadata?: Prisma.InputJsonValue;
   modelProviderId?: string;
+  sceneId?: string;
 }
 
 export interface ListConversationsInput {
@@ -129,9 +131,11 @@ export async function createConversationWithUserMessage(
 
   return prisma.conversation.create({
     data: {
+      characterId: input.characterId,
       knowledgeBaseId: input.knowledgeBaseId,
       lastMessageAt: now,
       modelProviderId: input.modelProviderId,
+      sceneId: input.sceneId,
       title: createConversationTitle(input.message),
       userId: user.id,
       messages: {

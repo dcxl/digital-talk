@@ -251,11 +251,51 @@ export type CharacterRoleType =
   | "knowledge_assistant";
 
 export type CharacterStatus = "active" | "deleted" | "disabled" | "draft";
+export type CharacterSceneType = CharacterRoleType;
+export type CharacterSceneStatus = "active" | "deleted" | "disabled";
 
 export interface CharacterSceneSummary {
   id: string;
   name: string;
-  type: string;
+  type: CharacterSceneType;
+}
+
+export interface CharacterSceneItem {
+  counts: {
+    bindings: number;
+    conversations: number;
+  };
+  createdAt: string;
+  description?: string | null;
+  id: string;
+  inputMode: string;
+  knowledgeBase?: {
+    id: string;
+    name: string;
+    status: string;
+  } | null;
+  knowledgeBaseId?: string | null;
+  name: string;
+  outputMode: string;
+  promptTemplate?: {
+    id: string;
+    name: string;
+    status: string;
+    type: string;
+  } | null;
+  promptTemplateId?: string | null;
+  status: CharacterSceneStatus;
+  type: CharacterSceneType;
+  updatedAt: string;
+  workflowPolicy?: unknown;
+}
+
+export interface CharacterSceneFormState {
+  description: string;
+  inputMode: string;
+  name: string;
+  outputMode: string;
+  type: CharacterSceneType;
 }
 
 export interface CharacterSceneBindingItem {

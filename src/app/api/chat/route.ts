@@ -209,10 +209,12 @@ function buildAssistantMetadata(input: {
 }
 
 async function createPersistenceTurn(input: {
+  characterId?: string;
   conversationId?: string;
   knowledgeBaseId?: string;
   message: string;
   modelProviderId?: string;
+  sceneId?: string;
   userMessageId?: string;
 }): Promise<PersistedTurn> {
   if (!isDatabaseConfigured()) {
@@ -253,9 +255,11 @@ async function createPersistenceTurn(input: {
     }
 
     const conversation = await createConversationWithUserMessage({
+      characterId: input.characterId,
       knowledgeBaseId: input.knowledgeBaseId,
       message: input.message,
       modelProviderId: input.modelProviderId,
+      sceneId: input.sceneId,
     });
     const userMessage = conversation.messages[0];
     const assistantMessage = await appendMessage({
@@ -287,18 +291,23 @@ export async function POST(request: NextRequest) {
     enableTTS?: unknown;
     message?: unknown;
     conversationId?: unknown;
+    characterId?: unknown;
     knowledgeBaseId?: unknown;
     modelProviderId?: unknown;
+    sceneId?: unknown;
     userMessageId?: unknown;
   } | null;
   const message = typeof body?.message === "string" ? body.message.trim() : "";
   const enableTTS = body?.enableTTS !== false;
   const requestedConversationId =
     typeof body?.conversationId === "string" ? body.conversationId : undefined;
+  const characterId =
+    typeof body?.characterId === "string" ? body.characterId : undefined;
   const knowledgeBaseId =
     typeof body?.knowledgeBaseId === "string" ? body.knowledgeBaseId : undefined;
   const modelProviderId =
     typeof body?.modelProviderId === "string" ? body.modelProviderId : undefined;
+  const sceneId = typeof body?.sceneId === "string" ? body.sceneId : undefined;
   const userMessageId =
     typeof body?.userMessageId === "string" ? body.userMessageId : undefined;
 
@@ -317,10 +326,12 @@ export async function POST(request: NextRequest) {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const turn = await createPersistenceTurn({
+        characterId,
         conversationId: requestedConversationId,
         knowledgeBaseId,
         message,
         modelProviderId,
+        sceneId,
         userMessageId,
       });
       const assistantId = turn.assistantMessageId;

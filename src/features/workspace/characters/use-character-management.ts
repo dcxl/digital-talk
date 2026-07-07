@@ -1,16 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  bindCharacterSceneRequest,
+  createSceneRequest,
   deleteCharacterRequest,
   readAvatarProfiles,
   readCharacters,
   readProviders,
+  readScenes,
   saveCharacterRequest,
+  unbindCharacterSceneRequest,
 } from "../lib/api";
 import type {
   AsyncStatus,
   AvatarProfileItem,
   CharacterFormState,
   CharacterItem,
+  CharacterSceneFormState,
+  CharacterSceneItem,
   ProviderItem,
 } from "../types";
 import { createBlankCharacterForm } from "./constants";
@@ -53,6 +59,7 @@ export function useCharacterManagement() {
     createBlankCharacterForm(),
   );
   const [providers, setProviders] = useState<ProviderItem[]>([]);
+  const [scenes, setScenes] = useState<CharacterSceneItem[]>([]);
   const [selectedCharacterId, setSelectedCharacterId] = useState("");
   const [status, setStatus] = useState<AsyncStatus>("idle");
   const [statusText, setStatusText] = useState("");
@@ -75,17 +82,19 @@ export function useCharacterManagement() {
     setStatus("loading");
 
     try {
-      const [nextCharacters, nextAppearances, nextProviders] =
+      const [nextCharacters, nextAppearances, nextProviders, nextScenes] =
         await Promise.all([
           readCharacters(),
           readAvatarProfiles(),
           readProviders(),
+          readScenes(),
         ]);
       const selected = selectCharacter(nextCharacters, preferredId);
 
       setCharacters(nextCharacters);
       setAppearanceProfiles(nextAppearances);
       setProviders(nextProviders);
+      setScenes(nextScenes);
       setSelectedCharacterId(selected?.id ?? "");
       setForm(selected ? toCharacterForm(selected) : createBlankCharacterForm());
       setStatus("success");
@@ -144,6 +153,63 @@ export function useCharacterManagement() {
     }
   }
 
+  async function createScene(input: CharacterSceneFormState) {
+    setStatus("loading");
+
+    try {
+      const scene = await createSceneRequest(input);
+      setStatus("success");
+      setStatusText("场景已创建");
+      await loadCharacterWorkspace(selectedCharacterId || form.id || "");
+      return scene;
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "场景创建失败");
+      return null;
+    }
+  }
+
+  async function bindScene(sceneId: string, isDefault = false) {
+    const characterId = selectedCharacterId || form.id;
+    if (!characterId) return;
+
+    setStatus("loading");
+
+    try {
+      await bindCharacterSceneRequest({
+        characterId,
+        isDefault,
+        sceneId,
+      });
+      setStatus("success");
+      setStatusText(isDefault ? "默认场景已更新" : "场景已绑定");
+      await loadCharacterWorkspace(characterId);
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "场景绑定失败");
+    }
+  }
+
+  async function unbindScene(sceneId: string) {
+    const characterId = selectedCharacterId || form.id;
+    if (!characterId) return;
+
+    setStatus("loading");
+
+    try {
+      await unbindCharacterSceneRequest({
+        characterId,
+        sceneId,
+      });
+      setStatus("success");
+      setStatusText("场景绑定已解除");
+      await loadCharacterWorkspace(characterId);
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "解除绑定失败");
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -158,17 +224,21 @@ export function useCharacterManagement() {
 
   return {
     appearanceProfiles,
+    bindScene,
     characters,
+    createScene,
     deleteCharacter,
     form,
     isBusy,
     loadCharacterWorkspace,
     saveCharacter,
+    scenes,
     selectCharacter: selectCharacterProfile,
     selectedCharacter,
     selectedCharacterId,
     startCreateCharacter,
     statusText,
+    unbindScene,
     updateForm,
     voiceProviders,
   };

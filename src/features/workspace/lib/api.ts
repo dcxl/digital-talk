@@ -6,6 +6,8 @@ import type {
   AvatarProfileItem,
   CharacterFormState,
   CharacterItem,
+  CharacterSceneFormState,
+  CharacterSceneItem,
   ConversationItem,
   DashboardSummary,
   GeneralSettingsState,
@@ -676,6 +678,97 @@ export async function deleteCharacterRequest(characterId: string) {
   }
 
   return payload.data.character;
+}
+
+function getScenePayload(input: CharacterSceneFormState) {
+  return {
+    description: input.description.trim() || null,
+    inputMode: input.inputMode.trim() || "text",
+    name: input.name.trim(),
+    outputMode: input.outputMode.trim() || "text",
+    type: input.type,
+  };
+}
+
+export async function readScenes() {
+  const payload =
+    await fetchJson<{ data?: { items?: CharacterSceneItem[] } }>("/api/scenes");
+  return payload?.data?.items ?? [];
+}
+
+export async function createSceneRequest(input: CharacterSceneFormState) {
+  const response = await fetch("/api/scenes", {
+    body: JSON.stringify(getScenePayload(input)),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      scene?: CharacterSceneItem;
+    };
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok || !payload.data?.scene) {
+    throw new Error(getApiErrorMessage(payload, "创建场景失败"));
+  }
+
+  return payload.data.scene;
+}
+
+export async function bindCharacterSceneRequest(input: {
+  characterId: string;
+  enabled?: boolean;
+  isDefault?: boolean;
+  sceneId: string;
+}) {
+  const response = await fetch(
+    `/api/characters/${input.characterId}/scenes/${input.sceneId}/bind`,
+    {
+      body: JSON.stringify({
+        enabled: input.enabled ?? true,
+        isDefault: input.isDefault ?? false,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    },
+  );
+  const payload = (await response.json()) as {
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(payload, "绑定场景失败"));
+  }
+}
+
+export async function unbindCharacterSceneRequest(input: {
+  characterId: string;
+  sceneId: string;
+}) {
+  const response = await fetch(
+    `/api/characters/${input.characterId}/scenes/${input.sceneId}/bind`,
+    {
+      method: "DELETE",
+    },
+  );
+  const payload = (await response.json().catch(() => ({}))) as {
+    error?: {
+      message?: string;
+    };
+  };
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(payload, "解除场景绑定失败"));
+  }
 }
 
 export async function updateAvatarAssetRequest(

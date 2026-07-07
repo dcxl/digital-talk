@@ -14,17 +14,21 @@ import { useCharacterManagement } from "../characters/use-character-management";
 export function CharactersPage() {
   const {
     appearanceProfiles,
+    bindScene,
     characters,
+    createScene,
     deleteCharacter,
     form,
     isBusy,
     loadCharacterWorkspace,
     saveCharacter,
+    scenes,
     selectCharacter,
     selectedCharacter,
     selectedCharacterId,
     startCreateCharacter,
     statusText,
+    unbindScene,
     updateForm,
     voiceProviders,
   } = useCharacterManagement();
@@ -72,7 +76,15 @@ export function CharactersPage() {
               voiceProviders={voiceProviders}
             />
           </div>
-          <CharacterScenePanel character={selectedCharacter} />
+          <CharacterScenePanel
+            character={selectedCharacter}
+            isBusy={isBusy}
+            onBindScene={(sceneId) => void bindScene(sceneId)}
+            onCreateScene={(input) => void createScene(input)}
+            onSetDefaultScene={(sceneId) => void bindScene(sceneId, true)}
+            onUnbindScene={(sceneId) => void unbindScene(sceneId)}
+            scenes={scenes}
+          />
           <CharacterMemoryPanel character={selectedCharacter} />
           <div className="2xl:col-span-2">
             <CharacterWorkflowPanel character={selectedCharacter} />

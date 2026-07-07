@@ -1,4 +1,9 @@
-import type { CharacterFormState, CharacterRoleType } from "../types";
+import type {
+  CharacterFormState,
+  CharacterRoleType,
+  CharacterSceneFormState,
+  CharacterSceneType,
+} from "../types";
 
 export const characterRoleOptions: Array<{
   label: string;
@@ -22,6 +27,21 @@ export const characterStatusLabels = {
   draft: "草稿",
 } as const;
 
+export const characterSceneTypeOptions: Array<{
+  label: string;
+  value: CharacterSceneType;
+}> = [
+  { label: "知识库助手", value: "knowledge_assistant" },
+  { label: "主播场景", value: "host" },
+  { label: "闲聊陪伴", value: "chat_companion" },
+  { label: "业务助手", value: "business_assistant" },
+  { label: "自定义", value: "custom" },
+];
+
+export const characterSceneTypeLabels = Object.fromEntries(
+  characterSceneTypeOptions.map((option) => [option.value, option.label]),
+) as Record<CharacterSceneType, string>;
+
 export function createBlankCharacterForm(): CharacterFormState {
   return {
     appearanceProfileId: "",
@@ -33,5 +53,15 @@ export function createBlankCharacterForm(): CharacterFormState {
     tagsText: "",
     voice: "",
     voiceProviderId: "",
+  };
+}
+
+export function createBlankCharacterSceneForm(): CharacterSceneFormState {
+  return {
+    description: "",
+    inputMode: "text",
+    name: "新场景",
+    outputMode: "text",
+    type: "custom",
   };
 }
