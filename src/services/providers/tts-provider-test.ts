@@ -51,6 +51,7 @@ async function createTestProvider(
 
     return createBailianCosyVoiceTTSProvider({
       apiKey: input.apiKey,
+      cache: false,
       defaultFormat: input.format ?? "mp3",
       endpoint: input.baseUrl,
       model: input.model,

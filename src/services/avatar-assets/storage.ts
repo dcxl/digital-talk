@@ -26,11 +26,27 @@ const extensionByMimeType: Record<string, string> = {
   "image/webp": "webp",
 };
 
-function getStorageRoot() {
-  return (
-    process.env.AVATAR_ASSET_STORAGE_DIR ||
-    path.join(/*turbopackIgnore: true*/ process.cwd(), "storage", "avatar-assets")
+function resolveStoragePath(storageKey: string) {
+  const normalizedRoot = path.resolve(
+    process.cwd(),
+    "storage",
+    "avatar-assets",
   );
+  const normalizedFile = path.resolve(
+    process.cwd(),
+    "storage",
+    "avatar-assets",
+    storageKey,
+  );
+
+  if (
+    normalizedFile !== normalizedRoot &&
+    !normalizedFile.startsWith(`${normalizedRoot}${path.sep}`)
+  ) {
+    throw new Error("Invalid storage key");
+  }
+
+  return normalizedFile;
 }
 
 function getExtension(input: StoreAvatarAssetInput) {
@@ -51,16 +67,7 @@ function toBuffer(bytes: StoreAvatarAssetInput["bytes"]) {
 
 class LocalAvatarAssetStorage implements AvatarAssetStorage {
   async get(storageKey: string) {
-    const root = getStorageRoot();
-    const filePath = path.join(root, storageKey);
-    const normalizedRoot = path.resolve(root);
-    const normalizedFile = path.resolve(filePath);
-
-    if (!normalizedFile.startsWith(normalizedRoot)) {
-      throw new Error("Invalid storage key");
-    }
-
-    return readFile(normalizedFile);
+    return readFile(resolveStoragePath(storageKey));
   }
 
   async put(input: StoreAvatarAssetInput) {
@@ -68,7 +75,7 @@ class LocalAvatarAssetStorage implements AvatarAssetStorage {
     const date = new Date().toISOString().slice(0, 10);
     const extension = getExtension(input);
     const storageKey = `${input.userId}/${date}/${randomUUID()}.${extension}`;
-    const filePath = path.join(getStorageRoot(), storageKey);
+    const filePath = resolveStoragePath(storageKey);
 
     await mkdir(path.dirname(filePath), { recursive: true });
     await writeFile(filePath, buffer);

@@ -98,13 +98,13 @@ DEFAULT_TTS_VOICE=
 DEFAULT_TTS_FORMAT=mp3
 DEFAULT_TTS_SAMPLE_RATE=24000
 TTS_CACHE_ENABLED=true
-TTS_CACHE_DIR=
 ```
 
 缓存策略：
 
 - 开发阶段默认开启 TTS cache。
 - 同一段文本、voice、model 命中缓存时不重复调用 TTS。
+- 缓存固定写入 `storage/tts-cache`，不再通过 env 覆盖目录，避免 Next build 文件追踪范围扩大。
 
 ## 7. ASR
 
@@ -175,4 +175,3 @@ npm run build
 ```bash
 npx prisma migrate dev
 ```
-

@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
 
 export interface TTSCacheKeyInput {
   format: "mp3" | "wav";
@@ -29,10 +28,11 @@ function isCacheEnabled() {
 }
 
 function getCacheRoot() {
-  return (
-    process.env.TTS_CACHE_DIR ||
-    path.join(/*turbopackIgnore: true*/ process.cwd(), "storage", "tts-cache")
-  );
+  if (process.env.NODE_ENV === "test" && process.env.TTS_CACHE_DIR) {
+    return process.env.TTS_CACHE_DIR.replace(/\/+$/, "");
+  }
+
+  return `${process.cwd()}/storage/tts-cache`;
 }
 
 export function createTTSCacheKey(input: TTSCacheKeyInput) {
@@ -54,20 +54,15 @@ function getCachePaths(key: string, format: "mp3" | "wav") {
   if (!/^[a-f0-9]{64}$/.test(key)) throw new Error("Invalid TTS cache key");
 
   const root = getCacheRoot();
-  const audioPath = path.join(root, `${key}.${format}`);
-  const metadataPath = path.join(root, `${key}.json`);
-  const normalizedRoot = path.resolve(root);
-
-  for (const filePath of [audioPath, metadataPath]) {
-    if (!path.resolve(filePath).startsWith(normalizedRoot)) {
-      throw new Error("Invalid TTS cache path");
-    }
-  }
 
   return {
-    audioPath,
-    metadataPath,
+    audioPath: `${root}/${key}.${format}`,
+    metadataPath: `${root}/${key}.json`,
   };
+}
+
+function getParentDirectory(filePath: string) {
+  return filePath.slice(0, filePath.lastIndexOf("/")) || ".";
 }
 
 export async function readTTSCache(
@@ -111,7 +106,7 @@ export async function writeTTSCache(
     mimeType: input.mimeType,
   };
 
-  await mkdir(path.dirname(paths.audioPath), { recursive: true });
+  await mkdir(getParentDirectory(paths.audioPath), { recursive: true });
   await Promise.all([
     writeFile(paths.audioPath, input.audio),
     writeFile(paths.metadataPath, JSON.stringify(metadata, null, 2)),

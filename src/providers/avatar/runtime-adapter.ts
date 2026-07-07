@@ -8,10 +8,6 @@ import {
   normalizeAvatarRuntimeMotionMap,
   resolveAvatarMotionDirective,
 } from "@/core/avatar-runtime/motion-map";
-import {
-  getDefaultLive2DPackage,
-  validateLive2DPackage,
-} from "@/services/avatar-runtime/live2d-manifest";
 
 const adapters: Record<
   AvatarRuntimeDriver,
@@ -24,8 +20,8 @@ const adapters: Record<
   }
 > = {
   live2d: {
-    adapterId: "live2d-placeholder",
-    adapterName: "Live2D 占位运行时",
+    adapterId: "static-compat-runtime",
+    adapterName: "静态兼容运行时",
     capabilities: {
       expressions: false,
       image: true,
@@ -35,7 +31,7 @@ const adapters: Record<
       vrm: false,
     },
     fallbackDriver: "static",
-    status: "placeholder",
+    status: "degraded",
   },
   static: {
     adapterId: "static-avatar-runtime",
@@ -51,8 +47,8 @@ const adapters: Record<
     status: "ready",
   },
   vrm: {
-    adapterId: "vrm-placeholder",
-    adapterName: "VRM 占位运行时",
+    adapterId: "static-compat-runtime",
+    adapterName: "静态兼容运行时",
     capabilities: {
       expressions: false,
       image: true,
@@ -62,7 +58,7 @@ const adapters: Record<
       vrm: false,
     },
     fallbackDriver: "static",
-    status: "placeholder",
+    status: "degraded",
   },
 };
 
@@ -77,51 +73,12 @@ function getMouthOpen(input: AvatarRuntimeInput) {
   return Math.max(0, Math.min(1, input.mouthOpen));
 }
 
-function getLive2DRuntime(input: AvatarRuntimeInput) {
-  const manifest = input.assetPackageId
-    ? validateLive2DPackage({ packageId: input.assetPackageId })
-    : getDefaultLive2DPackage();
-
-  if (!manifest) return null;
-
-  return {
-    adapterId: "live2d-runtime",
-    adapterName: "Live2D 数字人运行时",
-    asset: {
-      entrypoint: manifest.entrypoint.url,
-      files: manifest.files.map((file) => ({
-        mimeType: file.mimeType,
-        path: file.path,
-        url: file.url,
-      })),
-      id: manifest.packageId,
-      manifestUrl: manifest.entrypoint.url,
-      type: "live2d" as const,
-    },
-    capabilities: {
-      expressions: manifest.expressions.length > 0,
-      image: true,
-      live2d: manifest.valid,
-      motions: manifest.motions.length > 0,
-      viseme: true,
-      vrm: false,
-    },
-    diagnostics: {
-      errors: manifest.errors,
-      warnings: manifest.warnings,
-    },
-    fallbackDriver: manifest.valid ? undefined : ("static" as const),
-    status: manifest.valid ? ("ready" as const) : ("degraded" as const),
-  };
-}
-
 export function resolveAvatarRuntime(
   input: AvatarRuntimeInput,
 ): AvatarRuntimeResult {
   const startedAt = performance.now();
   const driver = normalizeDriver(input.driver);
-  const adapter = driver === "live2d" ? getLive2DRuntime(input) : null;
-  const resolvedAdapter = adapter ?? adapters[driver];
+  const resolvedAdapter = adapters[driver];
   const motionMap = normalizeAvatarRuntimeMotionMap(input.motionMap);
 
   return {

@@ -1,4 +1,4 @@
-import { Bot, Box, BrainCircuit, Layers3, Play } from "lucide-react";
+import { Bot, BrainCircuit, Play } from "lucide-react";
 import { AvatarRuntimeStage } from "@/features/avatar-runtime/components/avatar-runtime-stage";
 import type { RuntimeState } from "@/core/runtime/events";
 import type {
@@ -35,8 +35,6 @@ export function AvatarPreviewStage({
   preview,
 }: AvatarPreviewStageProps) {
   const state = preview?.state ?? "idle";
-  const isPlaceholderDriver = form.driver === "live2d" || form.driver === "vrm";
-  const PlaceholderIcon = form.driver === "vrm" ? Box : Layers3;
   const driverLabel = avatarDriverLabels[form.driver];
   const runtimeState = state as RuntimeState;
   const previewMouthOpen = state === "speaking" ? 0.7 : 0;
@@ -84,11 +82,6 @@ export function AvatarPreviewStage({
                   className="size-44 rounded-full object-cover"
                   src={form.previewImageUrl}
                 />
-              ) : isPlaceholderDriver ? (
-                <div className="flex size-40 flex-col items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
-                  <PlaceholderIcon size={64} />
-                  <span className="mt-2 text-xs font-medium">{driverLabel}</span>
-                </div>
               ) : (
                 <div className="flex size-40 items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl">
                   {state === "thinking" ? (

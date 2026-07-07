@@ -6,14 +6,12 @@ export const avatarDriverOptions: Array<{
   value: AvatarDriver;
 }> = [
   { label: "静态", value: "static" },
-  { disabled: true, label: "Live2D（历史兼容）", value: "live2d" },
-  { disabled: true, label: "VRM（历史兼容）", value: "vrm" },
 ];
 
 export const avatarDriverLabels: Record<AvatarDriver, string> = {
-  live2d: "Live2D（历史兼容）",
+  live2d: "静态兼容",
   static: "静态",
-  vrm: "VRM（历史兼容）",
+  vrm: "静态兼容",
 };
 
 export const avatarBackgroundOptions = [

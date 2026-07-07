@@ -42,7 +42,6 @@ export async function GET(
   const provider = getAvatarProvider();
   const runtimeConfig = getAvatarRuntimeProfileConfig(profile.config);
   const runtime = await provider.getRuntime({
-    assetPackageId: runtimeConfig.assetPackageId,
     driver: profile.driver as AvatarRuntimeDriver,
     motionMap: runtimeConfig.motionMap,
     reason: "runtime",

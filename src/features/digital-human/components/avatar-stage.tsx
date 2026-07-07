@@ -23,8 +23,7 @@ export function AvatarStage({
   state,
   volume = 0,
 }: AvatarStageProps) {
-  const driverLabel =
-    driver === "live2d" ? "Live2D" : driver === "vrm" ? "VRM" : "静态";
+  const driverLabel = driver === "static" ? "静态" : "静态兼容";
 
   return (
     <section className="min-h-[520px] rounded-lg border border-slate-200 bg-white p-4 shadow-sm">

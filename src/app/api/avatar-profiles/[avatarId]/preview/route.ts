@@ -71,7 +71,6 @@ export async function POST(
   });
   const runtimeConfig = getAvatarRuntimeProfileConfig(profile.config);
   const runtime = await provider.getRuntime({
-    assetPackageId: runtimeConfig.assetPackageId,
     driver: profile.driver as AvatarRuntimeDriver,
     motionMap: runtimeConfig.motionMap,
     state,

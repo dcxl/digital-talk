@@ -5,13 +5,17 @@ import type {
   TTSChunk,
   TTSInput,
 } from "@/core/providers/types";
-import { readTTSCache, writeTTSCache } from "@/services/tts-cache/storage";
+import type {
+  TTSCacheEntry,
+  TTSCacheKeyInput,
+} from "@/services/tts-cache/storage";
 
 const DEFAULT_ENDPOINT = "wss://dashscope.aliyuncs.com/api-ws/v1/inference";
 const DEFAULT_SAMPLE_RATE = 22050;
 
 export interface BailianCosyVoiceTTSProviderOptions {
   apiKey: string;
+  cache?: boolean;
   defaultFormat?: "mp3" | "wav";
   endpoint?: string;
   model: string;
@@ -52,6 +56,16 @@ interface BuildTaskInput {
 
 function getEndpoint(endpoint?: string) {
   return endpoint?.trim() || DEFAULT_ENDPOINT;
+}
+
+async function readCachedAudio(input: TTSCacheKeyInput) {
+  const { readTTSCache } = await import("@/services/tts-cache/storage");
+  return readTTSCache(input);
+}
+
+async function writeCachedAudio(input: TTSCacheKeyInput & TTSCacheEntry) {
+  const { writeTTSCache } = await import("@/services/tts-cache/storage");
+  return writeTTSCache(input);
 }
 
 function getMimeType(format: "mp3" | "wav") {
@@ -359,7 +373,8 @@ export function createBailianCosyVoiceTTSProvider(
         text: input.text,
         voice,
       };
-      const cached = await readTTSCache(cacheKey);
+      const cached =
+        options.cache === false ? null : await readCachedAudio(cacheKey);
       if (cached) {
         return {
           audioUrl: `data:${cached.mimeType};base64,${cached.audio.toString("base64")}`,
@@ -382,12 +397,14 @@ export function createBailianCosyVoiceTTSProvider(
       const mimeType = getMimeType(format);
       const durationMs = estimateDurationMs(input.text);
 
-      await writeTTSCache({
-        ...cacheKey,
-        audio,
-        durationMs,
-        mimeType,
-      }).catch(() => undefined);
+      if (options.cache !== false) {
+        await writeCachedAudio({
+          ...cacheKey,
+          audio,
+          durationMs,
+          mimeType,
+        }).catch(() => undefined);
+      }
 
       return {
         audioUrl: `data:${mimeType};base64,${audio.toString("base64")}`,
@@ -413,7 +430,8 @@ export function createBailianCosyVoiceTTSProvider(
         voice,
       };
       const mimeType = getMimeType(format);
-      const cached = await readTTSCache(cacheKey);
+      const cached =
+        options.cache === false ? null : await readCachedAudio(cacheKey);
       if (cached) {
         yield createChunk({
           audio: cached.audio,
@@ -449,12 +467,14 @@ export function createBailianCosyVoiceTTSProvider(
         throw new Error("CosyVoice returned empty audio");
       }
 
-      await writeTTSCache({
-        ...cacheKey,
-        audio: Buffer.concat(audioChunks),
-        durationMs: estimateDurationMs(input.text),
-        mimeType,
-      }).catch(() => undefined);
+      if (options.cache !== false) {
+        await writeCachedAudio({
+          ...cacheKey,
+          audio: Buffer.concat(audioChunks),
+          durationMs: estimateDurationMs(input.text),
+          mimeType,
+        }).catch(() => undefined);
+      }
     },
   };
 }

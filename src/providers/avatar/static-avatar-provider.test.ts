@@ -16,7 +16,7 @@ describe("static avatar runtime provider", () => {
     expect(runtime.motion.motionCandidates).toContain("Speaking");
   });
 
-  it("falls missing Live2D packages and VRM profiles back to static", async () => {
+  it("degrades retired drivers back to static", async () => {
     const live2d = await staticAvatarProvider.getRuntime({
       assetPackageId: "missing-package",
       driver: "live2d",
@@ -31,12 +31,12 @@ describe("static avatar runtime provider", () => {
     expect(live2d.loadLatencyMs).toBeGreaterThanOrEqual(0);
     expect(live2d.status).toBe("degraded");
     expect(vrm.fallbackDriver).toBe("static");
-    expect(vrm.status).toBe("placeholder");
+    expect(vrm.status).toBe("degraded");
   });
 
   it("applies profile motion map overrides", async () => {
     const runtime = await staticAvatarProvider.getRuntime({
-      driver: "live2d",
+      driver: "static",
       motionMap: {
         speaking: {
           expression: "qizi1",

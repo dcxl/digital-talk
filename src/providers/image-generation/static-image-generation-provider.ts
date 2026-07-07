@@ -1,45 +1,32 @@
-import { readFile, stat } from "node:fs/promises";
-import path from "node:path";
 import type {
   ImageGenerationInput,
   ImageGenerationProvider,
 } from "@/core/providers/types";
 
 const defaultImagePath = "marketing/beautiful_girl.png";
+const placeholderPng = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/luzx5wAAAABJRU5ErkJggg==",
+  "base64",
+);
 
 export interface StaticImageGenerationProviderOptions {
   imagePath?: string;
   name?: string;
 }
 
-function getPublicRoot() {
-  return path.join(/*turbopackIgnore: true*/ process.cwd(), "public");
-}
-
 function resolvePublicImagePath(imagePath?: string) {
-  const publicRoot = getPublicRoot();
   const relativePath = (imagePath || defaultImagePath).replace(/^\/+/, "");
-  const filePath = path.resolve(publicRoot, relativePath);
-  const normalizedRoot = path.resolve(publicRoot);
+  const segments = relativePath.split("/").filter(Boolean);
 
   if (
-    filePath !== normalizedRoot &&
-    !filePath.startsWith(`${normalizedRoot}${path.sep}`)
+    segments.length === 0 ||
+    segments.some((segment) => segment === "." || segment === "..") ||
+    relativePath.includes("\\")
   ) {
     throw new Error("Invalid static image path");
   }
 
-  return {
-    filePath,
-    relativePath,
-  };
-}
-
-function getMimeType(filePath: string) {
-  const extension = path.extname(filePath).toLowerCase();
-  if (extension === ".jpg" || extension === ".jpeg") return "image/jpeg";
-  if (extension === ".webp") return "image/webp";
-  return "image/png";
+  return segments.join("/");
 }
 
 export function createStaticImageGenerationProvider(
@@ -52,24 +39,18 @@ export function createStaticImageGenerationProvider(
     health: "ready",
 
     async generate(input: ImageGenerationInput) {
-      const { filePath, relativePath } = resolvePublicImagePath(
-        options.imagePath,
-      );
-      const [imageBytes, fileStat] = await Promise.all([
-        readFile(filePath),
-        stat(filePath),
-      ]);
+      const relativePath = resolvePublicImagePath(options.imagePath);
 
       return {
-        imageBytes,
+        imageBytes: placeholderPng,
         metadata: {
           prompt: input.prompt,
-          source: "static-public-image",
+          source: "static-placeholder-image",
           sourcePath: `/${relativePath}`,
-          size: fileStat.size,
+          size: placeholderPng.byteLength,
           style: input.style,
         },
-        mimeType: getMimeType(filePath),
+        mimeType: "image/png",
       };
     },
   };

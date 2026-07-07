@@ -14,7 +14,7 @@ import { isDatabaseConfigured } from "@/services/database/prisma";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const assetTypes = new Set<AvatarAssetType>(["image", "live2d", "vrm"]);
+const assetTypes = new Set<AvatarAssetType>(["image"]);
 const assetSources = new Set<AvatarAssetSource>([
   "upload",
   "generated",

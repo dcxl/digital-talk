@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createStaticImageGenerationProvider } from "./static-image-generation-provider";
 
 describe("createStaticImageGenerationProvider", () => {
-  it("returns bytes from a public image without external provider cost", async () => {
+  it("returns placeholder bytes without external provider cost", async () => {
     const provider = createStaticImageGenerationProvider({
       imagePath: "marketing/digital-human.png",
     });
@@ -16,7 +16,7 @@ describe("createStaticImageGenerationProvider", () => {
     expect(result.mimeType).toBe("image/png");
     expect(result.metadata).toMatchObject({
       prompt: "生成一个数字人头像",
-      source: "static-public-image",
+      source: "static-placeholder-image",
       sourcePath: "/marketing/digital-human.png",
       style: "portrait",
     });

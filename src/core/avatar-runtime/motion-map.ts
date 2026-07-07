@@ -110,19 +110,12 @@ export function getAvatarRuntimeMotionMapFromConfig(config: unknown) {
 
   const record = config as Record<string, unknown>;
   const runtime = record.runtime;
-  const live2d = record.live2d;
   const runtimeMap =
     runtime && typeof runtime === "object"
       ? (runtime as Record<string, unknown>).motionMap
       : undefined;
-  const live2dMap =
-    live2d && typeof live2d === "object"
-      ? (live2d as Record<string, unknown>).motionMap
-      : undefined;
 
-  return normalizeAvatarRuntimeMotionMap(
-    runtimeMap ?? live2dMap ?? record.motionMap,
-  );
+  return normalizeAvatarRuntimeMotionMap(runtimeMap ?? record.motionMap);
 }
 
 function toCandidates(value: string | string[] | undefined) {
