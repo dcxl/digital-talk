@@ -24,6 +24,10 @@ AI Character Platform 是一个面向个人开发者的开源 AI 角色平台。
 - [16 AI Character Platform 产品重构](./16-ai-character-platform-redesign.md)
 - [17 AI Character Platform 产品理念与北极星](./17-product-philosophy-and-north-star.md)
 - [18 v0.5 Character Platform Core](./18-v0.5-character-platform-core.md)
+- [19 Character 数据模型与迁移设计](./19-character-data-model-and-migration.md)
+- [20 ComfyUI Provider 接入设计](./20-comfyui-provider-integration.md)
+- [21 Character Studio 页面级原型](./21-character-studio-page-prototype.md)
+- [22 Character Runtime、Memory 与 Workflow 规则](./22-character-runtime-memory-workflow.md)
 
 ## 当前设计原则
 
@@ -49,5 +53,6 @@ AI Character Platform 是一个面向个人开发者的开源 AI 角色平台。
 
 - 当前产品北极星：`17-product-philosophy-and-north-star.md`
 - 当前开发主线：`18-v0.5-character-platform-core.md`
+- v0.5 执行规格：`19` 到 `22`
 - `02` 到 `11` 为历史基线架构文档，可能保留 Avatar / 数字人术语；后续实现时以 Character 作为产品对象进行解释和迁移。
 - `12` 到 `15` 为历史运行时路线，保留用于追溯 TTS、ASR、Live2D、Realtime 设计。Live2D 不再作为后续主线；外观生成改为 ComfyUI Provider / Workflow。
