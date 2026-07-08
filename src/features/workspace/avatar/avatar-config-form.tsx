@@ -7,6 +7,7 @@ import {
   avatarLanguageOptions,
   avatarStatusLabels,
 } from "./constants";
+import { AvatarMotionConfigEditor } from "./avatar-motion-config-editor";
 
 interface AvatarConfigFormProps {
   avatarProviders: ProviderItem[];
@@ -180,6 +181,13 @@ export function AvatarConfigForm({
             value={form.previewImageUrl}
           />
         </label>
+
+        <div className="md:col-span-2">
+          <AvatarMotionConfigEditor
+            config={form.config}
+            onChange={(config) => onChange({ config })}
+          />
+        </div>
       </div>
 
       <div className="flex justify-end border-t border-slate-200 p-4">
