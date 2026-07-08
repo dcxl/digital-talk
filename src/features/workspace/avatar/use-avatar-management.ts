@@ -21,6 +21,7 @@ import type {
   ProviderItem,
 } from "../types";
 import { createBlankAvatarForm } from "./constants";
+import { upsertAvatarMotionAssetConfig } from "./motion-assets-config";
 
 function getAssetUrl(asset: AvatarAssetItem) {
   return asset.publicUrl || `/api/avatar-assets/${asset.id}/content`;
@@ -235,6 +236,53 @@ export function useAvatarManagement() {
     }
   }
 
+  async function bindAvatarMotionAsset(
+    asset: AvatarAssetItem,
+    state: "idle" | "speaking" | "thinking",
+  ) {
+    const assetUrl = getAssetUrl(asset);
+    const nextConfig = upsertAvatarMotionAssetConfig(form.config, {
+      id: asset.id,
+      kind: "image",
+      label: asset.name,
+      state,
+      url: assetUrl,
+    });
+    setStatus("loading");
+
+    try {
+      if (form.id) {
+        const [updatedAsset, updatedProfile] = await Promise.all([
+          updateAvatarAssetRequest(asset.id, {
+            profileId: form.id,
+          }),
+          saveAvatarProfileRequest({
+            ...form,
+            config: nextConfig,
+          }),
+        ]);
+
+        setAssets((current) =>
+          current.map((item) => (item.id === updatedAsset.id ? updatedAsset : item)),
+        );
+        setForm(toAvatarForm(updatedProfile));
+        setSelectedProfileId(updatedProfile.id);
+        setStatusText("表现资产已绑定");
+      } else {
+        setForm((current) => ({
+          ...current,
+          config: nextConfig,
+        }));
+        setStatusText("表现资产已选择，保存角色后生效");
+      }
+
+      setStatus("success");
+    } catch (error) {
+      setStatus("error");
+      setStatusText(error instanceof Error ? error.message : "表现资产绑定失败");
+    }
+  }
+
   async function uploadAvatarAsset(file: File) {
     setStatus("loading");
 
@@ -311,6 +359,7 @@ export function useAvatarManagement() {
     assets,
     avatarProviders,
     bindAvatarAsset,
+    bindAvatarMotionAsset,
     form,
     generateAvatarAsset,
     isBusy: status === "loading",

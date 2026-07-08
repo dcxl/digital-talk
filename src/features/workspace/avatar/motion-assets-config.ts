@@ -1,8 +1,10 @@
 import {
   getAvatarRuntimeMotionAssetsFromConfig,
   normalizeAvatarRuntimeMotionAssets,
+  type AvatarRuntimeMotionAssetKind,
   type AvatarRuntimeMotionAssetMap,
 } from "@/core/avatar-runtime/motion-assets";
+import type { RuntimeState } from "@/core/runtime/events";
 
 export const avatarMotionAssetsExample = JSON.stringify(
   {
@@ -81,6 +83,29 @@ function writeMotionAssets(
   return nextConfig;
 }
 
+export function upsertAvatarMotionAssetConfig(
+  config: unknown,
+  input: {
+    id?: string;
+    kind: AvatarRuntimeMotionAssetKind;
+    label?: string;
+    state: RuntimeState;
+    url: string;
+  },
+) {
+  const motionAssets = getAvatarRuntimeMotionAssetsFromConfig(config);
+
+  return writeMotionAssets(config, {
+    ...motionAssets,
+    [input.state]: {
+      ...(input.id ? { id: input.id } : {}),
+      kind: input.kind,
+      ...(input.label ? { label: input.label } : {}),
+      url: input.url,
+    },
+  });
+}
+
 export function getAvatarMotionAssetsEditorValue(config: unknown) {
   const motionAssets = getAvatarRuntimeMotionAssetsFromConfig(config);
 
@@ -128,4 +153,3 @@ export function parseAvatarMotionAssetsEditorValue(
     config: writeMotionAssets(config, motionAssets),
   };
 }
-

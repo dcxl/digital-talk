@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getAvatarMotionAssetsEditorValue,
   parseAvatarMotionAssetsEditorValue,
+  upsertAvatarMotionAssetConfig,
 } from "./motion-assets-config";
 
 describe("avatar motion assets config", () => {
@@ -123,5 +124,53 @@ describe("avatar motion assets config", () => {
       },
     });
   });
-});
 
+  it("upserts one state asset and preserves existing runtime config", () => {
+    const config = upsertAvatarMotionAssetConfig(
+      {
+        runtime: {
+          motionAssets: {
+            idle: {
+              kind: "image",
+              url: "/idle.png",
+            },
+          },
+          motionMap: {
+            speaking: {
+              expression: "happy",
+            },
+          },
+        },
+      },
+      {
+        id: "asset-1",
+        kind: "image",
+        label: "Speaking",
+        state: "speaking",
+        url: "/speaking.png",
+      },
+    );
+
+    expect(config).toEqual({
+      runtime: {
+        motionAssets: {
+          idle: {
+            kind: "image",
+            url: "/idle.png",
+          },
+          speaking: {
+            id: "asset-1",
+            kind: "image",
+            label: "Speaking",
+            url: "/speaking.png",
+          },
+        },
+        motionMap: {
+          speaking: {
+            expression: "happy",
+          },
+        },
+      },
+    });
+  });
+});

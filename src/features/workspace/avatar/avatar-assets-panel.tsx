@@ -1,4 +1,4 @@
-import { ImagePlus, Link2, Upload } from "lucide-react";
+import { Film, ImagePlus, Link2, Upload } from "lucide-react";
 import type { AvatarAssetItem } from "../types";
 import { avatarAssetSourceLabels } from "./constants";
 
@@ -6,6 +6,10 @@ interface AvatarAssetsPanelProps {
   assets: AvatarAssetItem[];
   isBusy: boolean;
   onBind: (asset: AvatarAssetItem) => void;
+  onBindMotionAsset: (
+    asset: AvatarAssetItem,
+    state: "idle" | "speaking" | "thinking",
+  ) => void;
   onUpload: (file: File) => void;
   selectedAssetUrl?: string;
 }
@@ -19,10 +23,17 @@ function formatSize(size: number) {
   return `${(size / 1024 / 1024).toFixed(1)} MB`;
 }
 
+const motionAssetStateOptions = [
+  { label: "待机", value: "idle" },
+  { label: "思考", value: "thinking" },
+  { label: "说话", value: "speaking" },
+] as const;
+
 export function AvatarAssetsPanel({
   assets,
   isBusy,
   onBind,
+  onBindMotionAsset,
   onUpload,
   selectedAssetUrl,
 }: AvatarAssetsPanelProps) {
@@ -96,6 +107,20 @@ export function AvatarAssetsPanel({
                 <Link2 size={14} />
                 {selected ? "已绑定" : "绑定"}
               </button>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {motionAssetStateOptions.map((option) => (
+                  <button
+                    className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-600 disabled:opacity-60"
+                    disabled={isBusy || asset.type !== "image"}
+                    key={option.value}
+                    onClick={() => onBindMotionAsset(asset, option.value)}
+                    type="button"
+                  >
+                    <Film size={13} />
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </article>
           );
         })}

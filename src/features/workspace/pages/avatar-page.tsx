@@ -13,6 +13,7 @@ export function AvatarPage() {
     assets,
     avatarProviders,
     bindAvatarAsset,
+    bindAvatarMotionAsset,
     form,
     generateAvatarAsset,
     isBusy,
@@ -80,6 +81,9 @@ export function AvatarPage() {
               assets={assets}
               isBusy={isBusy}
               onBind={(asset) => void bindAvatarAsset(asset)}
+              onBindMotionAsset={(asset, state) =>
+                void bindAvatarMotionAsset(asset, state)
+              }
               onUpload={(file) => void uploadAvatarAsset(file)}
               selectedAssetUrl={form.previewImageUrl}
             />
