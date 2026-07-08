@@ -7,6 +7,7 @@ import {
   avatarLanguageOptions,
   avatarStatusLabels,
 } from "./constants";
+import { AvatarMotionAssetsEditor } from "./avatar-motion-assets-editor";
 import { AvatarMotionConfigEditor } from "./avatar-motion-config-editor";
 
 interface AvatarConfigFormProps {
@@ -184,6 +185,13 @@ export function AvatarConfigForm({
 
         <div className="md:col-span-2">
           <AvatarMotionConfigEditor
+            config={form.config}
+            onChange={(config) => onChange({ config })}
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <AvatarMotionAssetsEditor
             config={form.config}
             onChange={(config) => onChange({ config })}
           />
