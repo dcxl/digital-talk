@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { resolveAvatarMotionRuntime } from "@/core/avatar-runtime/motion-runtime";
 import type { RuntimeState } from "@/core/runtime/events";
 import { useAvatarRuntime } from "../hooks/use-avatar-runtime";
 import type { AvatarRuntimeDriver } from "../types";
@@ -29,6 +30,16 @@ export function AvatarRuntimeStage({
   volume,
 }: AvatarRuntimeStageProps) {
   const { error, isLoading, runtime } = useAvatarRuntime(avatarId);
+  const motion = useMemo(
+    () =>
+      resolveAvatarMotionRuntime({
+        motion: runtime?.motion,
+        mouthOpen,
+        state,
+        volume,
+      }),
+    [mouthOpen, runtime?.motion, state, volume],
+  );
   const statusText = useMemo(() => {
     if (isLoading) return "运行时加载中";
     if (error) return error;
@@ -40,14 +51,15 @@ export function AvatarRuntimeStage({
     <div className="flex min-h-[410px] flex-col items-center justify-center gap-6">
       <div
         className={`relative flex size-56 items-center justify-center rounded-full border border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100 ${
-          state === "thinking" || state === "speaking" ? "avatar-ring" : ""
+          motion.ring ? "avatar-ring" : ""
         }`}
       >
         <StaticAvatarView
           avatarImageUrl={avatarImageUrl}
           avatarName={avatarName}
           driver={runtime?.fallbackDriver ?? driver}
-          mouthOpen={mouthOpen}
+          motion={motion}
+          mouthOpen={motion.mouthOpen}
           state={state}
           volume={volume}
         />
@@ -58,7 +70,7 @@ export function AvatarRuntimeStage({
           <span
             key={item}
             className={`w-2 rounded-full bg-slate-900 ${
-              state === "speaking" ? "speak-bar" : "h-3 opacity-25"
+              motion.isSpeaking ? "speak-bar" : "h-3 opacity-25"
             }`}
             style={{ animationDelay: `${item * 90}ms` }}
           />

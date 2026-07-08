@@ -46,6 +46,76 @@ textarea {
   }
 }
 
+@keyframes avatar-motion-breathe {
+  0%,
+  100% {
+    transform: translateY(var(--avatar-motion-translate-y))
+      rotate(var(--avatar-motion-rotate)) scale(var(--avatar-motion-scale));
+  }
+  50% {
+    transform: translateY(calc(var(--avatar-motion-translate-y) - 1.5px))
+      rotate(var(--avatar-motion-rotate))
+      scale(calc(var(--avatar-motion-scale) + 0.008));
+  }
+}
+
+@keyframes avatar-motion-float {
+  0%,
+  100% {
+    transform: translateY(var(--avatar-motion-translate-y))
+      rotate(var(--avatar-motion-rotate)) scale(var(--avatar-motion-scale));
+  }
+  50% {
+    transform: translateY(calc(var(--avatar-motion-translate-y) - 4px))
+      rotate(calc(var(--avatar-motion-rotate) + 0.8deg))
+      scale(calc(var(--avatar-motion-scale) + 0.012));
+  }
+}
+
+@keyframes avatar-motion-focus {
+  0%,
+  100% {
+    transform: translateY(var(--avatar-motion-translate-y))
+      rotate(var(--avatar-motion-rotate)) scale(var(--avatar-motion-scale));
+  }
+  50% {
+    transform: translateY(calc(var(--avatar-motion-translate-y) - 2px))
+      rotate(var(--avatar-motion-rotate))
+      scale(calc(var(--avatar-motion-scale) + 0.015));
+  }
+}
+
+@keyframes avatar-motion-speak {
+  0%,
+  100% {
+    transform: translateY(var(--avatar-motion-translate-y))
+      rotate(var(--avatar-motion-rotate)) scale(var(--avatar-motion-scale));
+  }
+  50% {
+    transform: translateY(calc(var(--avatar-motion-translate-y) - 2px))
+      rotate(var(--avatar-motion-rotate))
+      scale(calc(var(--avatar-motion-scale) + 0.018));
+  }
+}
+
+@keyframes avatar-motion-shake {
+  0%,
+  100% {
+    transform: translateY(var(--avatar-motion-translate-y))
+      rotate(var(--avatar-motion-rotate)) scale(var(--avatar-motion-scale));
+  }
+  25% {
+    transform: translate(-3px, var(--avatar-motion-translate-y))
+      rotate(calc(var(--avatar-motion-rotate) - 1deg))
+      scale(var(--avatar-motion-scale));
+  }
+  75% {
+    transform: translate(3px, var(--avatar-motion-translate-y))
+      rotate(calc(var(--avatar-motion-rotate) + 1deg))
+      scale(var(--avatar-motion-scale));
+  }
+}
+
 .avatar-ring::before,
 .avatar-ring::after {
   position: absolute;
@@ -64,3 +134,61 @@ textarea {
   animation: speak-bar 0.8s ease-in-out infinite;
 }
 
+.avatar-motion-root {
+  filter: saturate(var(--avatar-motion-saturate))
+    brightness(var(--avatar-motion-brightness));
+  transform: translateY(var(--avatar-motion-translate-y))
+    rotate(var(--avatar-motion-rotate)) scale(var(--avatar-motion-scale));
+  transition:
+    filter 180ms ease,
+    transform 180ms ease;
+  will-change: filter, transform;
+}
+
+.avatar-motion-root::after {
+  position: absolute;
+  inset: -10px;
+  z-index: 0;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(79, 70, 229, var(--avatar-motion-glow-opacity)) 0%,
+    rgba(79, 70, 229, 0) 64%
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.avatar-motion-root > * {
+  position: relative;
+  z-index: 1;
+}
+
+.avatar-motion-breathe {
+  animation: avatar-motion-breathe var(--avatar-motion-duration) ease-in-out
+    infinite;
+}
+
+.avatar-motion-float {
+  animation: avatar-motion-float var(--avatar-motion-duration) ease-in-out
+    infinite;
+}
+
+.avatar-motion-focus {
+  animation: avatar-motion-focus var(--avatar-motion-duration) ease-in-out
+    infinite;
+}
+
+.avatar-motion-speak {
+  animation: avatar-motion-speak var(--avatar-motion-duration) ease-in-out
+    infinite;
+}
+
+.avatar-motion-shake {
+  animation: avatar-motion-shake var(--avatar-motion-duration) ease-in-out 1;
+}
+
+.avatar-motion-error {
+  animation: avatar-motion-breathe var(--avatar-motion-duration) ease-in-out
+    infinite;
+}
