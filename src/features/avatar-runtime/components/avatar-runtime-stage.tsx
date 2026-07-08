@@ -34,11 +34,20 @@ export function AvatarRuntimeStage({
     () =>
       resolveAvatarMotionRuntime({
         motion: runtime?.motion,
+        motionAssets: runtime?.motionAssets,
+        motionMap: runtime?.motionMap,
         mouthOpen,
         state,
         volume,
       }),
-    [mouthOpen, runtime?.motion, state, volume],
+    [
+      mouthOpen,
+      runtime?.motion,
+      runtime?.motionAssets,
+      runtime?.motionMap,
+      state,
+      volume,
+    ],
   );
   const statusText = useMemo(() => {
     if (isLoading) return "运行时加载中";

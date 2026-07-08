@@ -3,6 +3,10 @@ import type {
   AvatarRuntimeMotionDirective,
   AvatarRuntimeMotionMap,
 } from "@/core/avatar-runtime/motion-map";
+import type {
+  AvatarRuntimeMotionAssetDirective,
+  AvatarRuntimeMotionAssetMap,
+} from "@/core/avatar-runtime/motion-assets";
 
 export type ProviderCapability =
   | "llm"
@@ -121,6 +125,7 @@ export interface AvatarRuntimeInput {
   assetPackageId?: string;
   driver?: AvatarRuntimeDriver;
   mouthOpen?: number;
+  motionAssets?: AvatarRuntimeMotionAssetMap;
   motionMap?: AvatarRuntimeMotionMap;
   reason?: string;
   state: RuntimeState;
@@ -160,6 +165,8 @@ export interface AvatarRuntimeResult {
     source: "audio-volume" | "none" | "speech-mark" | "viseme";
   };
   motion: AvatarRuntimeMotionDirective;
+  motionAsset?: AvatarRuntimeMotionAssetDirective;
+  motionAssets?: AvatarRuntimeMotionAssetMap;
   motionMap?: AvatarRuntimeMotionMap;
   reason?: string;
   status: "degraded" | "error" | "placeholder" | "ready";

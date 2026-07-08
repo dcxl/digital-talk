@@ -29,19 +29,35 @@ export function StaticAvatarView({
   const mouthWidth = 28 + visibleMouthOpen * 34;
   const volumeGlow = Math.min(0.58, volume * 1.8 + motion.intensity * 0.18);
   const motionStyle = motion.cssVars as CSSProperties;
+  const imageUrl =
+    motion.asset?.kind === "image" ? motion.asset.url : avatarImageUrl;
+  const videoAsset = motion.asset?.kind === "video" ? motion.asset : null;
 
-  if (avatarImageUrl) {
+  if (imageUrl || videoAsset) {
     return (
       <div
         className={`avatar-motion-root ${motion.animationClass} relative z-10 flex size-44 items-center justify-center`}
         style={motionStyle}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          alt={avatarName ?? "AI 角色"}
-          className="relative z-10 size-44 rounded-full object-cover shadow-2xl"
-          src={avatarImageUrl}
-        />
+        {videoAsset ? (
+          <video
+            aria-label={avatarName ?? "AI 角色"}
+            autoPlay
+            className="relative z-10 size-44 rounded-full object-cover shadow-2xl"
+            loop={videoAsset.loop ?? true}
+            muted
+            playsInline
+            poster={videoAsset.posterUrl}
+            src={videoAsset.url}
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            alt={avatarName ?? "AI 角色"}
+            className="relative z-10 size-44 rounded-full object-cover shadow-2xl"
+            src={imageUrl ?? undefined}
+          />
+        )}
         <span
           aria-hidden="true"
           className="absolute bottom-9 left-1/2 z-20 rounded-full bg-slate-950 shadow-lg transition-[height,opacity,width] duration-75"

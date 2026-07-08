@@ -55,5 +55,56 @@ describe("avatar motion runtime", () => {
     expect(motion.motion).toBe("slow-float");
     expect(motion.animationClass).toBe("avatar-motion-float");
   });
-});
 
+  it("ignores stale runtime motion and resolves by current state", () => {
+    const motion = resolveAvatarMotionRuntime({
+      motion: {
+        expression: "neutral",
+        expressionCandidates: ["neutral"],
+        motion: "idle",
+        motionCandidates: ["idle"],
+        source: "default",
+        state: "idle",
+      },
+      motionMap: {
+        speaking: {
+          expression: "happy",
+          motion: "talk-soft",
+        },
+      },
+      state: "speaking",
+    });
+
+    expect(motion.expression).toBe("happy");
+    expect(motion.motion).toBe("talk-soft");
+  });
+
+  it("selects motion asset for the current expression", () => {
+    const motion = resolveAvatarMotionRuntime({
+      motionMap: {
+        speaking: {
+          expression: "happy",
+          motion: "talk-soft",
+        },
+      },
+      motionAssets: {
+        speaking: [
+          {
+            expression: "neutral",
+            kind: "image",
+            url: "/neutral.png",
+          },
+          {
+            expression: "happy",
+            kind: "image",
+            url: "/happy.png",
+          },
+        ],
+      },
+      state: "speaking",
+    });
+
+    expect(motion.asset?.matchedBy).toBe("expression");
+    expect(motion.asset?.url).toBe("/happy.png");
+  });
+});

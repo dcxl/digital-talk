@@ -3,6 +3,10 @@ import type {
   AvatarRuntimeMotionDirective,
   AvatarRuntimeMotionMap,
 } from "@/core/avatar-runtime/motion-map";
+import type {
+  AvatarRuntimeMotionAssetDirective,
+  AvatarRuntimeMotionAssetMap,
+} from "@/core/avatar-runtime/motion-assets";
 
 export type AvatarRuntimeDriver = "live2d" | "static" | "vrm";
 
@@ -42,6 +46,8 @@ export interface AvatarRuntimeSnapshot {
     source: "audio-volume" | "none" | "speech-mark" | "viseme";
   };
   motion: AvatarRuntimeMotionDirective;
+  motionAsset?: AvatarRuntimeMotionAssetDirective;
+  motionAssets?: AvatarRuntimeMotionAssetMap;
   motionMap?: AvatarRuntimeMotionMap;
   reason?: string;
   status: "degraded" | "error" | "placeholder" | "ready";

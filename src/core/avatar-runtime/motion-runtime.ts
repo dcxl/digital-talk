@@ -1,5 +1,10 @@
 import type { RuntimeState } from "@/core/runtime/events";
 import {
+  resolveAvatarMotionAsset,
+  type AvatarRuntimeMotionAssetDirective,
+  type AvatarRuntimeMotionAssetMap,
+} from "./motion-assets";
+import {
   resolveAvatarMotionDirective,
   type AvatarRuntimeMotionDirective,
   type AvatarRuntimeMotionMap,
@@ -25,6 +30,7 @@ export interface AvatarMotionCssVars {
 
 export interface AvatarMotionViewModel {
   animationClass: AvatarMotionAnimationClass;
+  asset?: AvatarRuntimeMotionAssetDirective;
   cssVars: AvatarMotionCssVars;
   expression?: string;
   expressionCandidates: string[];
@@ -53,6 +59,7 @@ interface AvatarMotionStatePreset {
 
 export interface ResolveAvatarMotionRuntimeInput {
   motion?: AvatarRuntimeMotionDirective | null;
+  motionAssets?: AvatarRuntimeMotionAssetMap | null;
   motionMap?: AvatarRuntimeMotionMap | null;
   mouthOpen?: number;
   state: RuntimeState;
@@ -205,12 +212,20 @@ export function resolveAvatarMotionRuntime(
     volume,
   });
   const speakingBoost = input.state === "speaking" ? volume : 0;
+  const providedMotion =
+    input.motion?.state === input.state ? input.motion : undefined;
   const directive =
-    input.motion ??
+    providedMotion ??
     resolveAvatarMotionDirective({
       motionMap: input.motionMap,
       state: input.state,
     });
+  const asset = resolveAvatarMotionAsset({
+    expressionCandidates: directive.expressionCandidates,
+    motionAssets: input.motionAssets,
+    motionCandidates: directive.motionCandidates,
+    state: input.state,
+  });
   const scale = preset.scale + speakingBoost * 0.035;
   const translateY = preset.translateY - speakingBoost * 3;
   const intensity = clamp01(preset.intensity + speakingBoost * 0.42);
@@ -222,6 +237,7 @@ export function resolveAvatarMotionRuntime(
 
   return {
     animationClass: preset.animationClass,
+    ...(asset ? { asset } : {}),
     cssVars: {
       "--avatar-motion-brightness": formatNumber(preset.brightness),
       "--avatar-motion-duration": `${preset.durationMs}ms`,
@@ -243,4 +259,3 @@ export function resolveAvatarMotionRuntime(
     volume,
   };
 }
-

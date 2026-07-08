@@ -8,6 +8,10 @@ import {
   normalizeAvatarRuntimeMotionMap,
   resolveAvatarMotionDirective,
 } from "@/core/avatar-runtime/motion-map";
+import {
+  normalizeAvatarRuntimeMotionAssets,
+  resolveAvatarMotionAsset,
+} from "@/core/avatar-runtime/motion-assets";
 
 const adapters: Record<
   AvatarRuntimeDriver,
@@ -79,7 +83,18 @@ export function resolveAvatarRuntime(
   const startedAt = performance.now();
   const driver = normalizeDriver(input.driver);
   const resolvedAdapter = adapters[driver];
+  const motionAssets = normalizeAvatarRuntimeMotionAssets(input.motionAssets);
   const motionMap = normalizeAvatarRuntimeMotionMap(input.motionMap);
+  const motion = resolveAvatarMotionDirective({
+    motionMap,
+    state: input.state,
+  });
+  const motionAsset = resolveAvatarMotionAsset({
+    expressionCandidates: motion.expressionCandidates,
+    motionAssets,
+    motionCandidates: motion.motionCandidates,
+    state: input.state,
+  });
 
   return {
     ...resolvedAdapter,
@@ -89,10 +104,10 @@ export function resolveAvatarRuntime(
       openness: getMouthOpen(input),
       source: input.state === "speaking" ? "audio-volume" : "none",
     },
-    motion: resolveAvatarMotionDirective({
-      motionMap,
-      state: input.state,
-    }),
+    motion,
+    ...(motionAsset ? { motionAsset } : {}),
+    motionAssets:
+      Object.keys(motionAssets).length > 0 ? motionAssets : undefined,
     motionMap: Object.keys(motionMap).length > 0 ? motionMap : undefined,
     reason: input.reason,
     state: input.state,
