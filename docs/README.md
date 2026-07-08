@@ -33,6 +33,7 @@ AI Character Platform 是一个面向个人开发者的开源 AI 角色平台。
 - [25 本地开发与环境变量](./25-local-development-env.md)
 - [26 v0.5 测试与验收](./26-v0.5-test-acceptance.md)
 - [27 Avatar / Live2D 退场计划](./27-avatar-live2d-deprecation.md)
+- [28 v0.6 Character Motion Runtime](./28-v0.6-character-motion-runtime.md)
 
 ## 当前设计原则
 
@@ -51,13 +52,15 @@ AI Character Platform 是一个面向个人开发者的开源 AI 角色平台。
 | v0.3 Realtime Character | ASR 语音输入、Realtime Session、低延迟 TTS、barge-in |
 | v0.4 Character Appearance Runtime | 历史 Live2D 验证、真实角色渲染、口型同步、runtime fallback |
 | v0.5 Character Platform Core | AI 角色库、ComfyUI 角色工坊、场景绑定、角色记忆、工作流基础 |
+| v0.6 Character Motion Runtime | 静态角色状态动作、口型/音量联动、表现层 adapter 边界 |
 | Beta | ComfyUI 工作流增强、WebRTC、RAG 增强、Tool Calling |
 | v1.0 | 插件化工具、文档站、示例应用、生产部署基线 |
 
 ## 文档状态
 
 - 当前产品北极星：`17-product-philosophy-and-north-star.md`
-- 当前开发主线：`18-v0.5-character-platform-core.md`
+- 当前开发主线：`28-v0.6-character-motion-runtime.md`
 - v0.5 执行规格：`19` 到 `27`
+- v0.6 执行规格：`28`
 - `02` 到 `11` 为历史基线架构文档，可能保留 Avatar / 数字人术语；后续实现时以 Character 作为产品对象进行解释和迁移。
 - `12` 到 `15` 为历史运行时路线，保留用于追溯 TTS、ASR、Live2D、Realtime 设计。Live2D 不再作为后续主线；外观生成改为 ComfyUI Provider / Workflow。
